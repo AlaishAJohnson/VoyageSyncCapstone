@@ -1,1 +1,1 @@
-# VoyageSyncCapstone
+# VoyageSync
