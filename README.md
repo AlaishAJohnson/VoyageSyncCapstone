@@ -94,7 +94,7 @@ Allows users to tailor their journey based on their preference and interest for 
 ![Wireframe](images/wireframe.png)
 
 ### Digital Mockup
-
+![Wireframe](images/VoyageSyncDesign.pdf)
 ## Schema
 ### Models
 #### User
