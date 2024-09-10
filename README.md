@@ -1,4 +1,9 @@
 # VoyageSync
+# Members
+- Alaisha Johnson
+- Widly Delone
+- Essence Ochoa
+- Ajani Roberts
 
 # Table of Contents
 1.) [Overview](#overview)
