@@ -18,7 +18,7 @@ import java.time.LocalTime;
 public class Bookings {
 
     @Id
-    private ObjectId bookingId;
+    private ObjectId bookingID;
     private LocalDate dateOfBooking;
     private LocalTime timeOfBooking;
     private ConfirmationStatus confirmationStatus = ConfirmationStatus.PENDING;
