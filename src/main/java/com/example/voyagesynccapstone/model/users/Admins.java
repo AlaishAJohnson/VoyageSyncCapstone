@@ -1,7 +1,8 @@
-package com.example.voyagesynccapstone.model;
+package com.example.voyagesynccapstone.model.users;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
@@ -11,12 +12,12 @@ import java.time.LocalDateTime;
 
 @Document(collection = "admins")
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Admins {
+public class Admins extends Users {
     @Id
     private ObjectId adminID;
-    private ObjectId userID; // reference to user entity
     private LocalDateTime dateAssigned;
 
 

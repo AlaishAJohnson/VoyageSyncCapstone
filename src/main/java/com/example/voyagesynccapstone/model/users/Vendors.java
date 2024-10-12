@@ -1,5 +1,6 @@
-package com.example.voyagesynccapstone.model;
+package com.example.voyagesynccapstone.model.users;
 
+import com.example.voyagesynccapstone.enums.VerificationStatus;
 import com.mongodb.lang.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Data;

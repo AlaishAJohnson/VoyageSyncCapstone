@@ -1,4 +1,4 @@
-package com.example.voyagesynccapstone.model;
+package com.example.voyagesynccapstone.model.trips;
 
 import com.mongodb.lang.Nullable;
 import lombok.AllArgsConstructor;

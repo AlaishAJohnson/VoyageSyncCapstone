@@ -1,5 +1,6 @@
-package com.example.voyagesynccapstone.model;
+package com.example.voyagesynccapstone.model.trips;
 
+import com.example.voyagesynccapstone.enums.ConfirmationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,4 +1,4 @@
-package com.example.voyagesynccapstone.model;
+package com.example.voyagesynccapstone.model.services;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-@Document(collection = "serviceAvailability")
+@Document(collection = "service_availability")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
