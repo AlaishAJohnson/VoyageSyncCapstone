@@ -4,6 +4,7 @@ import com.mongodb.lang.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 public class Vendors {
 
     @Id
-    private String vendorID;
+    private ObjectId vendorID;
     private String vendorName;
     private String vendorRegistrationNumber;
     private String countryOfRegistration;
@@ -31,14 +32,8 @@ public class Vendors {
     private String representativeRole;
 
     // References
-    private String representativeID;
-    private String permissionID;
-
-    public enum VerificationStatus {
-        PENDING,
-        VERIFIED,
-        REJECTED
-    }
+    private ObjectId representativeID;
+    private ObjectId permissionID;
 
 
 }

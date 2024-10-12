@@ -1,7 +1,9 @@
 package com.example.voyagesynccapstone.model;
 
 
+import com.mongodb.lang.Nullable;
 import lombok.*;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -16,24 +18,20 @@ import java.util.Map;
 public class Users {
 
     @Id
-    private String userID;
+    private ObjectId userID;
     private String firstName;
     private String lastName;
     private String email;
     private String password;
     private String phoneNumber;
     private String role;
-    private Map<String, List<String>> travelPreferences;
+    private Map<String, List<ObjectId>> travelPreferences;
     private LocalDateTime createdAt;
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;
 
     // References
-    private String permissionID;
-    private List<String> trips;
+    private ObjectId permissionID;
+    @Nullable private List<ObjectId> trips;
 
-    public enum VerificationStatus {
-        PENDING,
-        VERIFIED,
-        REJECTED
-    }
+
 }

@@ -7,17 +7,19 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
-
-@Document(collection = "admins")
+@Document(collection = "services")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Admins {
+public class Services {
+
     @Id
-    private ObjectId adminID;
-    private ObjectId userID; // reference to user entity
-    private LocalDateTime dateAssigned;
+    private ObjectId serviceID;
+    private String serviceName;
+    private String serviceDescription;
+    private String serviceType;
+    private String servicePrice;
 
-
+    // Reference
+    private ObjectId vendorID;
 }

@@ -4,6 +4,7 @@ import com.mongodb.lang.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -18,15 +19,15 @@ import java.util.Map;
 public class Trips {
 
     @Id
-    private String tripID;
-    private String organizerID;
+    private ObjectId tripID;
+    private ObjectId organizerID; // reference
     private String tripName;
     private String destination;
     private LocalDate startDate;
     private LocalDate endDate;
     private double budget;
-    private Map<String, List<String>> itinerary;
-    @Nullable private String groupTripID;
+    private Map<String, List<ObjectId>> itinerary;
+    @Nullable private ObjectId groupTripID;
     private TripStatus tripStatus = TripStatus.PROGRESS;
     
     public enum TripStatus {
