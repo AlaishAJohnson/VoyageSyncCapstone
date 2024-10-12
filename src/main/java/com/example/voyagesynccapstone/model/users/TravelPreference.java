@@ -1,4 +1,4 @@
-package com.example.voyagesynccapstone.model;
+package com.example.voyagesynccapstone.model.users;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

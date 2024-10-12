@@ -1,4 +1,4 @@
-package com.example.voyagesynccapstone.interfaces;
+package com.example.voyagesynccapstone.interfaces.permissions;
 
 import com.example.voyagesynccapstone.model.permissions.Permissions;
 import org.bson.types.ObjectId;

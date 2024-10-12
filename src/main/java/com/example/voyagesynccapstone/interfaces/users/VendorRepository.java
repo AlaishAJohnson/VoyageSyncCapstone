@@ -1,4 +1,4 @@
-package com.example.voyagesynccapstone.interfaces;
+package com.example.voyagesynccapstone.interfaces.users;
 
 import com.example.voyagesynccapstone.enums.VerificationStatus;
 import com.example.voyagesynccapstone.model.users.Vendors;

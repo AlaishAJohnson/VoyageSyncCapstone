@@ -1,4 +1,4 @@
-package com.example.voyagesynccapstone.interfaces;
+package com.example.voyagesynccapstone.interfaces.users;
 
 import com.example.voyagesynccapstone.model.users.Admins;
 import org.bson.types.ObjectId;

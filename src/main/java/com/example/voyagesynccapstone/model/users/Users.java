@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @Document(collection = "users")
 @Data
@@ -26,7 +25,7 @@ public class Users {
     private String password;
     private String phoneNumber;
     private String role;
-    private Map<String, List<ObjectId>> travelPreferences;
+    @Nullable private TravelPreference travelPreference;
     private LocalDateTime createdAt;
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;
 
