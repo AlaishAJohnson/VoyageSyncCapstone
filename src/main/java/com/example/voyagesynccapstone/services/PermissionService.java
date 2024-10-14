@@ -4,11 +4,14 @@ import com.example.voyagesynccapstone.interfaces.permissions.PermissionRepositor
 import com.example.voyagesynccapstone.model.permissions.Permissions;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Service
 public class PermissionService {
+
     @Autowired
     private PermissionRepository permissionRepository;
 
@@ -22,7 +25,7 @@ public class PermissionService {
         Permissions permission = new Permissions();
         permission.setPermissionName(permissionName);
         permission.setUserID(userID);
-        permission.setDateAssigned(LocalDateTime.now());
+        permission.setDateAssigned(LocalDateTime.now()); // Assign current time
         return permissionRepository.save(permission);
     }
 }

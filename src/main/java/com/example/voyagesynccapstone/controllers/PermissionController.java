@@ -12,7 +12,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/permissions")
 public class PermissionController {
-   @Autowired
+
+    @Autowired
     private PermissionService permissionService;
 
     @GetMapping
@@ -27,6 +28,6 @@ public class PermissionController {
             @RequestParam ObjectId userID
     ) {
         Permissions permission = permissionService.createPermission(permissionName, userID);
-        return ResponseEntity.ok(permission);
+        return ResponseEntity.ok(permission); // return the created Permission object
     }
 }

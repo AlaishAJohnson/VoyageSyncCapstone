@@ -3,6 +3,7 @@ package com.example.voyagesynccapstone.controllers;
 import com.example.voyagesynccapstone.model.users.Admins;
 import com.example.voyagesynccapstone.services.AdminService;
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
