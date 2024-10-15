@@ -3,17 +3,22 @@ package com.example.voyagesynccapstone.controllers;
 import com.example.voyagesynccapstone.model.users.Users;
 import com.example.voyagesynccapstone.services.UserService;
 import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    @Autowired
-    private UserService userService;
+
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping("/{userId}")
     public ResponseEntity<Users> getUserById(@PathVariable ObjectId userId) {
@@ -28,10 +33,11 @@ public class UserController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<String> createUser(@RequestBody Users user) {
-        userService.createUser(user);
-        return ResponseEntity.ok("User created successfully.");
+    public ResponseEntity<Users> createUser(@RequestBody Users user) {
+        Users createdUser = userService.createUser(user);
+        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
     }
+
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<String> deleteUser(@PathVariable ObjectId userId) {

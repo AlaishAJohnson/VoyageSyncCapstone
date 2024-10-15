@@ -12,6 +12,6 @@ import java.util.List;
 @Repository
 public interface PermissionRepository extends MongoRepository<Permissions, ObjectId> {
     List<Permissions> findByUserID(ObjectId userID);
-    Permissions findByPermissionID(ObjectId permissionID);
+    Permissions findByPermissionName(ObjectId permissionName);
     List<Permissions> findByDateAssigned(LocalDate dateAssigned);
 }
