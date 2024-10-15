@@ -73,7 +73,7 @@ class UserServiceTest {
 
         // Assert
         assertEquals(user, foundUser);
-        verify(userRepository, times(1)).findById(userId); /
+        verify(userRepository, times(1)).findById(userId);
     }
 
     @Test
@@ -98,7 +98,7 @@ class UserServiceTest {
         userService.deleteUser(userId);
 
         // Assert
-        verify(userRepository, times(1)).deleteUsersByUserID(userId); /
+        verify(userRepository, times(1)).deleteUsersByUserID(userId);
     }
 
     @Test
