@@ -1,5 +1,6 @@
 package com.voyagesync.voyagesyncproject.controllers.users;
 
+import com.voyagesync.voyagesyncproject.dto.LoginRequest;
 import com.voyagesync.voyagesyncproject.enums.VerificationStatus;
 import com.voyagesync.voyagesyncproject.models.users.Admins;
 import com.voyagesync.voyagesyncproject.models.users.TravelPreferences;
@@ -9,6 +10,8 @@ import com.voyagesync.voyagesyncproject.services.users.AdminService;
 import com.voyagesync.voyagesyncproject.services.users.TravelPreferenceService;
 import com.voyagesync.voyagesyncproject.services.users.UsersService;
 import com.voyagesync.voyagesyncproject.services.users.VendorService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.bson.types.ObjectId;
@@ -36,7 +39,7 @@ public class UsersController {
         this.travelPreferenceService = travelPreferenceService;
     }
 
-    @GetMapping
+    @GetMapping("/")
     public ResponseEntity<List<Map<String, Object>>> getAllUsers() {
         List<Users> userList = usersService.getAllUsers();
         List<Map<String, Object>> response = userList.stream().map(users -> {
@@ -77,6 +80,19 @@ public class UsersController {
         }).toList();
 
         return new ResponseEntity<>( response, HttpStatus.OK);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+        Users user = usersService.login(loginRequest.getUsernameOrEmail(), loginRequest.getPassword());
+        if(user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+
+        }
+        HttpSession session = request.getSession();
+        session.setAttribute("userId", user.getId());
+        return ResponseEntity.ok().body("Login Successful");
+
     }
 
     @PostMapping("/create")
@@ -144,6 +160,8 @@ public class UsersController {
         }
 
     }
+
+
 
     /* Helper Functions */
     private List<String> safeGetListFromMap(Map<String, Object> map, String key) {

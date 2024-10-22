@@ -27,7 +27,6 @@ public class GroupTripsController {
        List<Map<String, Object>> response = groupTripsList.stream().map(groupTrips -> {
            Map<String, Object> groupTripMap = new LinkedHashMap<>();
            groupTripMap.put("groupTripId", groupTrips.getGroupTripId().toHexString());
-           groupTripMap.put("organizerId", groupTrips.getOrganizerId().toHexString());
            groupTripMap.put("majorityVoteRule", groupTrips.getMajorityVoteRule());
            groupTripMap.put("votingStatus", groupTrips.isVotingStatus());
            List<String> membersIds = groupTrips.getMembers().stream().map(ObjectId::toHexString).collect(Collectors.toList());

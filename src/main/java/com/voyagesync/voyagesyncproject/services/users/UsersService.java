@@ -24,10 +24,23 @@ public class UsersService {
     }
 
     public boolean existByUsername(String username) {
-        return usersRepository.findByUsername(username).isPresent();
+        return usersRepository.existsByUsername(username);
     }
     public boolean existByEmail(String email) {
-        return usersRepository.findByEmail(email).isPresent();
+        return usersRepository.existsByEmail(email);
+    }
+    public Users login(String usernameOrEmail, String password) {
+        Users user = usersRepository.findByUsername(usernameOrEmail);
+        if(user == null) {
+            usersRepository.findByEmail(usernameOrEmail);
+        }
+        if(user == null) {
+            throw new RuntimeException("User not found");
+        }
+        if(passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("Invalid password");
+        }
+        return user;
     }
 
 

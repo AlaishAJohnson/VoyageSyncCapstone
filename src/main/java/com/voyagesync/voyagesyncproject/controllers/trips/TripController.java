@@ -1,14 +1,17 @@
 package com.voyagesync.voyagesyncproject.controllers.trips;
 
+import com.voyagesync.voyagesyncproject.models.trips.GroupTrips;
 import com.voyagesync.voyagesyncproject.models.trips.Trips;
+import com.voyagesync.voyagesyncproject.repositories.trips.GroupTripRepository;
 import com.voyagesync.voyagesyncproject.services.trips.TripService;
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,8 +21,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/trips")
 public class TripController {
     private final TripService tripService;
-    public TripController(final TripService tripService) {
+    private final GroupTripRepository groupTripRepository;
+
+    public TripController(final TripService tripService, GroupTripRepository groupTripRepository) {
         this.tripService = tripService;
+        this.groupTripRepository = groupTripRepository;
     }
 
     @GetMapping
@@ -29,6 +35,7 @@ public class TripController {
 
             Map<String, Object> tripMap = new LinkedHashMap<>();
             tripMap.put("tripId", trips.getTripId().toHexString());
+            tripMap.put("organizerId", trips.getOrganizerId().toHexString());
             tripMap.put("tripName", trips.getTripName());
             tripMap.put("startDate", trips.getStartDate());
             tripMap.put("endDate", trips.getEndDate());
@@ -51,5 +58,32 @@ public class TripController {
         }).toList();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<Trips> createTrip(@RequestBody Map<String, Object> tripDetails, @RequestParam boolean isGroupTrip, @RequestParam ObjectId userId){
+        Trips newTrip = new Trips();
+
+        newTrip.setTripName((String) tripDetails.get("tripName"));
+        newTrip.setDestination((String) tripDetails.get("destination"));
+        newTrip.setStartDate(LocalDate.parse((String) tripDetails.get("startDate")));
+        newTrip.setEndDate(LocalDate.parse((String) tripDetails.get("endDate")));
+        newTrip.setBudget((double) tripDetails.get("budget"));
+
+        newTrip.setOrganizerId(userId);
+        if(isGroupTrip){
+            GroupTrips groupTrip = new GroupTrips();
+            groupTrip.setMembers(new ArrayList<>());
+            groupTrip.setCreatedAt(LocalDateTime.now());
+
+            GroupTrips savedGroupTrip = groupTripRepository.save(groupTrip);
+            newTrip.setGroupTripId(savedGroupTrip.getGroupTripId());
+            newTrip.setIsGroupTrip(true);
+        } else {
+            newTrip.setIsGroupTrip(false);
+        }
+
+        Trips createdTrip = tripService.createTrip(newTrip, isGroupTrip, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdTrip);
     }
 }

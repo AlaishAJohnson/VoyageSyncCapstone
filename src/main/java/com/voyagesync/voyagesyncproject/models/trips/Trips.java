@@ -6,21 +6,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Document(collection = "Trip")
-@TypeAlias("")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Trips {
     @Id
     private ObjectId tripId;
-
+    private ObjectId organizerId;
     private String tripName;
     private String destination;
     private LocalDate startDate;
@@ -29,9 +27,19 @@ public class Trips {
     private List<ObjectId> itinerary;
 
 
+    private boolean isGroupTrip;
     @Nullable
     private ObjectId groupTripId;
     private TripStatus tripStatus = TripStatus.PROGRESS;
+
+
+    public boolean isGroupTrip() {
+        return isGroupTrip;
+    }
+
+    public void setIsGroupTrip(boolean isGroupTrip) {
+        this.isGroupTrip = isGroupTrip;
+    }
 
     public enum TripStatus {
         PROGRESS,
