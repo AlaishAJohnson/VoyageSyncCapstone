@@ -3,7 +3,7 @@ package com.voyagesync.voyagesyncproject.services.trips;
 import com.voyagesync.voyagesyncproject.models.trips.GroupTrips;
 import com.voyagesync.voyagesyncproject.models.trips.Trips;
 import com.voyagesync.voyagesyncproject.repositories.trips.GroupTripRepository;
-import com.voyagesync.voyagesyncproject.repositories.trips.TripRespository;
+import com.voyagesync.voyagesyncproject.repositories.trips.TripRepository;
 import com.voyagesync.voyagesyncproject.repositories.users.UsersRepository;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
@@ -14,10 +14,10 @@ import java.util.List;
 
 @Service
 public class TripService {
-    private final TripRespository tripRepository;
+    private final TripRepository tripRepository;
     private final GroupTripRepository groupTripRepository;
     private final UsersRepository usersRepository;
-    public TripService(final TripRespository tripRepository, final GroupTripRepository groupTripRepository, final UsersRepository usersRepository) {
+    public TripService(final TripRepository tripRepository, final GroupTripRepository groupTripRepository, final UsersRepository usersRepository) {
         this.tripRepository = tripRepository;
         this.groupTripRepository = groupTripRepository;
         this.usersRepository = usersRepository;

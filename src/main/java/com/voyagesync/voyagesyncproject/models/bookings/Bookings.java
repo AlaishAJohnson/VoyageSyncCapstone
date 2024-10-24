@@ -26,4 +26,16 @@ public class Bookings {
     private LocalTime bookingTime;
     private ConfirmationStatus confirmationStatus = ConfirmationStatus.PENDING;
     private String itineraryId;
+
+    private int numberOfParticipants;
+
+    // getter for numberOfParticipants
+    public int getNumberOfParticipants() {
+        return numberOfParticipants;
+    }
+
+    // setter for numberOfParticipants (if needed)
+    public void setNumberOfParticipants(int numberOfParticipants) {
+        this.numberOfParticipants = numberOfParticipants;
+    }
 }

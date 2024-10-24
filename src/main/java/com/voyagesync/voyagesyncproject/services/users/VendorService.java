@@ -20,4 +20,15 @@ public class VendorService {
     public void createVendor(Vendors newVendor) {
         vendorRepository.save(newVendor);
     }
+
+    // Method to get vendors by business name
+    public List<Vendors> getVendorsByName(String businessName) {
+        return vendorRepository.findByBusinessName(businessName);
+    }
+
+    // Method to get vendors by business type
+    public List<Vendors> getVendorsByType(String businessType) {
+        return vendorRepository.findByBusinessType(businessType);
+    }
+
 }
