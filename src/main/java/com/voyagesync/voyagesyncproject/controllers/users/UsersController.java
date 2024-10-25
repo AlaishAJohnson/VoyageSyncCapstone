@@ -82,6 +82,18 @@ public class UsersController {
         return new ResponseEntity<>( response, HttpStatus.OK);
     }
 
+    @GetMapping("/{username}")
+    public ResponseEntity<?> getUserByUsername(@PathVariable("username") String username) {
+        try {
+            Users user = usersService.getByUsername(username);
+            return ResponseEntity.ok(user);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("user not found");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred while retrieving user: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         Users user = usersService.login(loginRequest.getUsernameOrEmail(), loginRequest.getPassword());

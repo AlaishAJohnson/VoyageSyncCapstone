@@ -2,17 +2,17 @@ package com.voyagesync.voyagesyncproject.services.users;
 
 import com.voyagesync.voyagesyncproject.models.users.Users;
 import com.voyagesync.voyagesyncproject.repositories.users.UsersRepository;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class UsersService {
 
     private final UsersRepository usersRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
 
     public UsersService(final UsersRepository usersRepository) {
         this.usersRepository = usersRepository;
@@ -21,6 +21,9 @@ public class UsersService {
     /* GET Methods */
     public List<Users> getAllUsers() {
         return usersRepository.findAll();
+    }
+    public Users getByUsername(String username){
+        return usersRepository.findByUsername(username);
     }
 
     public boolean existByUsername(String username) {
@@ -37,8 +40,8 @@ public class UsersService {
         if(user == null) {
             throw new RuntimeException("User not found");
         }
-        if(passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+        if(!Objects.equals(password, user.getPassword())) {
+            throw new RuntimeException("Wrong password");
         }
         return user;
     }
@@ -47,8 +50,8 @@ public class UsersService {
     /* POST Methods */
 
     public Users createUser(Users user) {
-        String hashedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(hashedPassword);
+//        String hashedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(user.getPassword());
         user.setCreatedAt(LocalDateTime.now());
         return usersRepository.save(user);
     }
