@@ -1,5 +1,6 @@
 package com.voyagesync.voyagesyncproject.services.users;
 
+import com.voyagesync.voyagesyncproject.enums.VerificationStatus;
 import com.voyagesync.voyagesyncproject.models.users.Users;
 import com.voyagesync.voyagesyncproject.repositories.users.UsersRepository;
 import org.springframework.stereotype.Service;
@@ -22,8 +23,39 @@ public class UsersService {
     public List<Users> getAllUsers() {
         return usersRepository.findAll();
     }
+    public List<Users> getByRole(final String role) {
+        return usersRepository.findByRole(role);
+    }
+
+    public List<Users> getByFirstAndLastName(final String firstName, final String lastName) {
+        return usersRepository.findByFirstNameAndLastName(firstName, lastName);
+    }
+    public List<Users> getByVerificationStatus(VerificationStatus verificationStatus) {
+        return usersRepository.findByVerificationStatus(verificationStatus);
+    }
     public Users getByUsername(String username){
-        return usersRepository.findByUsername(username);
+        Users user = usersRepository.findByUsername(username);
+        if(user != null) {
+            return user;
+        } else {
+            throw new RuntimeException("User not found");
+        }
+    }
+    public Users getByEmail(String email) {
+        Users user = usersRepository.findByEmail(email);
+        if(user != null) {
+            return user;
+        } else {
+            throw new RuntimeException("User not found");
+        }
+    }
+    public Users getByPhoneNumber(String phoneNumber) {
+        Users user = usersRepository.findByPhoneNumber(phoneNumber);
+        if(user != null) {
+            return user;
+        } else {
+            throw new RuntimeException("User not found");
+        }
     }
 
     public boolean existByUsername(String username) {
