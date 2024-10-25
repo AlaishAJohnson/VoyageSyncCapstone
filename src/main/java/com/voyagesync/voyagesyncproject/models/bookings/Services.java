@@ -7,7 +7,7 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
-
+import com.voyagesync.voyagesyncproject.models.bookings.ServiceAvailability; //Remove
 import java.util.List;
 
 @Document(collection = "Services")
@@ -22,4 +22,8 @@ public class Services {
     private String serviceDescription;
     private List<ObjectId> serviceAvailability;
     private double price;
+
+    //nonsense
+    private String location;
+    private ServiceAvailability details;
 }

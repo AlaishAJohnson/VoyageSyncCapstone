@@ -25,5 +25,4 @@ public class ServiceAvailability {
     private boolean isAvailable = true;
     private double availableSlots;
 
-
 }
