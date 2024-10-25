@@ -24,34 +24,28 @@ public class VendorController {
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllVendors() {
         List<Vendors> vendorsList = vendorService.getAllVendors();
-        List<Map<String, Object>> response = vendorsList.stream().map(vendors -> {
-            return createVendorMap(vendors);
-        }).toList();
+        List<Map<String, Object>> response = vendorsList.stream().map(this::mapVendorsToResponse).collect(Collectors.toList());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     // New endpoint to filter vendors by name
-    @GetMapping("/filter/name")
-    public ResponseEntity<List<Map<String, Object>>> getVendorsByName(@RequestParam String businessName) {
+    @GetMapping("/filter/name/{businessName}")
+    public ResponseEntity<List<Map<String, Object>>> getVendorsByName(@PathVariable String businessName) {
         List<Vendors> vendorsList = vendorService.getVendorsByName(businessName);
-        List<Map<String, Object>> response = vendorsList.stream().map(vendors -> {
-            return createVendorMap(vendors);
-        }).toList();
+        List<Map<String, Object>> response = vendorsList.stream().map(this::mapVendorsToResponse).collect(Collectors.toList());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     // New endpoint to filter vendors by type
-    @GetMapping("/filter/type")
-    public ResponseEntity<List<Map<String, Object>>> getVendorsByType(@RequestParam String businessType) {
+    @GetMapping("/filter/type/{businessType}")
+    public ResponseEntity<List<Map<String, Object>>> getVendorsByType(@PathVariable String businessType) {
         List<Vendors> vendorsList = vendorService.getVendorsByType(businessType);
-        List<Map<String, Object>> response = vendorsList.stream().map(vendors -> {
-            return createVendorMap(vendors);
-        }).toList();
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        List<Map<String, Object>> response = vendorsList.stream().map(this::mapVendorsToResponse).collect(Collectors.toList());
+                return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     // Helper method to create the vendor map
-    private Map<String, Object> createVendorMap(Vendors vendors) {
+    private Map<String, Object> mapVendorsToResponse(Vendors vendors) {
         Map<String, Object> vendorMap = new LinkedHashMap<>();
         vendorMap.put("vendorId", vendors.getVendorId().toHexString());
         vendorMap.put("businessName", vendors.getBusinessName());
