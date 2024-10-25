@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -28,17 +29,7 @@ public class BookingsController {
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllBookings() {
         List<Bookings> bookingsList = bookingService.getAllBookings();
-        List<Map<String, Object>> response = bookingsList.stream().map(booking -> {
-            Map<String, Object> bookingMap = new LinkedHashMap<>();
-            bookingMap.put("bookingId", booking.getBookingId().toHexString());
-            bookingMap.put("serviceId", booking.getServiceId());
-            bookingMap.put("vendorId", booking.getVendorId());
-            bookingMap.put("bookingDate", booking.getBookingDate());
-            bookingMap.put("bookingTime", booking.getBookingTime());
-            bookingMap.put("confirmationStatus", booking.getConfirmationStatus());
-            bookingMap.put("itineraryId", booking.getItineraryId());
-            return bookingMap;
-        }).toList();
+        List<Map<String, Object>> response = bookingsList.stream().map(this::mapBookingsToResponse).collect(Collectors.toList());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -46,51 +37,34 @@ public class BookingsController {
     public ResponseEntity<List<Map<String, Object>>> getByConfirmationStatus(@PathVariable String confirmationStatus) {
         ConfirmationStatus status = ConfirmationStatus.valueOf(confirmationStatus.toUpperCase());
         List<Bookings> bookings = bookingService.getByConfirmationStatus(status);
-        List<Map<String, Object>> response = bookings.stream().map(booking -> {
-            Map<String, Object> bookingMap = new LinkedHashMap<>();
-            bookingMap.put("bookingId", booking.getBookingId().toHexString());
-            bookingMap.put("serviceId", booking.getServiceId());
-            bookingMap.put("vendorId", booking.getVendorId());
-            bookingMap.put("bookingDate", booking.getBookingDate());
-            bookingMap.put("bookingTime", booking.getBookingTime());
-            bookingMap.put("confirmationStatus", booking.getConfirmationStatus());
-            bookingMap.put("itineraryId", booking.getItineraryId());
-            return bookingMap;
-        }).toList();
+        List<Map<String, Object>> response = bookings.stream().map(this::mapBookingsToResponse).collect(Collectors.toList());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/date")
     public ResponseEntity<List<Map<String, Object>>> getByDateOfBookings(@RequestParam("date") LocalDate date) {
         List<Bookings> bookings = bookingService.getByDateOfBookings(date);
-        List<Map<String, Object>> response = bookings.stream().map(booking -> {
-            Map<String, Object> bookingMap = new LinkedHashMap<>();
-            bookingMap.put("bookingId", booking.getBookingId().toHexString());
-            bookingMap.put("serviceId", booking.getServiceId());
-            bookingMap.put("vendorId", booking.getVendorId());
-            bookingMap.put("bookingDate", booking.getBookingDate());
-            bookingMap.put("bookingTime", booking.getBookingTime());
-            bookingMap.put("confirmationStatus", booking.getConfirmationStatus());
-            bookingMap.put("itineraryId", booking.getItineraryId());
-            return bookingMap;
-        }).toList();
+        List<Map<String, Object>> response = bookings.stream().map(this::mapBookingsToResponse).collect(Collectors.toList());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/participants/{numberOfParticipants}")
     public ResponseEntity<List<Map<String, Object>>> getByNumberOfParticipants(@PathVariable int numberOfParticipants) {
         List<Bookings> bookings = bookingService.getByNumberOfParticipants(numberOfParticipants);
-        List<Map<String, Object>> response = bookings.stream().map(booking -> {
-            Map<String, Object> bookingMap = new LinkedHashMap<>();
-            bookingMap.put("bookingId", booking.getBookingId().toHexString());
-            bookingMap.put("serviceId", booking.getServiceId());
-            bookingMap.put("vendorId", booking.getVendorId());
-            bookingMap.put("bookingDate", booking.getBookingDate());
-            bookingMap.put("bookingTime", booking.getBookingTime());
-            bookingMap.put("confirmationStatus", booking.getConfirmationStatus());
-            bookingMap.put("itineraryId", booking.getItineraryId());
-            return bookingMap;
-        }).toList();
+        List<Map<String, Object>> response = bookings.stream().map(this::mapBookingsToResponse).collect(Collectors.toList());
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /* HELPER FUNCTIONS */
+    private Map<String, Object> mapBookingsToResponse(Bookings bookings) {
+        Map<String, Object> bookingMap = new LinkedHashMap<>();
+        bookingMap.put("bookingId", bookings.getBookingId().toHexString());
+        bookingMap.put("serviceId", bookings.getServiceId());
+        bookingMap.put("vendorId", bookings.getVendorId());
+        bookingMap.put("bookingDate", bookings.getBookingDate());
+        bookingMap.put("bookingTime", bookings.getBookingTime());
+        bookingMap.put("confirmationStatus", bookings.getConfirmationStatus());
+        bookingMap.put("itineraryId", bookings.getItineraryId());
+        return bookingMap;
     }
 }
