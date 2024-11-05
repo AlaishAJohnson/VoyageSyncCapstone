@@ -133,6 +133,7 @@ public class UsersController {
         }
     }
 
+
     @PostMapping("/create")
     public ResponseEntity<String> createUser(@RequestBody Map<String, Object> userDetails) {
        try{
@@ -155,6 +156,7 @@ public class UsersController {
            newUser.setPassword(userDetails.get("password").toString());
 
 
+           // add conditional statement for role to not show the travel preferences.
            String role = userDetails.get("role").toString();
            newUser.setRole(role);
 
