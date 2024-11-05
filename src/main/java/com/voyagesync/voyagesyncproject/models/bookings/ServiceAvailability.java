@@ -9,6 +9,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Document(collection = "Service-Availability")
@@ -20,8 +21,8 @@ public class ServiceAvailability {
     @Id
     private ObjectId serviceAvailabilityId;
     private ObjectId serviceId;
-    private LocalDate dateOfService;
-    private LocalTime timeOfService;
+    private LocalDateTime dateOfService;
+    private LocalDateTime timeOfService;
     private boolean isAvailable = true;
     private double availableSlots;
 

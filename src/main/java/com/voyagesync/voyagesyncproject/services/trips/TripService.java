@@ -8,6 +8,7 @@ import com.voyagesync.voyagesyncproject.repositories.users.UsersRepository;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,25 @@ public class TripService {
 
     public List<Trips> getAllTrips(){
         return tripRepository.findAll();
+    }
+
+//    public List<Trips> getAllUserTrips(String userId) {
+//
+//        // Fetch individual trips where the user is the organizer
+//        List<Trips> userTrips = new ArrayList<>(tripRepository.findByOrganizerId(new ObjectId(userId)));
+//
+//        // Fetch group trips where the user is a member
+//        List<GroupTrips> memberTrips = groupTripRepository.getAllGroupTripsContainingMemberId(new ObjectId(userId));
+//        for (GroupTrips groupTrip : memberTrips) {
+//            // Convert GroupTrip to Trip
+//            userTrips.add(convertGroupTripToTrip(groupTrip));
+//        }
+//
+//        return userTrips;
+//    }
+
+    public List<Trips> getTripsByOrganizerId(ObjectId organizerId) {
+        return tripRepository.findByOrganizerId(organizerId);
     }
 
     /* POST METHODS */
@@ -53,4 +73,15 @@ public class TripService {
         return tripRepository.save(trip);
     }
 
+    /* Helper Functions */
+    // Method to convert GroupTrip to Trip
+    private Trips convertGroupTripToTrip(GroupTrips groupTrip) {
+        Trips trip = new Trips();
+        trip.setTripId(groupTrip.getGroupTripId()); // You may want to set this differently
+        trip.setTripName("Group Trip"); // Example logic; adjust as needed
+        trip.setDestination("Destination not specified"); // Example logic; adjust as needed
+        trip.setStartDate(LocalDate.from(LocalDateTime.now())); // Set your start date logic
+        trip.setEndDate(LocalDate.from(LocalDateTime.now().plusDays(7))); // Example logic; adjust as needed
+        return trip;
+    }
 }

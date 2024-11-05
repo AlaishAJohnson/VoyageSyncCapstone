@@ -66,10 +66,10 @@ public class UsersService {
     }
     public Users login(String usernameOrEmail, String password) {
         Users user = usersRepository.findByUsername(usernameOrEmail);
-        if(user == null) {
-            usersRepository.findByEmail(usernameOrEmail);
+        if (user == null) {
+            user = usersRepository.findByEmail(usernameOrEmail);
         }
-        if(user == null) {
+        if (user == null) {
             throw new RuntimeException("User not found");
         }
         if(!Objects.equals(password, user.getPassword())) {

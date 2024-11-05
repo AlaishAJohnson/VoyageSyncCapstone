@@ -7,9 +7,10 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
 
 public interface VendorRepository extends MongoRepository<Vendors, ObjectId> {
-    // Method to find vendors by business name
-    List<Vendors> findByBusinessName(String businessName);
+    List<Vendors> findVendorByVendorId(final ObjectId id);
 
+    List<Vendors> findByBusinessName(String businessName);
+    List<Vendors> findByIndustry(String industry);
     // Method to find vendors by business type
     List<Vendors> findByBusinessType(String businessType);
 }

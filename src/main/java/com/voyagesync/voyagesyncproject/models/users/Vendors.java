@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 @Document(collection = "Vendor")
@@ -55,6 +56,7 @@ public class Vendors {
     private List<ObjectId> bookings;
     @Field("services")
     private List<ObjectId> services;
+
 
 
 }

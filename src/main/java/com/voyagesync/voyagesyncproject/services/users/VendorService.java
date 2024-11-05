@@ -2,8 +2,10 @@ package com.voyagesync.voyagesyncproject.services.users;
 
 import com.voyagesync.voyagesyncproject.models.users.Vendors;
 import com.voyagesync.voyagesyncproject.repositories.users.VendorRepository;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -21,6 +23,9 @@ public class VendorService {
         vendorRepository.save(newVendor);
     }
 
+    public Vendors getVendorById(ObjectId vendorId) {
+        return vendorRepository.findById(vendorId).orElse(null);
+    }
     // Method to get vendors by business name
     public List<Vendors> getVendorsByName(String businessName) {
         return vendorRepository.findByBusinessName(businessName);
@@ -30,5 +35,20 @@ public class VendorService {
     public List<Vendors> getVendorsByType(String businessType) {
         return vendorRepository.findByBusinessType(businessType);
     }
+
+    public List<Vendors> getVendorsByIndustry(String industry) {
+        return vendorRepository.findByIndustry(industry);
+    }
+
+    public List<ObjectId> getServiceIdByIndustry(String industry) {
+        List<Vendors> vendors = vendorRepository.findByIndustry(industry);
+        List<ObjectId> serviceIds = new ArrayList<>();
+        for (Vendors vendor : vendors) {
+            serviceIds.addAll(vendor.getServices());
+        }
+        return serviceIds;
+    }
+
+
 
 }

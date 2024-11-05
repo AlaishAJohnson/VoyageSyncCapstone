@@ -20,6 +20,13 @@ public class GroupTripServices {
     public List<GroupTrips> getAllGroupTrips(){
         return groupTripRepository.findAll();
     }
-
+//    public List<GroupTrips> getAllGroupTripsWithOrganizerId(String organizerId) {
+//        return groupTripRepository.getAllGroupTripsWithOrganizerId(new ObjectId(organizerId));
+//    }
+//
+//    public List<GroupTrips> getAllGroupTripsContainingMemberId(String memberId) {
+//        return groupTripRepository.getAllGroupTripsContainingMemberId(new ObjectId(memberId));
+//    }
+//
 
 }

@@ -44,6 +44,13 @@ public class VendorController {
                 return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("/industry")
+    public ResponseEntity<List<Map<String, Object>>> getVendorsByIndustry(@RequestParam String industry) {
+        List<Vendors> vendors = vendorService.getVendorsByIndustry(industry);
+        List<Map<String, Object>> response = vendors.stream().map(this::mapVendorsToResponse).collect(Collectors.toList());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     // Helper method to create the vendor map
     private Map<String, Object> mapVendorsToResponse(Vendors vendors) {
         Map<String, Object> vendorMap = new LinkedHashMap<>();

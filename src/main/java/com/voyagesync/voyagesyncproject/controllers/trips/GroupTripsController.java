@@ -37,4 +37,15 @@ public class GroupTripsController {
     }
 
 
+//    @GetMapping("/organizer/{organizerId}")
+//    public ResponseEntity<List<GroupTrips>> getGroupTripsByOrganizer(@PathVariable String organizerId) {
+//        List<GroupTrips> trips = groupTripService.getAllGroupTripsWithOrganizerId(organizerId);
+//        return ResponseEntity.ok(trips);
+//    }
+//
+//    @GetMapping("/member/{memberId}")
+//    public ResponseEntity<List<GroupTrips>> getGroupTripsByMember(@PathVariable String memberId) {
+//        List<GroupTrips> trips = groupTripService.getAllGroupTripsContainingMemberId(memberId);
+//        return ResponseEntity.ok(trips);
+//    }
 }

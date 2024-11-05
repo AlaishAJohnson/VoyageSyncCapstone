@@ -14,10 +14,10 @@ import java.util.List;
 
 @Repository
 public interface ServiceRepository extends MongoRepository<Services, ObjectId> {
-    //nonsense
+    List<Services> findByServiceIdIn(List<ObjectId> serviceIds);
 
     List<Services> getByLocation(String location);
-    List<Services> getByPrice(String price);
+    List<Services> getByPrice(double price);
 
     //doesnt run
     List<Services> getByServiceAvailability(List<ObjectId> serviceAvailabilityIds);

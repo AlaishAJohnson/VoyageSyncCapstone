@@ -20,8 +20,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 @RestController
 @RequestMapping("/api/users")
+
 public class UsersController {
 
     private final UsersService usersService;
@@ -122,16 +124,13 @@ public class UsersController {
 
     /* POST METHODS */
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
-        Users user = usersService.login(loginRequest.getUsernameOrEmail(), loginRequest.getPassword());
-        if(user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
-
+    public ResponseEntity<Users> login(@RequestBody LoginRequest loginRequest) {
+        try {
+            Users user = usersService.login(loginRequest.getUsernameOrEmail(), loginRequest.getPassword());
+            return ResponseEntity.ok(user); // Send user details back
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null); // Handle login failure
         }
-        HttpSession session = request.getSession();
-        session.setAttribute("userId", user.getId());
-        return ResponseEntity.ok().body("Login Successful");
-
     }
 
     @PostMapping("/create")

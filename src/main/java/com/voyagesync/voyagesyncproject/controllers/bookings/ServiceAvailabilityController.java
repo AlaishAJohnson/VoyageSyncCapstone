@@ -2,12 +2,16 @@ package com.voyagesync.voyagesyncproject.controllers.bookings;
 
 import com.voyagesync.voyagesyncproject.models.bookings.ServiceAvailability;
 import com.voyagesync.voyagesyncproject.services.bookings.ServiceAvailabilityService;
+import org.bson.types.ObjectId;
+import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,4 +39,11 @@ public class ServiceAvailabilityController {
         }).toList();
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+//    @GetMapping("/{serviceId}/{date}")
+//    public List<ServiceAvailability> getServiceAvailability(@PathVariable String serviceId, @PathVariable String date) {
+//        ObjectId id = new ObjectId(serviceId);
+//        LocalDate serviceDate = LocalDate.parse(date);
+//        return serviceAvailabilityService.getServiceAvailabilityByServiceIdAndDate(id, serviceDate);
+//    } // returning an empty array, needs to be debugged
 }

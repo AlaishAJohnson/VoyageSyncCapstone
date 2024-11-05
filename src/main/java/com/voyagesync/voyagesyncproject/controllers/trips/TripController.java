@@ -60,6 +60,19 @@ public class TripController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+//    @GetMapping("/trips/user/{userId}")
+//    public ResponseEntity<List<Trips>> getAllUserTrips(@PathVariable String userId) {
+//        List<Trips> trips = tripService.getAllUserTrips(userId);
+//        return ResponseEntity.ok(trips);
+//    }
+
+    @GetMapping("/organizer/{organizerId}")
+    public ResponseEntity<List<Trips>> getTripsByOrganizer(@PathVariable ObjectId organizerId) {
+        List<Trips> trips = tripService.getTripsByOrganizerId(organizerId);
+        return ResponseEntity.ok(trips);
+    }
+
+
     @PostMapping("/create")
     public ResponseEntity<Trips> createTrip(@RequestBody Map<String, Object> tripDetails, @RequestParam boolean isGroupTrip, @RequestParam ObjectId userId){
         Trips newTrip = new Trips();
