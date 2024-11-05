@@ -69,6 +69,11 @@ public class ServiceController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /* POST MAPPING */
+    // create service - you need avail. to connect it here. (serviceAvail. repo [the function] service [define] then use it here)
+    // update service
+    // delete service
+
 
     /* HELPER FUNCTIONS */
 

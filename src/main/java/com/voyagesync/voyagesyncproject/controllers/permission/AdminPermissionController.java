@@ -31,4 +31,6 @@ public class AdminPermissionController {
         }).toList();
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    // define admin permission (deactivate/activate users)
 }

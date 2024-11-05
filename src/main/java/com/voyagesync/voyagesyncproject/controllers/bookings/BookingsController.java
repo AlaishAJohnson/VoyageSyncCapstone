@@ -55,6 +55,9 @@ public class BookingsController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    // Create Booking here
+
+
     /* HELPER FUNCTIONS */
     private Map<String, Object> mapBookingsToResponse(Bookings bookings) {
         Map<String, Object> bookingMap = new LinkedHashMap<>();

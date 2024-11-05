@@ -73,6 +73,8 @@ public class TripController {
     }
 
 
+
+    // check this
     @PostMapping("/create")
     public ResponseEntity<Trips> createTrip(@RequestBody Map<String, Object> tripDetails, @RequestParam boolean isGroupTrip, @RequestParam ObjectId userId){
         Trips newTrip = new Trips();

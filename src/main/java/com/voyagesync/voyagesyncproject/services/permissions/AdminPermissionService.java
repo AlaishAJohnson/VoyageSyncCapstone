@@ -17,4 +17,6 @@ public class AdminPermissionService {
     public List<AdminPermissions> getAllAdminPermissions() {
         return adminPermissionRepository.findAll();
     }
+
+    // define admin permission (deactivate/activate users)
 }
