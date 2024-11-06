@@ -35,20 +35,19 @@ const SignIn = () => {
 
       const user = await response.json();
 
-      // Extract relevant user data
+
       const userData = {
-        id: user._id, // Assuming this is the user ID
+        id: user._id, 
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         phoneNumber: user.phoneNumber,
-        role: user.role, // 'admin' or 'user'
+        role: user.role, 
         verificationStatus: user.verificationStatus,
-        // Add any additional fields you need
       };
 
-      // Store user data in AsyncStorage or context
-      await AsyncStorage.setItem('userData', JSON.stringify(userData)); // For local storage
+
+      await AsyncStorage.setItem('userData', JSON.stringify(userData)); 
 
       // Navigate based on the user's role
       if (user.role === 'admin') {

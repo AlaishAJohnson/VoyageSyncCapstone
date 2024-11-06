@@ -5,26 +5,36 @@ import { Picker } from '@react-native-picker/picker';
 
 const Booking = () => {
   const router = useRouter();
-  const { id, name, date: selectedDate, time: selectedTime } = useLocalSearchParams(); // Retrieve date and time from parameters
+  const { id, name, date: selectedDate, time: selectedTime } = useLocalSearchParams(); 
   const [selectedTrip, setSelectedTrip] = useState('');
 
-  const isGroupTrip = selectedTrip && selectedTrip.includes('Group'); // Example condition for a group trip
-  const isTripSelected = !!selectedTrip; // Ensure selectedTrip is not empty
-
+  const isGroupTrip = selectedTrip && selectedTrip.includes('Group'); 
+  const isTripSelected = !!selectedTrip; 
   const handleBooking = () => {
     if (isTripSelected) {
       router.push(`/bookings/booking-confirmation?id=${id}&name=${name}&trip=${selectedTrip}&date=${selectedDate}&time=${selectedTime}`);
     }
   };
 
+  // Format date and time
+  const formattedDate = selectedDate
+    ? new Date(selectedDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    : null;
+    console.log("Selected Time:", selectedTime);
+  const timePart = selectedTime ? selectedTime.split('T')[1] : null; 
+  const formattedTime = timePart
+    ? new Date(`1970-01-01T${timePart}`).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+    : null;
+
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Book {name}</Text>
       
-      {selectedDate && selectedTime ? (
+      {formattedDate && formattedTime ? (
         <>
-          <Text style={styles.detailText}>Date: {selectedDate}</Text>
-          <Text style={styles.detailText}>Time: {selectedTime}</Text>
+          <Text style={styles.detailText}>Date: {formattedDate}</Text>
+          <Text style={styles.detailText}>Time: {formattedTime}</Text>
         </>
       ) : (
         <Text style={styles.warningText}>Please make sure to select a date and time on the previous page.</Text>
@@ -114,4 +124,3 @@ const styles = StyleSheet.create({
 });
 
 export default Booking;
-

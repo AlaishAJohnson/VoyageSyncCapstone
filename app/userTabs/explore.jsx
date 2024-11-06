@@ -4,78 +4,79 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router'; // Import useRouter
 
-// Sample service data (replace this with data from your database)
-const servicesData = [
-  {
-    id: '1',
-    title: 'City Tour',
-    description: 'Explore the beautiful city with a local guide.',
-    price: '$50',
-    vendor: 'Tourist Company',
-    rating: 4.5,
-    image: { uri: 'https://example.com/image1.jpg' },
-    industry: 'Tours',
-  },
-  {
-    id: '2',
-    title: 'Beach Getaway',
-    description: 'Relax at the beach with all-inclusive packages.',
-    price: '$200',
-    vendor: 'Beach Resort',
-    rating: 4.8,
-    image: { uri: 'https://example.com/image2.jpg' },
-    industry: 'Resorts',
-  },
-  {
-    id: '3',
-    title: 'Mountain Hiking',
-    description: 'Experience thrilling hikes with breathtaking views.',
-    price: '$75',
-    vendor: 'Adventure Co.',
-    rating: 4.7,
-    image: { uri: 'https://example.com/image3.jpg' },
-    industry: 'Adventures',
-  },
-  // Add more services as needed
-];
+
 
 const Explore = () => {
   const [services, setServices] = useState([]);
+  const [originalServices, setOriginalServices] = useState([]); 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedIndustry, setSelectedIndustry] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
-    fetchAllServices(); // Fetch all services on component mount
+    fetchAllServices(); 
   }, []);
 
   const fetchAllServices = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/services'); // Adjust the URL as needed
-      const data = await response.json();
-      setServices(data); // Update state with fetched services
+        const response = await fetch('https://7514-68-234-200-22.ngrok-free.app/api/services/vendor'); 
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("Fetched Services:", data); // Log entire fetched data
+        
+        // Ensure we set original services too
+        setOriginalServices(data); // Store original services for filtering
+        
+        data.forEach(service => {
+            // Make sure serviceName exists and is a string
+            if (typeof service.serviceName === 'string') {
+                console.log(`Service Name: ${service.serviceName}`);
+            } else {
+                console.error('Service name is undefined or not a string:', service);
+            }
+        });
+        
+        setServices(data); 
     } catch (error) {
-      console.error('Error fetching services:', error);
+        console.error('Error fetching services:', error);
     }
   };
 
+
   const handleSearch = (query) => {
     setSearchQuery(query);
-    // Implement search filtering logic here based on the query if needed
+
+    if (!query) {
+      setServices(originalServices);
+      return;
+    }
+
+    const filteredServices = originalServices.filter(service => {
+      const name = service.serviceName ? service.serviceName.toLowerCase() : '';
+      const description = service.serviceDescription ? service.serviceDescription.toLowerCase() : '';
+    
+      return (
+        name.includes(query.toLowerCase()) || 
+        description.includes(query.toLowerCase())
+      );
+    });
+    
+    setServices(filteredServices);
   };
 
   const renderService = ({ item }) => (
     <TouchableOpacity 
       style={styles.card}
-      onPress={() => router.push(`/serviceDetails/${item.serviceId}`)} // Navigate to service details
+      onPress={() => router.push(`/bookings/${item.serviceId}`)} 
     >
-      <Image source={{ uri: item.image }} style={styles.cardImage} /> {/* Adjust for your image source */}
+      <Image source={{ uri: item.image }} style={styles.cardImage} />
       <View style={styles.cardContent}>
         <Text style={styles.cardTitle}>{item.serviceName}</Text>
         <Text style={styles.cardDescription}>{item.serviceDescription}</Text>
-        <Text style={styles.cardPrice}>{item.price}</Text>
-        <Text style={styles.cardVendor}>Vendor: {/* Get vendor name from the relevant service data */}</Text>
-        <Text style={styles.cardRating}>Rating: {/* Add rating if available */}</Text>
+        <Text style={styles.cardPrice}>$ {item.price}</Text>
+        <Text style={styles.cardVendor}>Vendor: {item.vendorBusinessName}</Text>
+        <Text style={styles.cardRating}>Rating: {item.averageRating.toFixed(1)}</Text>
       </View>
     </TouchableOpacity>
   );
