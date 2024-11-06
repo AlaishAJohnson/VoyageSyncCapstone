@@ -2,16 +2,18 @@ package com.voyagesync.voyagesyncproject.controllers.bookings;
 
 import com.voyagesync.voyagesyncproject.dto.ServiceResponse;
 import com.voyagesync.voyagesyncproject.models.bookings.Services;
-import com.voyagesync.voyagesyncproject.models.users.Vendors;
 import com.voyagesync.voyagesyncproject.services.bookings.FeedbackService;
 import com.voyagesync.voyagesyncproject.services.bookings.ServicesService;
 import com.voyagesync.voyagesyncproject.services.users.VendorService;
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -69,11 +71,31 @@ public class ServiceController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    /* POST MAPPING */
+    /* POST, PUT, & Delete MAPPING */
     // create service - you need avail. to connect it here. (serviceAvail. repo [the function] service [define] then use it here)
-    // update service
-    // delete service
+    // Create Service (only accessible by vendors)
+    // then admins in the future
+    @PostMapping("/create")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ROLE_VENDOR')")
+    public Services createService(@RequestBody Services service) {
+        return servicesService.createService(service);
+    }
 
+    // Update Service (only accessible by vendors)
+    @PutMapping("/update/{id}")
+    @PreAuthorize("hasRole('ROLE_VENDOR')")
+    public Services updateService(@PathVariable("id") String serviceId, @RequestBody Services service) {
+        return servicesService.updateService(serviceId, service);
+    }
+
+    // Delete Service (only accessible by vendors)
+    @DeleteMapping("/delete/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ROLE_VENDOR')")
+    public void deleteService(@PathVariable("id") String serviceId) {
+        servicesService.deleteService(serviceId);
+    }
 
     /* HELPER FUNCTIONS */
 
@@ -87,7 +109,7 @@ public class ServiceController {
         serviceMap.put("price", service.getPrice());
 
         List<String> serviceAvailabilityIds = service.getServiceAvailability().stream()
-                .map(ObjectId::toHexString)
+                .map(serviceAvailability -> serviceAvailability.getServiceId().toHexString()) // Extract the ObjectId from ServiceAvailability
                 .collect(Collectors.toList());
         serviceMap.put("serviceAvailability", serviceAvailabilityIds);
 

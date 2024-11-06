@@ -13,4 +13,6 @@ public interface VendorRepository extends MongoRepository<Vendors, ObjectId> {
     List<Vendors> findByIndustry(String industry);
     // Method to find vendors by business type
     List<Vendors> findByBusinessType(String businessType);
+    // a method to find vendors that offer a specific service
+    List<Vendors> findByServicesContaining(ObjectId serviceId);
 }

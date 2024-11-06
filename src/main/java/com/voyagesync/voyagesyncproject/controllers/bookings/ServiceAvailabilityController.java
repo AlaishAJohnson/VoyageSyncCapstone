@@ -2,16 +2,11 @@ package com.voyagesync.voyagesyncproject.controllers.bookings;
 
 import com.voyagesync.voyagesyncproject.models.bookings.ServiceAvailability;
 import com.voyagesync.voyagesyncproject.services.bookings.ServiceAvailabilityService;
-import org.bson.types.ObjectId;
-import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,4 +41,28 @@ public class ServiceAvailabilityController {
 //        LocalDate serviceDate = LocalDate.parse(date);
 //        return serviceAvailabilityService.getServiceAvailabilityByServiceIdAndDate(id, serviceDate);
 //    } // returning an empty array, needs to be debugged
+
+    // Create Service Availability (Restricted to Vendor Role)
+    @PreAuthorize("hasRole('ROLE_VENDOR')")
+    @PostMapping("/create")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ServiceAvailability createServiceAvailability(@RequestBody ServiceAvailability serviceAvailability) {
+        return serviceAvailabilityService.createServiceAvailability(serviceAvailability);
+    }
+
+    // Update Service Availability (Restricted to Vendor Role)
+    @PreAuthorize("hasRole('ROLE_VENDOR')")
+    @PutMapping("/update/{id}")
+    public ServiceAvailability updateServiceAvailability(@PathVariable("id") String serviceAvailabilityId, @RequestBody ServiceAvailability serviceAvailability) {
+        return serviceAvailabilityService.updateServiceAvailability(serviceAvailabilityId, serviceAvailability);
+    }
+
+    // Delete Service Availability (Restricted to Vendor Role)
+    @PreAuthorize("hasRole('ROLE_VENDOR')")
+    @DeleteMapping("/delete/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteServiceAvailability(@PathVariable("id") String serviceAvailabilityId) {
+        serviceAvailabilityService.deleteServiceAvailability(serviceAvailabilityId);
+    }
+
 }

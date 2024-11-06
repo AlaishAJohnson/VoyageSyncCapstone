@@ -1,23 +1,15 @@
 package com.voyagesync.voyagesyncproject.services.bookings;
 
 import com.voyagesync.voyagesyncproject.dto.ServiceResponse;
-import com.voyagesync.voyagesyncproject.models.bookings.Feedback;
+import com.voyagesync.voyagesyncproject.models.bookings.ServiceAvailability;
 import com.voyagesync.voyagesyncproject.models.bookings.Services;
 import com.voyagesync.voyagesyncproject.models.users.Vendors;
-import com.voyagesync.voyagesyncproject.repositories.bookings.ServiceAvailabilityRepository;
 import com.voyagesync.voyagesyncproject.repositories.bookings.ServiceRepository;
-import com.voyagesync.voyagesyncproject.models.bookings.ServiceAvailability;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-
-
 import com.voyagesync.voyagesyncproject.repositories.users.VendorRepository;
-import com.voyagesync.voyagesyncproject.services.users.VendorService;
 import org.bson.types.ObjectId;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
+import org.springframework.web.server.ResponseStatusException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -150,6 +142,51 @@ public class ServicesService {
         return response;
     }
 
+    // vendors creating a service --> linked to serviceController & serviceRepo
+    // ^^^ similar method for updating and deleting a service
+    // all linked to the serviceController and serviceRepo
+    // Create a new service (already restricted to vendors by controller)
+    public Services createService(Services service) {
+        //creating service availability for the new service before saving it
+        serviceAvailabilityService.createAvailabilityForService(service);
+        // save the new service
+        return serviceRepository.save(service);
+    }
 
+    // Updating an existing service
+    public Services updateService(String serviceId, Services service) {
+        ObjectId id = new ObjectId(serviceId);
+        //retrieve the existing service by its ID
+        Optional<Services> existingServiceOptional = serviceRepository.findById(id);
+        if (existingServiceOptional.isEmpty()) {
+            throw new IllegalArgumentException("Service with ID " + serviceId + " not found.");
+        }
+        Services existingService = existingServiceOptional.get();
+
+        // update the necessary fields in the service
+        existingService.setServiceName(service.getServiceName());
+        existingService.setServiceDescription(service.getServiceDescription());
+        existingService.setPrice(service.getPrice());
+        existingService.setLocation(service.getLocation());
+
+        // update the service availability as well
+        serviceAvailabilityService.updateAvailabilityForService(existingService, service);
+
+        // save the updated service
+        return serviceRepository.save(existingService);
+    }
+
+    // Deleting an existing service
+    public void deleteService(String serviceId) {
+        ObjectId id = new ObjectId(serviceId);
+
+        if (!serviceRepository.existsById(id)) {
+            throw new IllegalArgumentException("Service with ID " + serviceId + " not found.");
+        }
+        // handle the deletion of service availability before deleting the service
+        serviceAvailabilityService.deleteAvailabilityForService(id);
+        // delete the service
+        serviceRepository.deleteById(id);
+    }
 
 }
