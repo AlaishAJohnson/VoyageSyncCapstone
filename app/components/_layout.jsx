@@ -14,6 +14,9 @@ const ComponentLayout = () => {
             title: 'User Profile',
             headerBackTitle: 'back'
             }} />
+        {/* <Stack.Screen name='userAuthForm' options={{
+
+        }} */}
     </Stack>
   )
 }
