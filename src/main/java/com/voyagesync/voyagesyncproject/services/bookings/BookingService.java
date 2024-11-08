@@ -30,4 +30,10 @@ public class BookingService {
     public List<Bookings> getByNumberOfParticipants(int numberOfParticipants) {
         return bookingsRepository.findByNumberOfParticipants(numberOfParticipants);
     }
+
+    //Create Booking
+    public Bookings createBooking(Bookings booking) {
+        return bookingsRepository.save(booking);
+    }
+    
 }
