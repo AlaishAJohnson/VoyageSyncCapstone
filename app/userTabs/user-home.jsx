@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 const tripsData = [
   {
@@ -69,6 +70,9 @@ const UserHome = () => {
       />
     );
   };
+  const handleCreateTrip = () => {
+    router.push('/trip/create-trip'); // Adjust path as needed
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -113,6 +117,9 @@ const UserHome = () => {
             </TouchableOpacity>
           )}
         />
+        <TouchableOpacity style={styles.floatingButton} onPress={handleCreateTrip}>
+          <Ionicons name="add" size={28} color="white" />
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -141,13 +148,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   activeTab: {
-    backgroundColor: '#0B7784', // Active tab color
+    backgroundColor: '#0B7784', 
   },
   inactiveTab: {
-    backgroundColor: 'lightgray', // Inactive tab color
+    backgroundColor: 'lightgray', 
   },
   tabText: {
-    color: '#fff', // Text color
+    color: '#fff', 
     fontWeight: 'bold',
   },
   card: {
@@ -155,16 +162,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 16,
-    elevation: 3, // Adds shadow on Android
-    shadowColor: '#000', // Shadow color for iOS
-    shadowOffset: { width: 0, height: 1 }, // Shadow offset for iOS
-    shadowOpacity: 0.2, // Shadow opacity for iOS
-    shadowRadius: 1, // Shadow radius for iOS
+    elevation: 3, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.2, 
+    shadowRadius: 1,
   },
   image: {
     width: '100%',
     height: 150,
-    resizeMode: 'cover', // Ensures the image covers the card properly
+    resizeMode: 'cover', 
   },
   title: {
     fontSize: 18,
@@ -177,6 +184,18 @@ const styles = StyleSheet.create({
     color: '#000',
     paddingHorizontal: 8,
     paddingBottom: 8,
+  },
+  floatingButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#FE9F67',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
   },
 });
 

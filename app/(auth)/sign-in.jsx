@@ -16,45 +16,51 @@ const SignIn = () => {
       Alert.alert('Error', 'Please enter both username/email and password.');
       return;
     }
-
+  
     setLoading(true);
     try {
-      const response = await fetch('https://7514-68-234-200-22.ngrok-free.app/api/users/login', {
+      const response = await fetch('https://1daa-68-234-200-22.ngrok-free.app/api/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ usernameOrEmail: username, password }),
       });
-
+  
       if (!response.ok) {
         const errorResponse = await response.json();
         Alert.alert('Error', errorResponse.message || 'Login failed. Please try again.');
         return;
       }
-
+  
       const user = await response.json();
-
-
+  
+      // Debugging: Check the user data
+      console.log('User Data:', user); // Make sure the role is correctly received
+  
       const userData = {
-        id: user._id, 
+        id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         phoneNumber: user.phoneNumber,
-        role: user.role, 
+        role: user.role,
         verificationStatus: user.verificationStatus,
       };
-
-
-      await AsyncStorage.setItem('userData', JSON.stringify(userData)); 
-
-      // Navigate based on the user's role
+  
+      await AsyncStorage.setItem('userData', JSON.stringify(userData));
+  
+      // Debugging: Check the saved data
+      const savedData = await AsyncStorage.getItem('userData');
+      console.log('Saved User Data:', savedData); // Ensure the data is saved correctly
+  
+      // Redirect based on the user role
       if (user.role === 'admin') {
-        router.push('/adminTabs'); // Navigate to Admin tabs
+        router.push('/adminTabs');
       } else {
-        router.push('/userTabs'); // Navigate to User tabs
+        router.push('/userTabs');
       }
+  
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'An unexpected error occurred. Please try again later.');
@@ -62,6 +68,7 @@ const SignIn = () => {
       setLoading(false);
     }
   };
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -78,6 +85,7 @@ const SignIn = () => {
             onChangeText={setUsername}
             placeholder="Username or Email Address"
             placeholderTextColor="#fff"
+            autoCapitalize='none'
           />
         </View>
 

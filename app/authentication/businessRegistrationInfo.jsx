@@ -8,7 +8,7 @@ import CustomButton from '../../constants/CustomButton'
 import image from '../../assets/DecoImage.png'
 
 
-const VendorAuthForm = () => {
+const BusinessRegistrationInfo = () => {
     const navigation = useNavigation();
     const router = useRouter();
 
@@ -16,57 +16,58 @@ const VendorAuthForm = () => {
         navigation.setOptions({headerShown: false})
     })    // Authentication Functions & States
 
-    const [businessName, setBusinessName] = useState('')
-    const [businessEmail, setBusinessEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [confirmPassword, setConfirmPassword] = useState('')
+    const [businessType, setBusinessType] = useState('')
+    const [industry, setIndustry] = useState('')
+    const [businessAddress, setBusinessAddress] = useState('')
+    const [countryOfOrigin, setCountryOfOrigin] = useState('')
+    const [phoneNumber, setPhoneNumber] = useState('')
+    const [registrationNumber, setRegistrationNumber] = useState('')
 
     // Placeholder functions
-
-    const checkIfEmailExists = (businessEmail) => {
+    const checkIfRegistrationNumberExists = (registrationNumber) => {
         // replace with API call 
         return false; // remove once api call i
     } 
 
+    const checkIfPhoneNumberExists = (phoneNumber) => {
+        // replace with API call 
+        return false; // remove once api call i
+    } 
 
     const handleSubmit = () => {
-        if(!businessName ||  !businessEmail || !password || !confirmPassword){
+        if(!businessType ||  !industry || !businessAddress || !countryOfOrigin || !phoneNumber || !registrationNumber){
             Alert.alert("Error", "Please fill out all fields.")
             return;
         }
 
-        if(checkIfEmailExists(businessEmail)) {
-            Alert.alert("Error", "This email is registered to another account. Try Login or use another email.")
+        if(checkIfPhoneNumberExists(phoneNumber)) {
+            Alert.alert("Error", "This phone number is registered to another account. Try Login or use another phone number.")
             return;
         }
-        if(password !== confirmPassword) {
-            Alert.alert("Error", "Passwords do not match.")
-            return;
+        if(checkIfRegistrationNumberExists(registrationNumber)) {
+            Alert.alert("Error", "This registration number is registered to another account.")
         }
+        
 
 
-        router.push('/authentication/businessRegistrationInfo')
-
+        router.push('/authentication/businessRepresentativeInfo')
+       
     }
 
   return (
     <SafeAreaView style={styles.container}>
         <Image source={image} style={styles.topLeftImage}/>
-        <Text style={styles.header}>Create Your Business Account</Text>
+        <Text style={styles.header}>Your Business Information</Text>
 
-        <View style={styles.imageUploadContainer}>
-            <TouchableOpacity style={styles.imageContainer}><MaterialIcons name='add-a-photo' size={40} color='white'/></TouchableOpacity>
-        </View>
-        
         <View style={styles.formContainer}>
-          <TextInput style={styles.input} placeholder='Business Name' placeholderTextColor='white' value={businessName} onChangeText={setBusinessName}/>
-          <TextInput style={styles.input} placeholder='Business Email' placeholderTextColor='white'  value={businessEmail} onChangeText={setBusinessEmail}/>
 
-
-          
-           <TextInput style={styles.input} placeholder='Password' placeholderTextColor='white' value={password} onChangeText={setPassword} secureTextEntry/>
-           <TextInput style={styles.input} placeholder='Confirm your Password' placeholderTextColor='white'  value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry/> 
-
+            <TextInput style={styles.input} placeholder='Business Registration Number' placeholderTextColor='white'  value={registrationNumber} onChangeText={setRegistrationNumber} /> 
+            <TextInput style={styles.input} placeholder='Business Type' placeholderTextColor='white' value={businessType} onChangeText={setBusinessType}/>
+            <TextInput style={styles.input} placeholder='Industry' placeholderTextColor='white' value={industry} onChangeText={setIndustry}/>
+            <TextInput style={styles.input} placeholder='Business Phone Number' placeholderTextColor='white' value={phoneNumber} onChangeText={setPhoneNumber} />
+            <TextInput style={styles.input} placeholder='Business Address' placeholderTextColor='white'  value={businessAddress} onChangeText={setBusinessAddress}/>
+            <TextInput style={styles.input} placeholder='Country of Origin' placeholderTextColor='white' value={countryOfOrigin} onChangeText={setCountryOfOrigin}/>
+        
            
 
         </View>
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
     input: {
         padding: 15,
         height: 60,
-        backgroundColor: 'rgba(11, 119, 132, 0.5)', // MainColor with 0.5 opacity
+        backgroundColor: 'rgba(11, 119, 132, 0.5)', 
         borderRadius: 20,
         color: '#fff',
         marginBottom: 20,
@@ -142,4 +143,4 @@ const styles = StyleSheet.create({
 
 })
 
-export default VendorAuthForm;
+export default BusinessRegistrationInfo;

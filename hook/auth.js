@@ -1,30 +1,96 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Create the Auth context
 const AuthContext = createContext();
 
-// Custom hook to use the Auth context
-export const useAuth = () => {
-  return useContext(AuthContext);
+export const useAuth = () => useContext(AuthContext);
+
+const saveUserData = async (userData) => {
+  try {
+    await AsyncStorage.setItem('@user_data', JSON.stringify(userData));
+  } catch (error) {
+    console.error('Failed to save user data:', error);
+  }
 };
 
-// Auth provider component
-export const AuthProvider = ({ children }) => {
-  const [userRole, setUserRole] = useState(null); // State to manage user role
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // State for authentication status
+const getUserData = async () => {
+  try {
+    const userData = await AsyncStorage.getItem('@user_data');
+    return userData ? JSON.parse(userData) : null;
+  } catch (error) {
+    console.error('Failed to load user data:', error);
+  }
+};
 
-  const login = (role) => {
-    setUserRole(role);
-    setIsAuthenticated(true);
+export const AuthProvider = ({ children }) => {
+  const [userData, setUserData] = useState({
+    name: '',
+  });
+  const [userRole, setUserRole] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(null); 
+  const [loading, setLoading] = useState(true);  
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      const savedUserData = await getUserData();
+      if (savedUserData) {
+        setUserData(savedUserData);
+        setUserRole(savedUserData.role); 
+        setIsAuthenticated(true);
+        console.log('Loaded user data from AsyncStorage:', savedUserData);
+      }
+      setLoading(false); 
+    };
+    loadUserData();
+  }, []);
+
+ 
+  if (loading) {
+    return null;  
+  }
+
+  const updateUserData = (newData) => {
+    setUserData((prevData) => ({
+      ...prevData,
+      ...newData,
+    }));
   };
 
-  const logout = () => {
-    setUserRole(null);
+  const login = async (userData) => {
+    await saveUserData(userData); 
+    setUserData(userData);         
+    setUserRole(userData.role);    
+    setIsAuthenticated(true);     
+  };
+
+  const logout = async () => {
+    await AsyncStorage.removeItem('@user_data');
+    setUserData(null);
     setIsAuthenticated(false);
   };
 
+  const createUser = async (userData) => {
+    await saveUserData(userData);
+  
+    setUserData(userData);
+    setUserRole(userData.role); 
+    setIsAuthenticated(true);  
+    console.log('User created and authenticated:', userData);
+  };
+  
+
   return (
-    <AuthContext.Provider value={{ userRole, isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        userData,
+        userRole,
+        isAuthenticated,
+        updateUserData,
+        login,           
+        logout,
+        createUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

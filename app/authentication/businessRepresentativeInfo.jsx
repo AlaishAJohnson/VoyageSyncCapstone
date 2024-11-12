@@ -8,7 +8,7 @@ import CustomButton from '../../constants/CustomButton'
 import image from '../../assets/DecoImage.png'
 
 
-const VendorAuthForm = () => {
+const BusinessRepresentativeInfo = () => {
     const navigation = useNavigation();
     const router = useRouter();
 
@@ -16,27 +16,44 @@ const VendorAuthForm = () => {
         navigation.setOptions({headerShown: false})
     })    // Authentication Functions & States
 
-    const [businessName, setBusinessName] = useState('')
-    const [businessEmail, setBusinessEmail] = useState('')
+    const [firstName, setFirstName] = useState('')
+    const [lastName, setLastName] = useState('')
+    const [username, setUsername] = useState('')
+    const [email, setEmail] = useState('')
+    const [phoneNumber, setPhoneNumber] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
 
     // Placeholder functions
-
-    const checkIfEmailExists = (businessEmail) => {
+    const checkIfUsernameExists = (username) => {
+        // replace with API call 
+        return false; // remove once api call i
+    } 
+    const checkIfEmailExists = (email) => {
+        // replace with API call 
+        return false; // remove once api call i
+    } 
+    const checkIfPhoneNumberExists = (phoneNumber) => {
         // replace with API call 
         return false; // remove once api call i
     } 
 
-
     const handleSubmit = () => {
-        if(!businessName ||  !businessEmail || !password || !confirmPassword){
+        if(!firstName || !lastName || !username || !email || !phoneNumber || !password || !confirmPassword){
             Alert.alert("Error", "Please fill out all fields.")
             return;
         }
 
-        if(checkIfEmailExists(businessEmail)) {
+        if(checkIfEmailExists(email)) {
             Alert.alert("Error", "This email is registered to another account. Try Login or use another email.")
+            return;
+        }
+        if(checkIfUsernameExists(username)){
+            Alert.alert("Error", "Username is taken!")
+            return;
+        }
+        if(checkIfPhoneNumberExists(phoneNumber)){
+            Alert.alert("Error", "This phone number is registered to another account. Try Login or use another phone number.")
             return;
         }
         if(password !== confirmPassword) {
@@ -45,27 +62,30 @@ const VendorAuthForm = () => {
         }
 
 
-        router.push('/authentication/businessRegistrationInfo')
+        router.push('/vendorTabs')
 
     }
 
   return (
     <SafeAreaView style={styles.container}>
         <Image source={image} style={styles.topLeftImage}/>
-        <Text style={styles.header}>Create Your Business Account</Text>
+        <Text style={styles.header}>Create Your Representative</Text>
 
         <View style={styles.imageUploadContainer}>
             <TouchableOpacity style={styles.imageContainer}><MaterialIcons name='add-a-photo' size={40} color='white'/></TouchableOpacity>
         </View>
         
         <View style={styles.formContainer}>
-          <TextInput style={styles.input} placeholder='Business Name' placeholderTextColor='white' value={businessName} onChangeText={setBusinessName}/>
-          <TextInput style={styles.input} placeholder='Business Email' placeholderTextColor='white'  value={businessEmail} onChangeText={setBusinessEmail}/>
+           <View style={styles.inputRow}>
+            <TextInput style={[styles.input, styles.halfWidthInput]} placeholder='First Name' placeholderTextColor='white' value={firstName} onChangeText={setFirstName}/>
+            <TextInput style={[styles.input, styles.halfWidthInput]} placeholder='Last Name' placeholderTextColor='white'  value={lastName} onChangeText={setLastName}/>
+           </View>
 
-
-          
+           <TextInput style={styles.input} placeholder='Phone Number' placeholderTextColor='white'  value={phoneNumber} onChangeText={setPhoneNumber}/>
+           <TextInput style={styles.input} placeholder='Username' placeholderTextColor='white'  value={username} onChangeText={setUsername}/>
+           <TextInput style={styles.input} placeholder='Email' placeholderTextColor='white'  value={email} onChangeText={setEmail}/>
            <TextInput style={styles.input} placeholder='Password' placeholderTextColor='white' value={password} onChangeText={setPassword} secureTextEntry/>
-           <TextInput style={styles.input} placeholder='Confirm your Password' placeholderTextColor='white'  value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry/> 
+           <TextInput style={styles.input} placeholder='Confirm your Password' placeholderTextColor='white'  value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry/>
 
            
 
@@ -142,4 +162,4 @@ const styles = StyleSheet.create({
 
 })
 
-export default VendorAuthForm;
+export default BusinessRepresentativeInfo;
