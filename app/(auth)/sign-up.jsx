@@ -1,42 +1,46 @@
-import { StyleSheet, Text, View, Image, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, Image } from 'react-native';
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-
 import CustomButton from '../../constants/CustomButton';
 import logo from '../../assets/logo.png';
-
 
 const SignUp = () => {
   const router = useRouter();
 
   const renderAccountTypeButtons = () => (
     <View>
-      <CustomButton title='User Account' onPress={() => router.push('/authentication/userAuthForm')} />
+      <CustomButton 
+        title="User Account" 
+        onPress={() => {
+          router.push('/authentication/userAuthForm');
+        }} 
+      />
       <View style={styles.orContainer}>
-        <View style={styles.line} /> 
+        <View style={styles.line} />
         <Text style={styles.orText}>or</Text>
         <View style={styles.line} />
       </View>
-      <CustomButton title='Vendor Account' onPress={() => router.push('/authentication/vendorAuthForm')} />
+      <CustomButton 
+        title="Vendor Account" 
+        onPress={() => {
+          router.push('/authentication/vendorAuthForm');
+        }} 
+      />
     </View>
   );
 
-  //app/authentication/userAuthForm.jsx
   return (
     <SafeAreaView style={styles.container}>
-      {/* <ScrollView contentContainerStyle={styles.scrollContainer}> */}
-        <View style={styles.imageContainer}>
-          <Image source={logo} style={styles.logo} />
-        </View>
-        <View style={styles.textContainer}>
-          <Text style={styles.heading}>Choose Your Account Type!</Text>
-
-        </View>
-        <View style={styles.buttonsContainer}>
-          {renderAccountTypeButtons()}
-        </View>
-      {/* </ScrollView> */}
+      <View style={styles.imageContainer}>
+        <Image source={logo} style={styles.logo} />
+      </View>
+      <View style={styles.textContainer}>
+        <Text style={styles.heading}>Choose Your Account Type!</Text>
+      </View>
+      <View style={styles.buttonsContainer}>
+        {renderAccountTypeButtons()}
+      </View>
     </SafeAreaView>
   );
 };
@@ -48,12 +52,6 @@ const styles = StyleSheet.create({
     flex: 1, 
     alignItems: 'center',
     justifyContent: 'center'
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center', 
-    alignItems: 'center',
-    height: '100%',     
   },
   orContainer: {
     flexDirection: 'row',

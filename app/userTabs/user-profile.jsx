@@ -1,16 +1,17 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../../hook/auth'; 
 
 const Profile = () => {
   const router = useRouter();
+  const { logout } = useAuth(); 
 
   const handleSignOut = () => {
-   
+    logout();  
     console.log("User signed out");
-    router.push('/'); 
+    router.push('/');  
   };
-
 
   return (
     <View style={styles.container}>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Image, StyleSheet, View, Text, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router'; 
 import { useAuth } from '../hook/auth'; 
@@ -7,11 +7,29 @@ import CustomButton from '../constants/CustomButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
+  const { userData, isAuthenticated, logout } = useAuth(); 
   const router = useRouter();
-  const { authState } = useAuth(); // Access the authentication state
 
-  // Log authState for debugging
-  console.log('Auth State:', authState);
+  useEffect(() => {
+    console.log('User Data:', userData);
+    console.log('Authenticated:', isAuthenticated);
+
+    // Check if user is authenticated and userData exists
+    if (isAuthenticated && userData) {
+      // Use setTimeout with a small delay to ensure the layout is mounted
+      const timer = setTimeout(() => {
+        if (userData.role === 'admin') {
+          router.push('/adminTabs');  
+        } else if (userData.role === 'user') {
+          router.push('/userTabs');
+        }
+      }, 500); // 500 ms delay to ensure the layout has mounted
+
+      // Clean up timer when component unmounts
+      return () => clearTimeout(timer);
+    }
+  }, [userData, isAuthenticated, router]);
+
   const renderAuthButtons = () => (
     <>
       <CustomButton title="Login" onPress={() => router.push('/sign-in')} />
@@ -24,22 +42,19 @@ export default function HomeScreen() {
     </>
   );
 
-  const renderWelcomeMessage = () => (
-    <Text style={styles.welcomeText}>Welcome back, {authState.username}!</Text>
-  );
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.imageContainer}>
           <Image source={logo} style={styles.logo} />
         </View>
+
         <View style={styles.textContainer}>
           <Text style={styles.heading}>Let's Start Your Journey!</Text>
         </View>
 
         <View style={styles.buttonsContainer}>
-          {authState?.authenticated ? renderWelcomeMessage() : renderAuthButtons()}
+          {renderAuthButtons()}
         </View>
       </ScrollView>
     </SafeAreaView>

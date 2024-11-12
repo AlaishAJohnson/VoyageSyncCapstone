@@ -4,11 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter, useNavigation } from 'expo-router'
 import { MaterialIcons } from '@expo/vector-icons'
 import CustomButton from '../../constants/CustomButton'
+import { useAuth } from '../../hook/auth'
 
 import image from '../../assets/DecoImage.png'
 
 
 const UserAuthForm = () => {
+    const { updateUserData } = useAuth();
     const navigation = useNavigation();
     const router = useRouter();
 
@@ -24,48 +26,38 @@ const UserAuthForm = () => {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
 
-    // Placeholder functions
-    const checkIfUsernameExists = (username) => {
-        // replace with API call 
-        return false; // remove once api call i
-    } 
-    const checkIfEmailExists = (email) => {
-        // replace with API call 
-        return false; // remove once api call i
-    } 
-    const checkIfPhoneNumberExists = (phoneNumber) => {
-        // replace with API call 
-        return false; // remove once api call i
-    } 
+    
 
-    const handleSubmit = () => {
-        if(!firstName || !lastName || !username || !email || !phoneNumber || !password || !confirmPassword){
-            Alert.alert("Error", "Please fill out all fields.")
-            return;
-        }
-
-        if(checkIfEmailExists(email)) {
-            Alert.alert("Error", "This email is registered to another account. Try Login or use another email.")
-            return;
-        }
-        if(checkIfUsernameExists(username)){
-            Alert.alert("Error", "Username is taken!")
-            return;
-        }
-        if(checkIfPhoneNumberExists(phoneNumber)){
-            Alert.alert("Error", "This phone number is registered to another account. Try Login or use another phone number.")
-            return;
-        }
-        if(password !== confirmPassword) {
-            Alert.alert("Error", "Passwords do not match.")
-            return;
-        }
-
-
-        router.push('/authentication/travelPreferences')
-        // app/authentication/travelPreferences.jsx
-
+    // UserAuthForm
+const handleSubmit = async () => {
+    if (!firstName || !lastName || !username || !email || !phoneNumber || !password || !confirmPassword) {
+      Alert.alert("Error", "Please fill out all fields.");
+      return;
     }
+  
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
+      return;
+    }
+  
+    try {
+      await updateUserData({
+        firstName,
+        lastName,
+        username,
+        role:  'user',
+        email,
+        phoneNumber,
+        password
+      });
+      router.push('/authentication/travelPreferences');
+    } catch (error) {
+      Alert.alert("Error", "Error updating user data.");
+      console.error(error);
+    }
+  };
+  
+      
 
   return (
     <SafeAreaView style={styles.container}>
@@ -82,15 +74,16 @@ const UserAuthForm = () => {
             <TextInput style={[styles.input, styles.halfWidthInput]} placeholder='Last Name' placeholderTextColor='white'  value={lastName} onChangeText={setLastName}/>
            </View>
 
-           <TextInput style={styles.input} placeholder='PhoneNumber' placeholderTextColor='white'  value={phoneNumber} onChangeText={setPhoneNumber}/>
-           <TextInput style={styles.input} placeholder='Username' placeholderTextColor='white'  value={username} onChangeText={setUsername}/>
+           <TextInput style={styles.input} placeholder='Phone Number' placeholderTextColor='white'  value={phoneNumber} onChangeText={setPhoneNumber}/>
+           <TextInput style={styles.input} placeholder='Username' placeholderTextColor='white'  value={username} onChangeText={setUsername} autoCapitalize="none"/>
            <TextInput style={styles.input} placeholder='Email' placeholderTextColor='white'  value={email} onChangeText={setEmail}/>
            <TextInput style={styles.input} placeholder='Password' placeholderTextColor='white' value={password} onChangeText={setPassword} secureTextEntry/>
            <TextInput style={styles.input} placeholder='Confirm your Password' placeholderTextColor='white'  value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry/>
 
-           <CustomButton title='Continue' onPress={(handleSubmit)}/>
+           
 
         </View>
+        <CustomButton title='Continue' onPress={handleSubmit}/>
     </SafeAreaView>
   )
 }
@@ -148,6 +141,7 @@ const styles = StyleSheet.create({
         color: '#fff',
         marginBottom: 20,
         textAlign: 'center',
+        fontSize: 20
     },
     halfWidthInput: {
         width: '48%', 
