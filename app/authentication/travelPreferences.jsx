@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import CustomButton from '../../constants/CustomButton';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../hook/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TravelPreferences = () => {
   const router = useRouter();
@@ -10,22 +11,25 @@ const TravelPreferences = () => {
   const [foodPreferences, setFoodPreferences] = useState([]);
   const [weatherPreferences, setWeatherPreferences] = useState([]);
   const [activityPreferences, setActivityPreferences] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Fetch travel preferences from the 'Travel-Preference' collection when the user data is available
   useEffect(() => {
     const fetchTravelPreferences = async () => {
       if (userData && userData.travelPreferences) {
         try {
-          const response = await fetch(`https://1379-24-163-58-200.ngrok-free.app/api/travel-preferences/${userData.travelPreferences.$oid}`);
+          setLoading(true);
+          const response = await fetch(`https://1daa-68-234-200-22.ngrok-free.app/api/travel-preferences/${userData.travelPreferences.$oid}`);
           const travelPrefs = await response.json();
           if (travelPrefs) {
-            // Set the preferences in state
             setFoodPreferences(travelPrefs.food || []);
             setWeatherPreferences(travelPrefs.weather || []);
             setActivityPreferences(travelPrefs.activities || []);
           }
         } catch (error) {
           console.error('Error fetching travel preferences:', error);
+          Alert.alert('Error', 'There was an issue fetching preferences.');
+        } finally {
+          setLoading(false); 
         }
       }
     };
@@ -33,46 +37,31 @@ const TravelPreferences = () => {
     if (userData && userData.travelPreferences) {
       fetchTravelPreferences();
     }
-  }, [userData]); // This will only run when userData changes
-
-  // Ensure the updateUserData function is only called if preferences have changed
-  useEffect(() => {
-    if (
-      foodPreferences.length !== (userData?.foodPreferences || []).length ||
-      weatherPreferences.length !== (userData?.weatherPreferences || []).length ||
-      activityPreferences.length !== (userData?.activityPreferences || []).length
-    ) {
-      updateUserData({
-        foodPreferences,
-        weatherPreferences,
-        activityPreferences,
-      });
-    }
-  }, [foodPreferences, weatherPreferences, activityPreferences, userData, updateUserData]);
+  }, [userData]);
 
   const toggleSelection = (category, item) => {
-    if (category === 'food') {
-      setFoodPreferences((prevState) => {
-        const isSelected = prevState.includes(item);
-        return isSelected
-          ? prevState.filter((i) => i !== item)
-          : [...prevState, item];
-      });
-    } else if (category === 'weather') {
-      setWeatherPreferences((prevState) => {
-        const isSelected = prevState.includes(item);
-        return isSelected
-          ? prevState.filter((i) => i !== item)
-          : [...prevState, item];
-      });
-    } else if (category === 'activities') {
-      setActivityPreferences((prevState) => {
-        const isSelected = prevState.includes(item);
-        return isSelected
-          ? prevState.filter((i) => i !== item)
-          : [...prevState, item];
-      });
-    }
+    const updatePreferences = (category, item) => {
+      switch (category) {
+        case 'food':
+          setFoodPreferences(prevState => toggleItem(prevState, item));
+          break;
+        case 'weather':
+          setWeatherPreferences(prevState => toggleItem(prevState, item));
+          break;
+        case 'activities':
+          setActivityPreferences(prevState => toggleItem(prevState, item));
+          break;
+        default:
+          break;
+      }
+    };
+
+    const toggleItem = (prevState, item) => {
+      const isSelected = prevState.includes(item);
+      return isSelected ? prevState.filter(i => i !== item) : [...prevState, item];
+    };
+
+    updatePreferences(category, item);
   };
 
   const renderBrickPatternSuggestions = (category, items) => {
@@ -89,11 +78,7 @@ const TravelPreferences = () => {
                 key={index}
                 style={[
                   styles.suggestionItem,
-                  (category === 'food' && foodPreferences.includes(item)) ||
-                  (category === 'weather' && weatherPreferences.includes(item)) ||
-                  (category === 'activities' && activityPreferences.includes(item))
-                    ? styles.selectedItem
-                    : {}
+                  isSelected(category, item) && styles.selectedItem
                 ]}
                 onPress={() => toggleSelection(category, item)}
               >
@@ -109,11 +94,7 @@ const TravelPreferences = () => {
                 key={index}
                 style={[
                   styles.suggestionItem,
-                  (category === 'food' && foodPreferences.includes(item)) ||
-                  (category === 'weather' && weatherPreferences.includes(item)) ||
-                  (category === 'activities' && activityPreferences.includes(item))
-                    ? styles.selectedItem
-                    : {}
+                  isSelected(category, item) && styles.selectedItem
                 ]}
                 onPress={() => toggleSelection(category, item)}
               >
@@ -126,33 +107,82 @@ const TravelPreferences = () => {
     );
   };
 
-  const handleSavePreferences = async () => {
-    const updatedUserData = {
-      ...userData,
-      foodPreferences,
-      weatherPreferences,
-      activityPreferences,
-    };
+  const isSelected = (category, item) => {
+    return (
+      (category === 'food' && foodPreferences.includes(item)) ||
+      (category === 'weather' && weatherPreferences.includes(item)) ||
+      (category === 'activities' && activityPreferences.includes(item))
+    );
+  };
 
+  const handleSavePreferences = async () => {
+    const userId = await AsyncStorage.getItem('userId');
+    console.log("Retrieved userId:", userId);
+  
+    const travelPreferences = {
+      food: foodPreferences,
+      weather: weatherPreferences,
+      activities: activityPreferences,
+    };
+  
     try {
-      await createUser(updatedUserData);
-      const response = await fetch('https://1daa-68-234-200-22.ngrok-free.app/api/users/create', {
-        method: 'POST',  
+      setLoading(true); // Show loading indicator while saving preferences
+      const response = await fetch('https://1daa-68-234-200-22.ngrok-free.app/api/travel-preferences/create', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + btoa('user:a70c2ddd-2bd2-42c7-afac-64b868255b63'),
         },
-        body: JSON.stringify(updatedUserData),
+        body: JSON.stringify(travelPreferences),
       });
   
+      // Check if the response is OK (status code 200-299)
       if (!response.ok) {
-        throw new Error('Failed to save preferences');
+        throw new Error(`Failed to save preferences. Status: ${response.status}`);
       }
-      router.push('/userTabs');
+  
+      const preferencesData = await response.json(); // Directly parse JSON response
+      console.log("Parsed Preferences Data:", preferencesData);
+  
+      // Extract the preferenceId from the response
+      const preferenceId = preferencesData.preferenceId;
+  
+      // Link preferences to the user
+      const linkResponse = await fetch(`https://1daa-68-234-200-22.ngrok-free.app/api/users/${userId}/linkPreferences/${preferenceId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Basic ' + btoa('user:a70c2ddd-2bd2-42c7-afac-64b868255b63'),
+        },
+      });
+  
+      if (!linkResponse.ok) {
+        const errorData = await linkResponse.json();
+        throw new Error(`Failed to link preferences to user: ${errorData.message || 'Unknown error'}`);
+      }
+  
+      // Update userData with the linked travel preferences
+      const updatedUser = {
+        ...userData,
+        travelPreferences: preferencesData,
+      };
+  
+      updateUserData(updatedUser);
+  
+      // Delay navigation until after state update is complete
+      setTimeout(() => {
+        router.push('/userTabs');
+      }, 500);  // Delay by 500ms
+  
     } catch (error) {
-      console.error('Error creating user:', error);
-      Alert.alert('Error', 'Failed to create user. Please try again.');
+      console.error('Error:', error);
+      Alert.alert('Error', 'Failed to save or link preferences. Please try again.');
+    } finally {
+      setLoading(false); // Hide loading indicator after saving
     }
   };
+  
+  
+  
 
   return (
     <View style={styles.container}>
@@ -165,7 +195,9 @@ const TravelPreferences = () => {
       <Text style={styles.header}>Activities</Text>
       {renderBrickPatternSuggestions('activities', ['Hiking', 'Beach', 'Skiing', 'City Tours', 'Museums', 'Shopping'])}
 
-      <CustomButton title="Create Account" onPress={handleSavePreferences} />
+      <CustomButton title="Save Preferences" onPress={handleSavePreferences} />
+
+      {loading && <ActivityIndicator size="large" color="#0B7784" />}
     </View>
   );
 };
@@ -180,7 +212,7 @@ const styles = StyleSheet.create({
     fontSize: 25,
     fontWeight: 'bold',
     color: '#0B7784',
-    marginBottom: 0,
+    marginBottom: 10,
     alignSelf: 'flex-start',
   },
   brickContainer: {

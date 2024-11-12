@@ -50,10 +50,8 @@ const CreateTrip = () => {
   );
   const handleToggleFriend = (friend) => {
     if (invitedFriends.some(f => f.id === friend.id)) {
-      // Remove friend if already selected
       setInvitedFriends(invitedFriends.filter(f => f.id !== friend.id));
     } else {
-      // Add friend if not already selected
       setInvitedFriends([...invitedFriends, friend]);
     }
   };

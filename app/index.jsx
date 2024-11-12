@@ -14,18 +14,17 @@ export default function HomeScreen() {
     console.log('User Data:', userData);
     console.log('Authenticated:', isAuthenticated);
 
-    // Check if user is authenticated and userData exists
+    
     if (isAuthenticated && userData) {
-      // Use setTimeout with a small delay to ensure the layout is mounted
+      
       const timer = setTimeout(() => {
         if (userData.role === 'admin') {
           router.push('/adminTabs');  
         } else if (userData.role === 'user') {
           router.push('/userTabs');
         }
-      }, 500); // 500 ms delay to ensure the layout has mounted
+      }, 500); 
 
-      // Clean up timer when component unmounts
       return () => clearTimeout(timer);
     }
   }, [userData, isAuthenticated, router]);

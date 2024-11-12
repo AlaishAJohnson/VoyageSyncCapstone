@@ -23,11 +23,9 @@ const getUserData = async () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [userData, setUserData] = useState({
-    name: '',
-  });
+  const [userData, setUserData] = useState(null);  
   const [userRole, setUserRole] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(null); 
+  const [isAuthenticated, setIsAuthenticated] = useState(false); 
   const [loading, setLoading] = useState(true);  
 
   useEffect(() => {
@@ -35,19 +33,16 @@ export const AuthProvider = ({ children }) => {
       const savedUserData = await getUserData();
       if (savedUserData) {
         setUserData(savedUserData);
-        setUserRole(savedUserData.role); 
+        setUserRole(savedUserData.role);
         setIsAuthenticated(true);
         console.log('Loaded user data from AsyncStorage:', savedUserData);
       }
-      setLoading(false); 
+      setLoading(false);  
     };
     loadUserData();
   }, []);
 
- 
-  if (loading) {
-    return null;  
-  }
+  
 
   const updateUserData = (newData) => {
     setUserData((prevData) => ({
@@ -57,27 +52,39 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (userData) => {
-    await saveUserData(userData); 
-    setUserData(userData);         
-    setUserRole(userData.role);    
-    setIsAuthenticated(true);     
+    try {
+      await saveUserData(userData); 
+      setUserData(userData);         
+      setUserRole(userData.role);    
+      setIsAuthenticated(true);     
+    } catch (error) {
+      console.error('Login failed:', error);
+      // Optionally, add user feedback here
+    }
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem('@user_data');
-    setUserData(null);
-    setIsAuthenticated(false);
+    try {
+      await AsyncStorage.removeItem('@user_data');
+      setUserData(null);
+      setUserRole(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   const createUser = async (userData) => {
-    await saveUserData(userData);
-  
-    setUserData(userData);
-    setUserRole(userData.role); 
-    setIsAuthenticated(true);  
-    console.log('User created and authenticated:', userData);
+    try {
+      await saveUserData(userData);
+      setUserData(userData);
+      setUserRole(userData.role); 
+      setIsAuthenticated(true);  
+      console.log('User created and authenticated:', userData);
+    } catch (error) {
+      console.error('User creation failed:', error);
+    }
   };
-  
 
   return (
     <AuthContext.Provider
