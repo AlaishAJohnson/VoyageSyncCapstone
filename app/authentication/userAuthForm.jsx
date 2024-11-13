@@ -54,7 +54,7 @@ const UserAuthForm = () => {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': 'Basic ' + btoa('user:a70c2ddd-2bd2-42c7-afac-64b868255b63')
+                  'Authorization': 'Basic ' + btoa('user:2054e07b-c906-4c41-8444-011e2cb7448f')
               },
               body: JSON.stringify(userData),
           });

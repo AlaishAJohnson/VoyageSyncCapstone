@@ -1,61 +1,94 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-
-const tripsData = [
-  {
-    _id: '6709890d60b3494e29ed5563',
-    tripName: 'Bahamas',
-    destination: 'The Bahamas',
-    startDate: '2024-12-04T05:00:00.000+00:00',
-    endDate: '2024-12-08T05:00:00.000+00:00',
-    imageUrl: 'https://tempo.cdn.tambourine.com/windsong/media/windsong-gallery-12-5fb43a016cb8b.jpg',
-    organizerId: 'user1',
-  },
-  {
-    _id: '6709890d60b3494e29ed5564',
-    tripName: 'Paris Getaway',
-    destination: 'Paris, France',
-    startDate: '2024-11-01T05:00:00.000+00:00',
-    endDate: '2024-11-07T05:00:00.000+00:00',
-    imageUrl: 'https://t4.ftcdn.net/jpg/02/96/15/35/360_F_296153501_B34baBHDkFXbl5RmzxpiOumF4LHGCvAE.jpg',
-    organizerId: 'user2',
-  },
-  {
-    _id: '6709890d60b3494e29ed5565',
-    tripName: 'Mountain Hiking',
-    destination: 'Swiss Alps',
-    startDate: '2024-12-15T05:00:00.000+00:00',
-    endDate: '2024-12-20T05:00:00.000+00:00',
-    imageUrl: 'https://example.com/mountain.jpg',
-    organizerId: 'user1',
-  },
-  {
-    _id: '6709890d60b3494e29ed5566',
-    tripName: 'Beach Retreat',
-    destination: 'Maldives',
-    startDate: '2024-11-15T05:00:00.000+00:00',
-    endDate: '2024-11-22T05:00:00.000+00:00',
-    imageUrl: 'https://example.com/maldives.jpg',
-    organizerId: 'user3',
-  },
-];
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserHome = () => {
   const [selectedTab, setSelectedTab] = useState('all');
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [userId, setUserId] = useState(null);  // State to store userId
   const router = useRouter();
-  const userId = 'user1'; 
-  const filteredTrips = tripsData.filter(trip => {
-    if (selectedTab === 'participating') {
-      return trip.organizerId !== userId;
+
+  // Function to fetch user data and userId from AsyncStorage
+  const getUserData = async () => {
+    const userData = await AsyncStorage.getItem('userData');
+    if (userData) {
+      const user = JSON.parse(userData);
+      console.log(user);  // Use the user data here
     }
-    if (selectedTab === 'organizing') {
-      return trip.organizerId === userId;
+  };
+
+  const getUserId = async () => {
+    const storedUserId = await AsyncStorage.getItem('userId');
+    console.log(storedUserId);  // Use the user ID here
+    if (storedUserId) {
+      setUserId(storedUserId);  // Store userId in state
     }
-    return true; // For 'all' tab
-  });
+  };
+
+  // Fetch trips based on the selected tab
+  const fetchTrips = async (tab) => {
+    if (!userId) {
+      console.error('User ID is not available');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      let url = '';
+      const userId = await AsyncStorage.getItem('userId');
+      const authHeader = 'Basic ' + btoa('user:2054e07b-c906-4c41-8444-011e2cb7448f'); 
+      // Determine the URL based on the selected tab
+      if (tab === 'all') {
+        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/organizer-member/${userId}`; // All trips where the user is a member
+      } else if (tab === 'organizing') {
+        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/organizer/${userId}`; // Trips where the user is the organizer
+      } else if (tab === 'participating') {
+        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/member/${userId}`; // Trips where the user is a member, but not the organizer
+      }
+
+      // Make the request to the backend
+      const response = await axios.get(url, {
+        headers: {
+          'Authorization': authHeader,
+        },
+      });
+  
+      const tripsData = response.data;
+
+      // Filter trips if necessary based on the tab
+      if (tab === 'participating') {
+        setTrips(tripsData.filter(trip => trip.organizerId !== userId)); // Exclude trips where the user is the organizer
+      } else {
+        setTrips(tripsData);
+      }
+    } catch (err) {
+      setError('Failed to fetch trips');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch user data and userId on component mount
+  useEffect(() => {
+    getUserData();
+    getUserId();  // Fetch the userId and update state
+  }, []);
+
+  // Fetch trips whenever the selected tab changes
+  useEffect(() => {
+    if (userId) {
+      fetchTrips(selectedTab);
+    }
+  }, [selectedTab, userId]);
 
   const onTripPress = (trip) => {
     router.push({ pathname: '/trip/trip-details', params: { tripId: trip._id } });
@@ -70,9 +103,30 @@ const UserHome = () => {
       />
     );
   };
+
   const handleCreateTrip = () => {
     router.push('/trip/create-trip'); // Adjust path as needed
   };
+
+  // if (loading) {
+  //   return (
+  //     <SafeAreaView style={styles.safeArea}>
+  //       <View style={styles.container}>
+  //         <Text>Loading...</Text>
+  //       </View>
+  //     </SafeAreaView>
+  //   );
+  // }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <Text>{error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -100,7 +154,7 @@ const UserHome = () => {
         </View>
 
         <FlatList
-          data={filteredTrips}
+          data={trips}
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => (
             <TouchableOpacity 

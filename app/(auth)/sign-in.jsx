@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Make sure to import AsyncStorage if you are using it
-import { useRouter } from 'expo-router'; // Ensure router is imported if used
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import { useRouter } from 'expo-router'; 
 
 const SignIn = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter(); // Initialize the router
+  const router = useRouter(); 
 
   const handleLogin = async () => {
-    // Input Validation
     if (!username || !password) {
       Alert.alert('Error', 'Please enter both username/email and password.');
       return;
@@ -23,6 +22,7 @@ const SignIn = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + btoa('user:2054e07b-c906-4c41-8444-011e2cb7448f')
         },
         body: JSON.stringify({ usernameOrEmail: username, password }),
       });
@@ -35,8 +35,8 @@ const SignIn = () => {
   
       const user = await response.json();
   
-      // Debugging: Check the user data
-      console.log('User Data:', user); // Make sure the role is correctly received
+    
+      console.log('User Data:', user); 
   
       const userData = {
         id: user._id,
@@ -50,11 +50,8 @@ const SignIn = () => {
   
       await AsyncStorage.setItem('userData', JSON.stringify(userData));
   
-      // Debugging: Check the saved data
       const savedData = await AsyncStorage.getItem('userData');
-      console.log('Saved User Data:', savedData); // Ensure the data is saved correctly
-  
-      // Redirect based on the user role
+      console.log('Saved User Data:', savedData); 
       if (user.role === 'admin') {
         router.push('/adminTabs');
       } else {
@@ -158,7 +155,7 @@ const styles = StyleSheet.create({
     padding: 15,
     height: 60,
     textAlign: 'center',
-    backgroundColor: 'rgba(11, 119, 132, 0.5)', // MainColor with 0.5 opacity
+    backgroundColor: 'rgba(11, 119, 132, 0.5)', 
     borderRadius: 20,
     color: '#fff',
   },

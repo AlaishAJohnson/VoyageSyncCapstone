@@ -27,7 +27,6 @@ const TravelPreferences = () => {
           }
         } catch (error) {
           console.error('Error fetching travel preferences:', error);
-          Alert.alert('Error', 'There was an issue fetching preferences.');
         } finally {
           setLoading(false); 
         }
@@ -131,7 +130,7 @@ const TravelPreferences = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Basic ' + btoa('user:a70c2ddd-2bd2-42c7-afac-64b868255b63'),
+          'Authorization': 'Basic ' + btoa('user:2054e07b-c906-4c41-8444-011e2cb7448f'),
         },
         body: JSON.stringify(travelPreferences),
       });
@@ -141,17 +140,16 @@ const TravelPreferences = () => {
         throw new Error(`Failed to save preferences. Status: ${response.status}`);
       }
   
-      const preferencesData = await response.json(); // Directly parse JSON response
+      const preferencesData = await response.json(); 
       console.log("Parsed Preferences Data:", preferencesData);
   
-      // Extract the preferenceId from the response
+     
       const preferenceId = preferencesData.preferenceId;
   
-      // Link preferences to the user
       const linkResponse = await fetch(`https://1daa-68-234-200-22.ngrok-free.app/api/users/${userId}/linkPreferences/${preferenceId}`, {
         method: 'PUT',
         headers: {
-          'Authorization': 'Basic ' + btoa('user:a70c2ddd-2bd2-42c7-afac-64b868255b63'),
+          'Authorization': 'Basic ' + btoa('user:2054e07b-c906-4c41-8444-011e2cb7448f'),
         },
       });
   
@@ -159,8 +157,7 @@ const TravelPreferences = () => {
         const errorData = await linkResponse.json();
         throw new Error(`Failed to link preferences to user: ${errorData.message || 'Unknown error'}`);
       }
-  
-      // Update userData with the linked travel preferences
+
       const updatedUser = {
         ...userData,
         travelPreferences: preferencesData,
@@ -168,16 +165,16 @@ const TravelPreferences = () => {
   
       updateUserData(updatedUser);
   
-      // Delay navigation until after state update is complete
+      
       setTimeout(() => {
         router.push('/userTabs');
-      }, 500);  // Delay by 500ms
+      }, 500);  
   
     } catch (error) {
       console.error('Error:', error);
       Alert.alert('Error', 'Failed to save or link preferences. Please try again.');
     } finally {
-      setLoading(false); // Hide loading indicator after saving
+      setLoading(false); 
     }
   };
   
