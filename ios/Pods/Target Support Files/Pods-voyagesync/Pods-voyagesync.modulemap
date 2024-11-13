@@ -1,0 +1,6 @@
+module Pods_voyagesync {
+  umbrella header "Pods-voyagesync-umbrella.h"
+
+  export *
+  module * { export * }
+}

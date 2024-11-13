@@ -2,12 +2,29 @@ import React, { useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useNavigation, useLocalSearchParams } from 'expo-router';
+//import axios from 'axios'; 
+// ^^ to be used in the future for fetching usrprofile data
 
 const UserProfile = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const navigation = useNavigation();
+  
+  //------------- the state for the verification status------\\
+  const [verificationStatus, setVerificationStatus] = useState(userData.verificationStatus); 
+  // (2) ^^ the usestate for this will probably be turned to null for future use
+  // (3) in order to manage accts being retrieved using ID 
+  // (4) and whether or not they are verified
+  //----------------------------------------------------------\\
+  
+  //------------------------------------------------------------\\
+  // const [userData, setUserData] = useState(null); 
+  // ^^ this will be used in the future when the sample data is removed 
+  // and the backend is connected with the front end
+  //------------------------------------------------------------\\
 
+
+  
   // Sample user data
   const userData = {
     firstName: "Test",
@@ -18,10 +35,38 @@ const UserProfile = () => {
     verificationStatus: "VERIFIED",
   };
 
+  //----- To change the acct status from "VERIFIED"" or "UNVERIFIED"---\\
+  const toggleVerificationStatus = () => {
+    setVerificationStatus((prevStatus) =>
+      prevStatus === "VERIFIED" ? "UNVERIFIED" : "VERIFIED"
+    );
+  };
+
   // Hide the tab bar on this screen
   useLayoutEffect(() => {
     navigation.setOptions({ tabBarVisible: false });
   }, [navigation]);
+
+  //---------To be added when sample data is removed---------------------\\
+  // we will use this fetch function to get user data based on the acct ID
+  // the code is below 
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const response = await axios.get(`https://ourapi.com/accounts/${id}`);
+  //       setUserData(response.data);
+  //       setVerificationStatus(response.data.verificationStatus);
+  //     } catch (error) {
+  //       console.error('Error getting user data:', error);
+  //      setError('It seems that the user data could not be loaded.');
+  //     }
+  //   };
+  //   fetchData();
+  // }, [id]);
+  //---------------------------handle error message--------------------------------\\
+  // this will be used to show loading screen while searching for userData
+  // if (!userData) return <Text>Please wait while we find your account...</Text>;
+ //--------------------------------------------------------------------------------\\
 
   return (
     <View style={styles.container}>
@@ -41,10 +86,17 @@ const UserProfile = () => {
         <Ionicons name="call" size={24} color="#0B7784" />
         <Text style={styles.infoText}>{userData.phoneNumber}</Text>
       </View>
-
+      
+      {/*The verification status toggle button */}
       <View style={styles.infoContainer}>
-        <Ionicons name="checkmark" size={24} color={userData.verificationStatus === "VERIFIED" ? "green" : "red"} />
-        <Text style={styles.infoText}>{userData.verificationStatus}</Text>
+        <TouchableOpacity onPress={toggleVerificationStatus}>
+          <Ionicons
+            name="checkmark"
+            size={24}
+            color={verificationStatus === "VERIFIED" ? "green" : "red"}
+          />
+        </TouchableOpacity>
+        <Text style={styles.infoText}>{verificationStatus}</Text>
       </View>
 
       <View style={styles.buttonContainer}>
