@@ -16,4 +16,5 @@ public class ItineraryService {
     public List<Itinerary> getAllItineraries(){
         return itineraryRepository.findAll();
     }
+
 }

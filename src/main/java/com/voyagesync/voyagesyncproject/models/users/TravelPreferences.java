@@ -22,4 +22,5 @@ public class TravelPreferences {
     private List<String> food;
     private List<String> weather;
 
+
 }

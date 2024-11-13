@@ -20,25 +20,18 @@ public class Trips {
     private ObjectId tripId;
     private ObjectId organizerId;
     private String tripName;
+    private String imageUrl;
     private String destination;
     private LocalDate startDate;
     private LocalDate endDate;
     private double budget;
     private List<ObjectId> itinerary;
-
-
     private boolean isGroupTrip;
-    @Nullable
-    private ObjectId groupTripId;
+    @Nullable private List<ObjectId> memberIds;
     private TripStatus tripStatus = TripStatus.PROGRESS;
 
-
-    public boolean isGroupTrip() {
-        return isGroupTrip;
-    }
-
-    public void setIsGroupTrip(boolean isGroupTrip) {
-        this.isGroupTrip = isGroupTrip;
+    public boolean isGroupTrip(List<ObjectId> memberIds) {
+        return memberIds != null && !memberIds.isEmpty();
     }
 
     public enum TripStatus {

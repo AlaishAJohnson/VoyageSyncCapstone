@@ -1,22 +1,27 @@
 package com.voyagesync.voyagesyncproject.services.users;
 
 import com.voyagesync.voyagesyncproject.enums.VerificationStatus;
+import com.voyagesync.voyagesyncproject.models.users.TravelPreferences;
 import com.voyagesync.voyagesyncproject.models.users.Users;
+import com.voyagesync.voyagesyncproject.repositories.users.TravelPreferenceRepository;
 import com.voyagesync.voyagesyncproject.repositories.users.UsersRepository;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class UsersService {
 
     private final UsersRepository usersRepository;
+    private final TravelPreferenceRepository travelPreferenceRepository;
 
 
-    public UsersService(final UsersRepository usersRepository) {
+    public UsersService(final UsersRepository usersRepository, final TravelPreferenceRepository travelPreferenceRepository) {
         this.usersRepository = usersRepository;
+        this.travelPreferenceRepository = travelPreferenceRepository;
     }
 
     /* GET Methods */
@@ -64,6 +69,7 @@ public class UsersService {
     public boolean existByEmail(String email) {
         return usersRepository.existsByEmail(email);
     }
+    public boolean existByPhoneNumber(String phoneNumber) {return usersRepository.existsByPhoneNumber(phoneNumber);}
     public Users login(String usernameOrEmail, String password) {
         Users user = usersRepository.findByUsername(usernameOrEmail);
         if (user == null) {
@@ -82,16 +88,52 @@ public class UsersService {
     /* POST Methods */
 
     public Users createUser(Users user) {
-//        String hashedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(user.getPassword());
-        user.setCreatedAt(LocalDateTime.now());
+        if(usersRepository.existsByUsername(user.getUsername())) {
+            throw new RuntimeException("Username already exists");
+        }
+        if(usersRepository.existsByEmail(user.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+        if(usersRepository.existsByPhoneNumber(user.getPhoneNumber())) {
+            throw new RuntimeException("Phone number already exists");
+        }
         return usersRepository.save(user);
     }
+
 
     /* UPDATE METHODS */
 
-    public Users updateUser(Users user) {
-        return usersRepository.save(user);
+    public void updateUser(Users user) {
+        if (user.getId() == null || !usersRepository.existsById(user.getId())) {
+            throw new IllegalArgumentException("User with given ID does not exist.");
+        }
+        usersRepository.save(user);
     }
 
+    public Optional<Users> findUserById(String id) {
+        try {
+            ObjectId objectId = new ObjectId(id);
+            return usersRepository.findById(objectId);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    public Users getUserById(String userId) {
+        ObjectId userObjectId = new ObjectId(userId);
+        return usersRepository.findById(userObjectId).orElse(null);
+    }
+
+    public Users linkTravelPreference(String userId, String preferencesId) {
+        ObjectId userObjectId = new ObjectId(userId);
+        Users user = usersRepository.findById(userObjectId).orElse(null);
+        ObjectId preferenceObjectId = new ObjectId(preferencesId);
+        TravelPreferences travelPreference = travelPreferenceRepository.findById(preferenceObjectId).orElse(null);
+        if (travelPreference != null) {
+            assert user != null;
+            user.setTravelPreferences(travelPreference);
+            return usersRepository.save(user);
+        }
+        return null;
+    }
 }

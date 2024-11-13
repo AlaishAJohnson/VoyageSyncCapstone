@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface TripRepository extends MongoRepository<Trips, ObjectId> {
     List<Trips> findByOrganizerId(ObjectId organizerId);
+    List<Trips> findByOrganizerIdOrMemberIdsContaining(ObjectId organizerId, ObjectId memberId);
+    List<Trips> findByMemberIds(ObjectId memberId);
 }

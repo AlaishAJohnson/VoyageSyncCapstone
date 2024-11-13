@@ -10,8 +10,6 @@ import com.voyagesync.voyagesyncproject.services.users.AdminService;
 import com.voyagesync.voyagesyncproject.services.users.TravelPreferenceService;
 import com.voyagesync.voyagesyncproject.services.users.UsersService;
 import com.voyagesync.voyagesyncproject.services.users.VendorService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.bson.types.ObjectId;
@@ -45,6 +43,14 @@ public class UsersController {
         List<Map<String, Object>> response = userList.stream().map(this::mapUserToResponse).collect(Collectors.toList());
 
         return new ResponseEntity<>( response, HttpStatus.OK);
+    }
+    @GetMapping("/{userId}")
+    public ResponseEntity<Users> getUserById(@PathVariable String userId) {
+        Users user = usersService.getUserById(userId);
+        if (user != null) {
+            return ResponseEntity.ok(user);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
 
     @GetMapping("/name/{firstName}/{lastName}")
@@ -127,98 +133,125 @@ public class UsersController {
     public ResponseEntity<Users> login(@RequestBody LoginRequest loginRequest) {
         try {
             Users user = usersService.login(loginRequest.getUsernameOrEmail(), loginRequest.getPassword());
-            return ResponseEntity.ok(user); // Send user details back
+            return ResponseEntity.ok(user);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null); // Handle login failure
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
     }
 
 
-    // check this too
-    @PostMapping("/create")
-    public ResponseEntity<String> createUser(@RequestBody Map<String, Object> userDetails) {
-       try{
-           String username = userDetails.get("username").toString();
-           String email = userDetails.get("email").toString();
+    @PostMapping("/create-user")
+    public ResponseEntity<Map<String, Object>> createUser(@RequestBody Map<String, Object> userDetails) {
+        try {
+            String username = userDetails.get("username").toString();
+            String email = userDetails.get("email").toString();
+            String phoneNumber = userDetails.get("phoneNumber").toString();
 
-           if(usersService.existByUsername(username)) {
-               return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
-           }
-           if(usersService.existByEmail(email)) {
-               return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists");
-           }
+            if (usersService.existByUsername(username)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "Username already exists"));
+            }
 
-           Users newUser = new Users();
-           newUser.setFirstName(userDetails.get("firstName").toString());
-           newUser.setLastName(userDetails.get("lastName").toString());
-           newUser.setUsername(username);
-           newUser.setEmail(email);
-           newUser.setPhoneNumber(userDetails.get("phoneNumber").toString());
-           newUser.setPassword(userDetails.get("password").toString());
+            if (usersService.existByEmail(email)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "Email already exists"));
+            }
 
+            if (usersService.existByPhoneNumber(phoneNumber)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "Phone number already exists"));
+            }
 
-           // add conditional statement for role to not show the travel preferences.
-           String role = userDetails.get("role").toString();
-           newUser.setRole(role);
+            // Create a new user
+            Users newUser = new Users();
+            newUser.setFirstName(userDetails.get("firstName").toString());
+            newUser.setLastName(userDetails.get("lastName").toString());
+            newUser.setUsername(username);
+            newUser.setEmail(email);
+            newUser.setPhoneNumber(phoneNumber);
+            newUser.setPassword(userDetails.get("password").toString());
+            newUser.setRole(userDetails.get("role").toString());
 
-           Users savedUser = usersService.createUser(newUser);
+            Users savedUser = usersService.createUser(newUser);
 
-           TravelPreferences travelPreferences = new TravelPreferences();
-           travelPreferences.setActivities(safeGetListFromMap(userDetails, "activities"));
-           travelPreferences.setFood(safeGetListFromMap(userDetails, "food"));
-           travelPreferences.setWeather(safeGetListFromMap(userDetails, "weather"));
+            // Handle additional role-specific data
+            String role = newUser.getRole();
+            if ("vendor".equals(role)) {
+                Vendors newVendor = createVendor(userDetails, savedUser.getId());
+                vendorService.createVendor(newVendor);
+            } else if ("admin".equals(role)) {
+                Admins newAdmin = new Admins();
+                newAdmin.setUserId(savedUser.getId());
+                adminService.createAdmin(newAdmin);
+            }
 
-           TravelPreferences savedPreferences = travelPreferenceService.savePreferences(travelPreferences);
-           savedUser.setTravelPreferences(savedPreferences);
+            // Send back a response with user details
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "User created successfully");
+            response.put("userId", savedUser.getId().toString());
 
-           usersService.updateUser(savedUser);
-
-           if("vendor".equals(role)) {
-               Vendors newVendor = new Vendors();
-               newVendor.setBusinessName((String)userDetails.get("businessName"));
-               newVendor.setBusinessRegistrationNumber((String)userDetails.get("businessRegistrationNumber"));
-               newVendor.setCountryOfRegistration((String)userDetails.get("countryOfRegistration"));
-               newVendor.setBusinessAddress((String)userDetails.get("businessAddress"));
-               newVendor.setBusinessPhoneNumber((String)userDetails.get("businessPhoneNumber"));
-               newVendor.setBusinessType((String)userDetails.get("businessType"));
-               newVendor.setIndustry((String)userDetails.get("industry"));
-               newVendor.setProofOfRegistration((byte[])userDetails.get("proofOfRegistration"));
-               newVendor.setVerificationStatus(VerificationStatus.PENDING);
-               newVendor.setRepresentativeRole((String)userDetails.get("representativeRole"));
-               newVendor.setRepresentativeId(savedUser.getId());
-
-               vendorService.createVendor(newVendor);
-           }
-
-           if("admin".equals(role)) {
-               Admins newAdmin = new Admins();
-               newAdmin.setUserId(savedUser.getId());
-               adminService.createAdmin(newAdmin);
-           }
-           return new ResponseEntity<>("User created successfully.", HttpStatus.CREATED);
-       } catch (Exception e) {
-           return new ResponseEntity<>("Failed to create user.", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(Map.of("message", "Failed to create user: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
 
+
+    @PutMapping("/{userId}/linkPreferences/{preferencesId}")
+    public ResponseEntity<String> linkPreferences(@PathVariable String userId, @PathVariable String preferencesId) {
+        try {
+            Optional<Users> userOptional = usersService.findUserById(userId);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            }
+
+            Optional<TravelPreferences> preferencesOptional = travelPreferenceService.findById(preferencesId);
+            if (preferencesOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Travel Preferences not found");
+            }
+
+            Users user = userOptional.get();
+            TravelPreferences preferences = preferencesOptional.get();
+
+            user.setTravelPreferences(preferences);
+            usersService.updateUser(user);
+
+            return new ResponseEntity<>("Travel preferences linked successfully.", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to link travel preferences: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    // Create or Update Travel Preferences
+    @PutMapping("/preferences/{preferencesId}")
+    public ResponseEntity<TravelPreferences> updateTravelPreferences(@PathVariable String preferencesId, @RequestBody TravelPreferences newPreferences) {
+        TravelPreferences updatedPreferences = travelPreferenceService.updateOrCreateTravelPreference(preferencesId, newPreferences);
+        return ResponseEntity.ok(updatedPreferences);
+    }
+
+
+
+    private Vendors createVendor(Map<String, Object> userDetails, ObjectId userId) {
+        Vendors vendor = new Vendors();
+        vendor.setBusinessName((String) userDetails.get("businessName"));
+        vendor.setBusinessRegistrationNumber((String) userDetails.get("businessRegistrationNumber"));
+        vendor.setCountryOfRegistration((String) userDetails.get("countryOfRegistration"));
+        vendor.setBusinessAddress((String) userDetails.get("businessAddress"));
+        vendor.setBusinessPhoneNumber((String) userDetails.get("businessPhoneNumber"));
+        vendor.setBusinessType((String) userDetails.get("businessType"));
+        vendor.setIndustry((String) userDetails.get("industry"));
+        vendor.setProofOfRegistration((byte[]) userDetails.get("proofOfRegistration"));
+        vendor.setVerificationStatus(VerificationStatus.PENDING);
+        vendor.setRepresentativeRole((String) userDetails.get("representativeRole"));
+        vendor.setRepresentativeId(userId);
+        return vendor;
+    }
+
+    private List<String> safeGetListFromMap(Map<String, Object> map, String key) {
+        return map.containsKey(key) ? (List<String>) map.get(key) : Collections.emptyList();
     }
 
 
 
     /* Helper Functions */
-    private List<String> safeGetListFromMap(Map<String, Object> map, String key) {
-        Object value = map.get(key);
-        if (value instanceof List<?> list) {
-            // Check if all elements are Strings
-            for (Object obj : list) {
-                if (!(obj instanceof String)) {
-                    throw new IllegalArgumentException("List elements must be of type String");
-                }
-            }
-            // Safe cast
-            return (List<String>) list;
-        }
-        return Collections.emptyList(); // Return an empty list if the value is not a list
-    }
 
     private Map<String, Object> mapUserToResponse(Users users) {
         Map<String, Object> userMap = new LinkedHashMap<>();
@@ -247,7 +280,7 @@ public class UsersController {
 
         List<String> tripIds = (users.getTrips() != null) ?
                 users.getTrips().stream()
-                        .map(ObjectId::toHexString) // Convert ObjectId to String
+                        .map(ObjectId::toHexString)
                         .collect(Collectors.toList()) : Collections.emptyList();
         userMap.put("trips", tripIds);
 

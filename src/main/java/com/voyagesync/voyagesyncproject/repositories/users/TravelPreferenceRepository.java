@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TravelPreferenceRepository extends MongoRepository<TravelPreferences, ObjectId> {
+    TravelPreferences findByPreferenceId(ObjectId preferenceId);
 }
