@@ -5,36 +5,34 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import defaultImage from '../../assets/defaultImage.jpeg'; // Make sure the path to defaultImage is correct
 
 const UserHome = () => {
   const [selectedTab, setSelectedTab] = useState('all');
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [userId, setUserId] = useState(null);  // State to store userId
+  const [userId, setUserId] = useState(null);
   const router = useRouter();
 
-  // Function to fetch user data and userId from AsyncStorage
   const getUserData = async () => {
     const userData = await AsyncStorage.getItem('userData');
     if (userData) {
       const user = JSON.parse(userData);
-      console.log(user);  // Use the user data here
+      console.log(user);
     }
   };
 
   const getUserId = async () => {
     const storedUserId = await AsyncStorage.getItem('userId');
-    console.log(storedUserId);  // Use the user ID here
     if (storedUserId) {
-      setUserId(storedUserId);  // Store userId in state
+      setUserId(storedUserId);
     }
   };
 
-  // Fetch trips based on the selected tab
   const fetchTrips = async (tab) => {
     if (!userId) {
-      console.error('User ID is not available');
+      console.error('User ID is missing, cannot fetch trips');
       return;
     }
 
@@ -44,28 +42,26 @@ const UserHome = () => {
     try {
       let url = '';
       const userId = await AsyncStorage.getItem('userId');
-      const authHeader = 'Basic ' + btoa('user:2054e07b-c906-4c41-8444-011e2cb7448f'); 
-      // Determine the URL based on the selected tab
+      const authHeader = 'Basic ' + btoa('user:854b010d-40f1-45f4-a2cd-2a94b52d6d93');
+
       if (tab === 'all') {
-        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/organizer-member/${userId}`; // All trips where the user is a member
+        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/organizer-member/${userId}`; // All trips
       } else if (tab === 'organizing') {
-        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/organizer/${userId}`; // Trips where the user is the organizer
+        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/organizer/${userId}`; // Trips the user is organizing
       } else if (tab === 'participating') {
-        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/member/${userId}`; // Trips where the user is a member, but not the organizer
+        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/member/${userId}`; // Trips where the user is a member
       }
 
-      // Make the request to the backend
       const response = await axios.get(url, {
         headers: {
           'Authorization': authHeader,
         },
       });
-  
+
       const tripsData = response.data;
 
-      // Filter trips if necessary based on the tab
       if (tab === 'participating') {
-        setTrips(tripsData.filter(trip => trip.organizerId !== userId)); // Exclude trips where the user is the organizer
+        setTrips(tripsData.filter((trip) => trip.organizerId !== userId));
       } else {
         setTrips(tripsData);
       }
@@ -77,46 +73,35 @@ const UserHome = () => {
     }
   };
 
-  // Fetch user data and userId on component mount
   useEffect(() => {
     getUserData();
-    getUserId();  // Fetch the userId and update state
+    getUserId();
   }, []);
 
-  // Fetch trips whenever the selected tab changes
   useEffect(() => {
     if (userId) {
       fetchTrips(selectedTab);
     }
   }, [selectedTab, userId]);
 
-  const onTripPress = (trip) => {
-    router.push({ pathname: '/trip/trip-details', params: { tripId: trip._id } });
-  };
-
-  const renderImage = (uri) => {
+  const renderImage = (trip) => {
+    const imageUri = trip.imageUrl ? { uri: trip.imageUrl } : defaultImage;
     return (
       <Image
-        source={{ uri }}
+        source={imageUri}
         style={styles.image}
         onError={() => {/* Handle error case, e.g., set a default image */}}
       />
     );
   };
 
-  const handleCreateTrip = () => {
-    router.push('/trip/create-trip'); // Adjust path as needed
+  const onTripPress = (trip) => {
+    router.push({ pathname: '/trip/trip-details', params: { tripId: trip._id } });
   };
 
-  // if (loading) {
-  //   return (
-  //     <SafeAreaView style={styles.safeArea}>
-  //       <View style={styles.container}>
-  //         <Text>Loading...</Text>
-  //       </View>
-  //     </SafeAreaView>
-  //   );
-  // }
+  const handleCreateTrip = () => {
+    router.push('/trip/create-trip');
+  };
 
   if (error) {
     return (
@@ -155,7 +140,7 @@ const UserHome = () => {
 
         <FlatList
           data={trips}
-          keyExtractor={(item) => item._id}
+          keyExtractor={(item) => item._id?.toString() || Math.random().toString()}
           renderItem={({ item }) => (
             <TouchableOpacity 
               style={styles.card} 
@@ -163,14 +148,17 @@ const UserHome = () => {
               accessibilityLabel={`View trip to ${item.destination}`}
               accessibilityHint="Tap to view trip details."
             >
-              {renderImage(item.imageUrl)}
+              {renderImage(item)}
               <Text style={styles.title}>{item.tripName}</Text>
               <Text style={styles.date}>
                 {new Date(item.startDate).toDateString()} - {new Date(item.endDate).toDateString()}
               </Text>
             </TouchableOpacity>
           )}
+          contentContainerStyle={{ paddingBottom: 16 }}
+          showsVerticalScrollIndicator={false}
         />
+
         <TouchableOpacity style={styles.floatingButton} onPress={handleCreateTrip}>
           <Ionicons name="add" size={28} color="white" />
         </TouchableOpacity>
@@ -250,7 +238,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 4,
-  },
+  }
 });
 
 export default UserHome;

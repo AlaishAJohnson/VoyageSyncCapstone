@@ -22,7 +22,7 @@ const SignIn = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Basic ' + btoa('user:2054e07b-c906-4c41-8444-011e2cb7448f')
+          'Authorization': 'Basic ' + btoa('user:854b010d-40f1-45f4-a2cd-2a94b52d6d93')
         },
         body: JSON.stringify({ usernameOrEmail: username, password }),
       });
