@@ -168,6 +168,7 @@ public class UsersController {
             newUser.setPhoneNumber(phoneNumber);
             newUser.setPassword(userDetails.get("password").toString());
             newUser.setRole(userDetails.get("role").toString());
+            newUser.setTrips(new ArrayList<>());
 
             Users savedUser = usersService.createUser(newUser);
 

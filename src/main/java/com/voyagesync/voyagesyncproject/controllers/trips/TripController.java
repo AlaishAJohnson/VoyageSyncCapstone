@@ -67,6 +67,37 @@ public class TripController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("/{tripId}")
+    public ResponseEntity<Map<String, Object>> getTripById(@PathVariable("tripId") String tripId) {
+        final Trips trip = tripService.getTripById(tripId);
+
+        if (trip == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        final Map<String, Object> tripMap = new LinkedHashMap<>();
+
+        tripMap.put("tripId", trip.getTripId().toHexString());
+        tripMap.put("organizerId", trip.getOrganizerId().toHexString());
+        tripMap.put("tripName", trip.getTripName());
+        tripMap.put("destination", trip.getDestination());
+        tripMap.put("startDate", trip.getStartDate());
+        tripMap.put("endDate", trip.getEndDate());
+        tripMap.put("budget", trip.getBudget());
+        tripMap.put("tripStatus", trip.getTripStatus());
+        tripMap.put("isGroupTrip", trip.isGroupTrip());
+        tripMap.put("imageUrl", trip.getImageUrl());
+
+        if (trip.getItinerary() != null) {
+            tripMap.put("itinerary", trip.getItinerary());
+        }
+        if (trip.getMemberIds() != null) {
+            tripMap.put("memberIds", trip.getMemberIds());
+        }
+
+        return new ResponseEntity<>(tripMap, HttpStatus.OK);
+    }
+
 
 
 

@@ -21,7 +21,10 @@ public class TripService {
         return tripRepository.findAll();
     }
 
-
+    public Trips getTripById(final String tripId) {
+        ObjectId tripObjectId = new ObjectId(tripId);
+        return tripRepository.findById(tripObjectId).orElse(null);
+    }
 
     public List<Trips> getTripsByOrganizerId(String organizerId) {
         ObjectId organizerObjectId = new ObjectId(organizerId);
