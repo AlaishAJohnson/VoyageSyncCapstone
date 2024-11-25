@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import defaultImage from '../../assets/defaultImage.jpeg'; // Make sure the path to defaultImage is correct
+import defaultImage from '../../assets/defaultImage.jpeg'; 
 
 const UserHome = () => {
   const [selectedTab, setSelectedTab] = useState('all');
@@ -42,7 +42,7 @@ const UserHome = () => {
     try {
       let url = '';
       const userId = await AsyncStorage.getItem('userId');
-      const authHeader = 'Basic ' + btoa('user:854b010d-40f1-45f4-a2cd-2a94b52d6d93');
+      const authHeader = 'Basic ' + btoa('user:ee0550bb-9f15-4e9b-8147-8beea24c13ef');
 
       if (tab === 'all') {
         url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/organizer-member/${userId}`; // All trips

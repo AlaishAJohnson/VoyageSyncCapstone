@@ -194,7 +194,7 @@ const TravelPreferences = () => {
 
       <CustomButton title="Save Preferences" onPress={handleSavePreferences} />
 
-      {loading && <ActivityIndicator size="large" color="#0B7784" />}
+      {/* {loading && <ActivityIndicator size="large" color="#0B7784" />} */}
     </View>
   );
 };

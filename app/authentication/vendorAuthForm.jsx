@@ -14,7 +14,7 @@ const VendorAuthForm = () => {
 
     useLayoutEffect(() => {
         navigation.setOptions({headerShown: false})
-    })    // Authentication Functions & States
+    })   
 
     const [businessName, setBusinessName] = useState('')
     const [businessEmail, setBusinessEmail] = useState('')
@@ -24,8 +24,8 @@ const VendorAuthForm = () => {
     // Placeholder functions
 
     const checkIfEmailExists = (businessEmail) => {
-        // replace with API call 
-        return false; // remove once api call i
+ 
+        return false; 
     } 
 
 
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     input: {
         padding: 15,
         height: 60,
-        backgroundColor: 'rgba(11, 119, 132, 0.5)', // MainColor with 0.5 opacity
+        backgroundColor: 'rgba(11, 119, 132, 0.5)', 
         borderRadius: 20,
         color: '#fff',
         marginBottom: 20,

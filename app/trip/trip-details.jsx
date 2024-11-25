@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,62 +7,67 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
-const mockTripDetailsFromDB = {
-  tripName: 'Birthday Trip',
-  destination: 'Bahamas',
-  startDate: '2024-12-04T05:00:00.000Z',
-  endDate: '2024-12-08T05:00:00.000Z',
-  budget: 2000,
-  tripStatus: 'UPCOMING',
-  groupTripId: '67098a4660b3494e29f13103',
-  itinerary: [
-    {
-      title: 'Snorkeling Adventure',
-      location: 'Bahamas',
-      startTime: '9:00 AM',
-      endTime: '11:00 AM',
-      estimatedPrice: '$100 USD',
-    },
-    {
-      title: 'Beach Day',
-      location: 'Nassau',
-      startTime: '1:00 PM',
-      endTime: '5:00 PM',
-      estimatedPrice: '$50 USD',
-    },
-  ],
-};
-
-const mockGroupTripDetailsFromDB = {
-  members: [
-    {
-      id: '67112a5bedf3d7f2f6d54597',
-      name: 'Alice',
-      profileImage: 'https://example.com/alice.jpg',
-      isOrganizer: true,
-    },
-    {
-      id: '670439efbbbf4097e881a0cf',
-      name: 'Bob',
-      profileImage: 'https://example.com/bob.jpg',
-      isOrganizer: false,
-    },
-  ],
-};
 
 const TripDetails = () => {
   const router = useRouter();
-  const [selectedDay, setSelectedDay] = useState(1);
+  const { tripId } = useSearchParams();
+  const [tripDetails, setTripDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (tripId) {
+      fetchTripDetails(tripId); 
+    }
+  }, [tripId]);
+
+  const fetchTripDetails = async (id) => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `https://1daa-68-234-200-22.ngrok-free.app/api/trips/${id}`,
+        {
+          headers: {
+            'Authorization': 'Basic ' + btoa('user:ee0550bb-9f15-4e9b-8147-8beea24c13ef'),
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch trip details');
+      }
+      const data = await response.json();
+      setTripDetails(data); // Set fetched details
+    } catch (error) {
+      console.error('Error fetching trip details:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const onExitPress = () => {
     router.back();
   };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (!tripDetails) {
+    return (
+      <View style={styles.container}>
+        <Text>Trip not found</Text>
+      </View>
+    );
+  }
+
   const hours = Array.from({ length: 24 }, (_, i) => {
-    const hour = (i + 9) % 24; // Starts at 9 AM
+    const hour = (i + 9) % 24; 
     return `${hour === 0 ? 12 : hour} ${hour < 12 ? 'AM' : 'PM'}`;
   });
 
@@ -70,7 +75,7 @@ const TripDetails = () => {
     <ScrollView>
       <View style={styles.container}>
         <Image
-          source={{ uri: 'https://tempo.cdn.tambourine.com/windsong/media/windsong-gallery-12-5fb43a016cb8b.jpg' }} // Set your background image here
+          source={{ uri: tripDetails.imageUrl }} 
           style={styles.topImage}
         />
         <View style={styles.overlay}>
@@ -79,77 +84,59 @@ const TripDetails = () => {
           </TouchableOpacity>
 
           <View style={styles.tripDetails}>
-            <Text style={styles.tripName}>{mockTripDetailsFromDB.tripName}</Text>
+            <Text style={styles.tripName}>{tripDetails.tripName}</Text>
 
             <View style={styles.locationContainer}>
               <Ionicons name="location-outline" size={20} color="#FE9F67" />
-              <Text style={styles.destination}>{mockTripDetailsFromDB.destination}</Text>
+              <Text style={styles.destination}>{tripDetails.destination}</Text>
             </View>
 
             <View style={styles.calendarContainer}>
               <Ionicons name="calendar-outline" size={20} color="#FE9F67" />
               <Text style={styles.tripDate}>
-                {new Date(mockTripDetailsFromDB.startDate).toDateString()} - {new Date(mockTripDetailsFromDB.endDate).toDateString()}
+                {new Date(tripDetails.startDate).toDateString()} - {new Date(tripDetails.endDate).toDateString()}
               </Text>
             </View>
 
             <View style={styles.statusContainer}>
               <View style={styles.statusItem}>
                 <Ionicons name="cash-outline" size={20} color="#FE9F67" />
-                <Text style={styles.statusText}>Budget: ${mockTripDetailsFromDB.budget}</Text>
+                <Text style={styles.statusText}>Budget: ${tripDetails.budget}</Text>
               </View>
               <View style={styles.statusItem}>
                 <Ionicons name="time-outline" size={20} color="#FE9F67" />
-                <Text style={styles.statusText}>Status: {mockTripDetailsFromDB.tripStatus}</Text>
+                <Text style={styles.statusText}>Status: {tripDetails.tripStatus}</Text>
               </View>
             </View>
 
             <Text style={styles.membersHeader}>Members</Text>
             <View style={styles.membersLine} />
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {mockGroupTripDetailsFromDB.members.map((member) => (
-                <View style={styles.memberContainer} key={member.id}>
-                  {member.isOrganizer && <Ionicons name="star" size={16} color="gold" style={styles.starIcon} />}
-                  <Image source={{ uri: member.profileImage }} style={styles.memberImage} />
-                  <Text style={styles.memberName}>{member.name.split(' ')[0]}{member.name.split(' ')[1]}</Text>
+              {tripDetails.memberIds?.map((memberId, index) => (
+                <View style={styles.memberContainer} key={memberId}>
+                  <Ionicons name="star" size={16} color="gold" style={styles.starIcon} />
+                  <Image source={{ uri: `https://example.com/${memberId}.jpg` }} style={styles.memberImage} />
+                  <Text style={styles.memberName}>Member {index + 1}</Text>
                 </View>
               ))}
             </ScrollView>
 
             <Text style={styles.membersHeader}>Itinerary</Text>
             <View style={styles.membersLine} />
-            
-
-            <View style={styles.tabsContainer}>
-              {Array.from({ length: 5 }, (_, i) => (
-                <TouchableOpacity
-                  key={i}
-                  style={[styles.tab, selectedDay === i + 1 && styles.activeTab]}
-                  onPress={() => setSelectedDay(i + 1)}
-                >
-                  <Text style={[styles.tabText, selectedDay === i + 1 && styles.activeTabText]}>
-                    Day {i + 1}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <ScrollView>
             <View style={styles.itineraryContainer}>
-              {/* Example itinerary cards, replace with dynamic data */}
-              {[...Array(3)].map((_, index) => (
+              {tripDetails.itinerary?.map((activity, index) => (
                 <View key={index} style={styles.itineraryCard}>
-                  <Text style={styles.itineraryTitle}>Activity {index + 1} for Day {selectedDay}</Text>
-                  <Text style={styles.itineraryLocation}>Location {index + 1}</Text>
-                  <Text style={styles.itineraryTime}>Time: {hours[selectedDay - 1]} - {hours[selectedDay]}</Text>
+                  <Text style={styles.itineraryTitle}>{activity.title}</Text>
+                  <Text style={styles.itineraryLocation}>{activity.location}</Text>
+                  <Text style={styles.itineraryTime}>
+                    {activity.startTime} - {activity.endTime}
+                  </Text>
                   <View style={styles.priceContainer}>
-                    <Text style={styles.price}>$20.00</Text>
+                    <Text style={styles.price}>{activity.estimatedPrice}</Text>
                   </View>
                 </View>
               ))}
-              {true && <Text style={styles.noActivitiesText}>No activities planned for this day.</Text>}
             </View>
-            </ScrollView>
           </View>
         </View>
       </View>
@@ -163,14 +150,14 @@ const styles = StyleSheet.create({
   },
   topImage: {
     width: "100%",
-    height: 600, 
+    height: 600,
     resizeMode: 'cover',
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     padding: 16,
-    marginTop: 60, 
+    marginTop: 60,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     marginTop: -100,
@@ -247,40 +234,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
   },
-  calendarHoursContainer: {
-    marginTop: 20,
-    paddingHorizontal: 8,
-  },
-  calendarHour: {
-    padding: 16,
-    backgroundColor: '#f9c2a6', // Light peach
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  hourText: {
-    fontWeight: 'bold',
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    marginTop: 20,
-  },
-  tab: {
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#0b7784', // Dark teal
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  activeTab: {
-    backgroundColor: '#0b7784',
-  },
-  tabText: {
-    color: '#000',
-    fontWeight: 'bold',
-  },
-  activeTabText: {
-    color: '#fff',
-  },
   itineraryContainer: {
     marginTop: 16,
   },
@@ -313,12 +266,6 @@ const styles = StyleSheet.create({
   price: {
     fontWeight: 'bold',
     color: '#FE9F67',
-  },
-  noActivitiesText: {
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 16,
-    color: '#666',
   },
 });
 

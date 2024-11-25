@@ -18,11 +18,11 @@ const SignIn = () => {
   
     setLoading(true);
     try {
-      const response = await fetch('https://1daa-68-234-200-22.ngrok-free.app/api/users/login', {
+      const response = await fetch('https://0583-24-163-58-200.ngrok-free.app/api/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Basic ' + btoa('user:854b010d-40f1-45f4-a2cd-2a94b52d6d93')
+          'Authorization': 'Basic ' + btoa('user:52763764-076a-4311-b84f-fb97dcb3e6b7')
         },
         body: JSON.stringify({ usernameOrEmail: username, password }),
       });
@@ -54,8 +54,12 @@ const SignIn = () => {
       console.log('Saved User Data:', savedData); 
       if (user.role === 'admin') {
         router.push('/adminTabs');
-      } else {
-        router.push('/userTabs');
+      } 
+      if (user.role === 'vendor') {
+        router.push('/vendorTabs');
+      }
+      else {
+        router.push('/userTabs')
       }
   
     } catch (error) {
