@@ -18,11 +18,11 @@ const SignIn = () => {
   
     setLoading(true);
     try {
-      const response = await fetch('https://0583-24-163-58-200.ngrok-free.app/api/users/login', {
+      const response = await fetch('https://ddcf-24-163-58-200.ngrok-free.app/api/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Basic ' + btoa('user:52763764-076a-4311-b84f-fb97dcb3e6b7')
+          'Authorization': 'Basic ' + btoa('user:488980c1-6cf5-4cdd-adb3-7852b9de02c5')
         },
         body: JSON.stringify({ usernameOrEmail: username, password }),
       });
@@ -58,7 +58,7 @@ const SignIn = () => {
       if (user.role === 'vendor') {
         router.push('/vendorTabs');
       }
-      else {
+      if (user.role == 'user') {
         router.push('/userTabs')
       }
   

@@ -42,14 +42,14 @@ const UserHome = () => {
     try {
       let url = '';
       const userId = await AsyncStorage.getItem('userId');
-      const authHeader = 'Basic ' + btoa('user:ee0550bb-9f15-4e9b-8147-8beea24c13ef');
+      const authHeader = 'Basic ' + btoa('user:488980c1-6cf5-4cdd-adb3-7852b9de02c5');
 
       if (tab === 'all') {
-        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/organizer-member/${userId}`; // All trips
+        url = `https://ddcf-24-163-58-200.ngrok-free.app/api/trips/organizer-member/${userId}`; // All trips
       } else if (tab === 'organizing') {
-        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/organizer/${userId}`; // Trips the user is organizing
+        url = `https://ddcf-24-163-58-200.ngrok-free.app/api/trips/organizer/${userId}`; // Trips the user is organizing
       } else if (tab === 'participating') {
-        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/member/${userId}`; // Trips where the user is a member
+        url = `https://ddcf-24-163-58-200.ngrok-free.app/api/trips/member/${userId}`; // Trips where the user is a member
       }
 
       const response = await axios.get(url, {
