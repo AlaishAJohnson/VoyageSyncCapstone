@@ -18,6 +18,10 @@ public class UsersService {
     private final UsersRepository usersRepository;
     private final TravelPreferenceRepository travelPreferenceRepository;
 
+    public boolean isUserParticipant(String username) {
+        Users user = usersRepository.findByUsername(username);
+        return user != null && "participant".equals(user.getRole());  // Assuming role is a field in Users model
+    }
 
     public UsersService(final UsersRepository usersRepository, final TravelPreferenceRepository travelPreferenceRepository) {
         this.usersRepository = usersRepository;
@@ -61,6 +65,9 @@ public class UsersService {
         } else {
             throw new RuntimeException("User not found");
         }
+    }
+    public boolean existsById(ObjectId userId) {
+        return usersRepository.existsById(userId);
     }
 
     public boolean existByUsername(String username) {

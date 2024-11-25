@@ -48,7 +48,9 @@ public class VendorService {
         }
         return serviceIds;
     }
-
-
+    // Method to check if a vendor exists by vendorId
+    public boolean existsById(ObjectId vendorId) {
+        return vendorRepository.existsById(vendorId);
+    }
 
 }
