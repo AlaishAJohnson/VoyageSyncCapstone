@@ -9,6 +9,8 @@ const SignIn = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter(); 
+ 
+  const BACKEND_URL = 'http://localhost:8080'; 
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -18,50 +20,51 @@ const SignIn = () => {
   
     setLoading(true);
     try {
-      const response = await fetch('https://0583-24-163-58-200.ngrok-free.app/api/users/login', {
+      const response = await fetch(`${BACKEND_URL}/api/users/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Basic ' + btoa('user:52763764-076a-4311-b84f-fb97dcb3e6b7')
         },
         body: JSON.stringify({ usernameOrEmail: username, password }),
       });
   
       if (!response.ok) {
-        const errorResponse = await response.json();
-        Alert.alert('Error', errorResponse.message || 'Login failed. Please try again.');
+        const errorResponse = await response.text();
+        console.log('Error response:', errorResponse);
+        Alert.alert('Error', errorResponse || 'Login failed. Please try again.');
         return;
       }
   
       const user = await response.json();
+      console.log('User Data:', user);
   
-    
-      console.log('User Data:', user); 
+      if (!user) {
+        throw new Error('No user data returned');
+      }
+
+      await AsyncStorage.setItem('userId', user.userId);
   
       const userData = {
-        id: user._id,
+        userId: user.userId,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         phoneNumber: user.phoneNumber,
         role: user.role,
         verificationStatus: user.verificationStatus,
+        trips: user.trips,
+        travelPreferences: user.travelPreferences,
       };
   
       await AsyncStorage.setItem('userData', JSON.stringify(userData));
   
-      const savedData = await AsyncStorage.getItem('userData');
-      console.log('Saved User Data:', savedData); 
       if (user.role === 'admin') {
         router.push('/adminTabs');
-      } 
-      if (user.role === 'vendor') {
+      } else if (user.role === 'vendor') {
         router.push('/vendorTabs');
+      } else if (user.role === 'user') {
+        router.push('/userTabs');
       }
-      else {
-        router.push('/userTabs')
-      }
-  
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'An unexpected error occurred. Please try again later.');
@@ -69,7 +72,7 @@ const SignIn = () => {
       setLoading(false);
     }
   };
-  
+   
 
   return (
     <SafeAreaView style={styles.container}>
@@ -122,7 +125,6 @@ const SignIn = () => {
   );
 }
 
-// Styles
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',

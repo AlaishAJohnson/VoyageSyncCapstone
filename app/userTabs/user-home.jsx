@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, StyleSheet, Alert, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +14,7 @@ const UserHome = () => {
   const [error, setError] = useState(null);
   const [userId, setUserId] = useState(null);
   const router = useRouter();
+  const BACKEND_URL = "http://localhost:8080"
 
   const getUserData = async () => {
     const userData = await AsyncStorage.getItem('userData');
@@ -27,6 +28,7 @@ const UserHome = () => {
     const storedUserId = await AsyncStorage.getItem('userId');
     if (storedUserId) {
       setUserId(storedUserId);
+      console.log('User ID:', storedUserId);
     }
   };
 
@@ -35,21 +37,29 @@ const UserHome = () => {
       console.error('User ID is missing, cannot fetch trips');
       return;
     }
-
+  
     setLoading(true);
-    setError(null);
-
+    setError(null); 
+  
     try {
       let url = '';
-      const userId = await AsyncStorage.getItem('userId');
-      const authHeader = 'Basic ' + btoa('user:ee0550bb-9f15-4e9b-8147-8beea24c13ef');
-
+      const authHeader = 'Basic ' + btoa('admin:admin'); 
+      console.log('Selected Tab:', tab);  
+      
       if (tab === 'all') {
-        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/organizer-member/${userId}`; // All trips
+        url = `${BACKEND_URL}/api/trips/organizer-member/${userId}`;
+        console.log('All Trips URL:', url); 
       } else if (tab === 'organizing') {
-        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/organizer/${userId}`; // Trips the user is organizing
+        url = `${BACKEND_URL}/api/trips/organizer/${userId}`;
+        console.log('Organizing Trips URL:', url); 
       } else if (tab === 'participating') {
-        url = `https://1daa-68-234-200-22.ngrok-free.app/api/trips/member/${userId}`; // Trips where the user is a member
+        url = `${BACKEND_URL}/api/trips/member/${userId}`;
+        console.log('Participating Trips URL:', url); 
+      }
+  
+      if (!url) {
+        console.error('No valid URL constructed!');
+        return;
       }
 
       const response = await axios.get(url, {
@@ -57,22 +67,27 @@ const UserHome = () => {
           'Authorization': authHeader,
         },
       });
-
-      const tripsData = response.data;
-
+  
+      console.log('Fetched Trips:', response.data); 
+  
+      const tripsData = Array.isArray(response.data.trips) ? response.data.trips : [];
+  
+      
       if (tab === 'participating') {
         setTrips(tripsData.filter((trip) => trip.organizerId !== userId));
       } else {
-        setTrips(tripsData);
+        setTrips(tripsData);  
       }
+  
     } catch (err) {
       setError('Failed to fetch trips');
-      console.error(err);
+      console.error('Error fetching trips:', err);
+      Alert.alert('Error', 'Failed to fetch trips');
     } finally {
       setLoading(false);
     }
-  };
-
+  }; 
+ 
   useEffect(() => {
     getUserData();
     getUserId();
@@ -96,8 +111,11 @@ const UserHome = () => {
   };
 
   const onTripPress = (trip) => {
-    router.push({ pathname: '/trip/trip-details', params: { tripId: trip._id } });
+    console.log('Trip ID pressed:', trip.tripId);
+    router.push(`/trip/trip-details?tripId=${trip.tripId}`);
+
   };
+  
 
   const handleCreateTrip = () => {
     router.push('/trip/create-trip');
@@ -139,8 +157,8 @@ const UserHome = () => {
         </View>
 
         <FlatList
-          data={trips}
-          keyExtractor={(item) => item._id?.toString() || Math.random().toString()}
+          data={trips || []}
+          keyExtractor={(item) => item.tripId?.toString() || Math.random().toString()}
           renderItem={({ item }) => (
             <TouchableOpacity 
               style={styles.card} 
@@ -165,6 +183,7 @@ const UserHome = () => {
       </View>
     </SafeAreaView>
   );
+
 };
 
 const styles = StyleSheet.create({

@@ -1,43 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
-import { useRouter, useSearchParams } from 'expo-router';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRoute } from '@react-navigation/native';
 
 const TripDetails = () => {
-  const router = useRouter();
-  const { tripId } = useSearchParams();
+  const route = useRoute();  
+  const { tripId } = route.params || {};  
   const [tripDetails, setTripDetails] = useState(null);
-  const [loading, setLoading] = useState(true);
-
+  const [loading, setLoading] = useState(true); 
   useEffect(() => {
+    console.log('Trip ID from route:', tripId);  
     if (tripId) {
-      fetchTripDetails(tripId); 
+      fetchTripDetails(tripId);
     }
   }, [tripId]);
 
-  const fetchTripDetails = async (id) => {
+  const fetchTripDetails = async (tripId) => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `https://1daa-68-234-200-22.ngrok-free.app/api/trips/${id}`,
-        {
-          headers: {
-            'Authorization': 'Basic ' + btoa('user:ee0550bb-9f15-4e9b-8147-8beea24c13ef'),
-          },
-        }
-      );
+      const response = await fetch(`http://localhost:8080/api/trips/${tripId}`, {
+        headers: {
+          'Authorization': 'Basic ' + btoa('admin:admin'),
+        },
+      });
+
       if (!response.ok) {
         throw new Error('Failed to fetch trip details');
       }
+
       const data = await response.json();
-      setTripDetails(data); // Set fetched details
+      setTripDetails(data);
     } catch (error) {
       console.error('Error fetching trip details:', error);
     } finally {
@@ -45,32 +37,30 @@ const TripDetails = () => {
     }
   };
 
-
-  const onExitPress = () => {
-    router.back();
-  };
-
   if (loading) {
     return (
-      <View style={styles.container}>
-        <Text>Loading...</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+        <Text>Loading trip details...</Text>
       </View>
     );
   }
 
   if (!tripDetails) {
     return (
-      <View style={styles.container}>
-        <Text>Trip not found</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Error loading trip details. Please try again.</Text>
       </View>
     );
   }
-
   const hours = Array.from({ length: 24 }, (_, i) => {
     const hour = (i + 9) % 24; 
     return `${hour === 0 ? 12 : hour} ${hour < 12 ? 'AM' : 'PM'}`;
   });
-
+  const onExitPress = () => {
+    route.push('/userTabs/user-home')
+  }
+ 
   return (
     <ScrollView>
       <View style={styles.container}>
@@ -79,9 +69,7 @@ const TripDetails = () => {
           style={styles.topImage}
         />
         <View style={styles.overlay}>
-          <TouchableOpacity onPress={onExitPress}>
-            <Text style={styles.exitButton}>✖</Text>
-          </TouchableOpacity>
+          
 
           <View style={styles.tripDetails}>
             <Text style={styles.tripName}>{tripDetails.tripName}</Text>
