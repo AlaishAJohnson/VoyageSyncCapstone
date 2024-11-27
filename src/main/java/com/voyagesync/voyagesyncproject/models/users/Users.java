@@ -36,5 +36,8 @@ public class Users {
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;
 
     @Nullable private List<ObjectId> trips;
+    @Nullable private List<ObjectId> friendIds;
+    @Nullable private List<ObjectId> userPermission;
+    @Nullable private LocalDateTime permissionAssignmentDate;
 
 }

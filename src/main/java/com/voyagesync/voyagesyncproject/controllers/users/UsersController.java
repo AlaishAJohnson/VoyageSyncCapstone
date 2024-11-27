@@ -10,18 +10,22 @@ import com.voyagesync.voyagesyncproject.services.users.AdminService;
 import com.voyagesync.voyagesyncproject.services.users.TravelPreferenceService;
 import com.voyagesync.voyagesyncproject.services.users.UsersService;
 import com.voyagesync.voyagesyncproject.services.users.VendorService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.bson.types.ObjectId;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 
 @RestController
 @RequestMapping("/api/users")
-
+@CrossOrigin(origins = "http://localhost:8081")
 public class UsersController {
 
     private final UsersService usersService;
@@ -44,6 +48,21 @@ public class UsersController {
 
         return new ResponseEntity<>( response, HttpStatus.OK);
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<Users> getCurrentUser(Authentication authentication) {
+        String username = authentication.getName();
+        Users user = usersService.getByUsername(username);
+
+        if (user == null) {
+            return ResponseEntity.status(404).body(null);
+        }
+
+        return ResponseEntity.ok(user);
+
+    }
+
+
     @GetMapping("/{userId}")
     public ResponseEntity<Users> getUserById(@PathVariable String userId) {
         Users user = usersService.getUserById(userId);
@@ -63,6 +82,7 @@ public class UsersController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
         }
     }
+
     @GetMapping("/verificationStatus/{verificationStatus}")
     public ResponseEntity<List<Map<String, Object>>> getVerificationStatus(@PathVariable("verificationStatus") VerificationStatus verificationStatus) {
         try{
@@ -130,14 +150,30 @@ public class UsersController {
 
     /* POST METHODS */
     @PostMapping("/login")
-    public ResponseEntity<Users> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         try {
+            // Validate the credentials
             Users user = usersService.login(loginRequest.getUsernameOrEmail(), loginRequest.getPassword());
-            return ResponseEntity.ok(user);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+
+            if (user != null) {
+                // Use the helper function to map the user object to the response format
+                Map<String, Object> userResponse = mapUserToResponse(user);
+
+                // Return the mapped response as JSON
+                return ResponseEntity.ok(userResponse);
+            } else {
+                // Return an error if the login failed
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Invalid credentials"); // Non-JSON error message for clarity
+            }
+        } catch (Exception e) {
+            // Log and handle unexpected errors
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while processing your request.");
         }
     }
+
+
 
 
     @PostMapping("/create-user")
@@ -168,7 +204,9 @@ public class UsersController {
             newUser.setPhoneNumber(phoneNumber);
             newUser.setPassword(userDetails.get("password").toString());
             newUser.setRole(userDetails.get("role").toString());
-            newUser.setTrips(new ArrayList<>());
+            newUser.setVerificationStatus(VerificationStatus.PENDING);
+            newUser.setCreatedAt(LocalDateTime.now());
+
 
             Users savedUser = usersService.createUser(newUser);
 
@@ -181,6 +219,11 @@ public class UsersController {
                 Admins newAdmin = new Admins();
                 newAdmin.setUserId(savedUser.getId());
                 adminService.createAdmin(newAdmin);
+            }
+            if("user".equals(role)) {
+                newUser.setTrips(new ArrayList<>());
+                newUser.setFriendIds(new ArrayList<>());
+                newUser.setUserPermission(new ArrayList<>());
             }
 
             // Send back a response with user details
@@ -243,13 +286,12 @@ public class UsersController {
         vendor.setVerificationStatus(VerificationStatus.PENDING);
         vendor.setRepresentativeRole((String) userDetails.get("representativeRole"));
         vendor.setRepresentativeId(userId);
+        vendor.setBookings(new ArrayList<>());
+        vendor.setVendorPermissions(new ArrayList<>());
+        vendor.setServices(new ArrayList<>());
+
         return vendor;
     }
-
-    private List<String> safeGetListFromMap(Map<String, Object> map, String key) {
-        return map.containsKey(key) ? (List<String>) map.get(key) : Collections.emptyList();
-    }
-
 
 
     /* Helper Functions */

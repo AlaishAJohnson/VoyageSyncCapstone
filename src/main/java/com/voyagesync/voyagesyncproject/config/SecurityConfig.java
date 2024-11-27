@@ -6,27 +6,38 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true) // Enables @PreAuthorize annotations
+@EnableMethodSecurity() // Enables @PreAuthorize and @PostAuthorize
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Disables CSRF; only do this if necessary
-                // ^^ to expand on this:
-                // disable CSRF since our application probably won't rely on cookies for authentication
-                // and our endpoints are mostly accessed by like mobile apps rather than browsers.
+                // Disable CSRF for development; enable in production
+                .csrf(AbstractHttpConfigurer::disable)
+
+                // Configure endpoint security
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/service/**").hasRole("VENDOR") // Restrict /api/service endpoints to VENDOR role
+                        // Open access to specific endpoints
+                        .requestMatchers("/api/users/login").permitAll()
                         .requestMatchers("/api/service-availability/**").permitAll()
-                        .anyRequest().authenticated() // Requires authentication for all other requests
+                        .requestMatchers("/api/vendors/feedback/new").permitAll()
+
+                        // Restrict access to other endpoints based on roles
+                        .requestMatchers("/api/service/**").hasRole("VENDOR")
+
+                        // Authenticate all other requests
+                        .anyRequest().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults()); // Use HTTP Basic authentication; consider form login or JWT in production
+
+                // Use HTTP Basic Authentication
+                .httpBasic(Customizer.withDefaults());
 
         return http.build();
     }
 }
+

@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/trips")
+@CrossOrigin(origins = "http://localhost:8081")
 public class TripController {
     private final TripService tripService;
 
@@ -28,42 +29,9 @@ public class TripController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<List<Map<String, Object>>> getAllTrips() {
+    public ResponseEntity<Map<String, Object>> getAllTrips() {
         List<Trips> tripsList = tripService.getAllTrips();
-        List<Map<String, Object>> response = tripsList.stream().map(trip -> {
-            Map<String, Object> tripMap = new LinkedHashMap<>();
-            tripMap.put("tripId", trip.getTripId().toHexString());
-            tripMap.put("organizerId", trip.getOrganizerId().toHexString());
-            tripMap.put("tripName", trip.getTripName());
-            tripMap.put("destination", trip.getDestination());
-            tripMap.put("startDate", trip.getStartDate());
-            tripMap.put("endDate", trip.getEndDate());
-            tripMap.put("budget", trip.getBudget());
-            tripMap.put("tripStatus", trip.getTripStatus());
-            tripMap.put("isGroupTrip", trip.isGroupTrip());
-            tripMap.put("imageUrl", trip.getImageUrl());
-
-            if (trip.getItinerary() != null) {
-                List<String> itineraryIds = trip.getItinerary().stream()
-                        .map(ObjectId::toHexString)
-                        .collect(Collectors.toList());
-                tripMap.put("itinerary", itineraryIds);
-            } else {
-                tripMap.put("itinerary", null);
-            }
-
-            if (trip.getMemberIds() != null) {
-                List<String> memberIds = trip.getMemberIds().stream()
-                        .map(ObjectId::toHexString)
-                        .collect(Collectors.toList());
-                tripMap.put("memberIds", memberIds);
-            } else {
-                tripMap.put("memberIds", null);
-            }
-
-            return tripMap;
-        }).toList();
-
+        Map<String, Object> response = mapTripToResponse(tripsList);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -102,28 +70,31 @@ public class TripController {
 
 
     @GetMapping("/organizer/{organizerId}")
-    public ResponseEntity<List<Trips>> getTripsByOrganizer(@PathVariable String organizerId) {
+    public ResponseEntity<Map<String, Object>> getTripsByOrganizer(@PathVariable String organizerId) {
         List<Trips> trips = tripService.getTripsByOrganizerId(organizerId);
-        return ResponseEntity.ok(trips);
+        Map<String, Object> response = mapTripToResponse(trips);
+        return ResponseEntity.ok(response);
     }
-
 
     @GetMapping("/organizer-member/{organizerId}")
-    public ResponseEntity<List<Trips>> getTripsByOrganizerOrMemberId(@PathVariable String organizerId) {
+    public ResponseEntity<Map<String, Object>> getTripsByOrganizerOrMemberId(@PathVariable String organizerId) {
         List<Trips> trips = tripService.getAllTripsByUserId(organizerId);
-        return ResponseEntity.ok(trips);
+        Map<String, Object> response = mapTripToResponse(trips);
+        return ResponseEntity.ok(response);
     }
+
     @GetMapping("/member/{userId}")
-    public ResponseEntity<List<Trips>> getTripsByMemberId(@PathVariable String userId) {
+    public ResponseEntity<Map<String, Object>> getTripsByMemberId(@PathVariable String userId) {
         List<Trips> trips = tripService.getAllTripsByMemberId(userId);
         ObjectId userObjectId = new ObjectId(userId);
         List<Trips> filteredTrips = trips.stream()
                 .filter(trip -> !trip.getOrganizerId().equals(userObjectId))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(filteredTrips);
+        Map<String, Object> response = mapTripToResponse(filteredTrips);
+        return ResponseEntity.ok(response);
     }
 
-    // check this
+
     @PostMapping("/create-trip")
     public ResponseEntity<Object> createTrip(@RequestBody Map<String, Object> tripDetails, @RequestParam boolean isGroupTrip, @RequestParam String organizerId) {
         Trips newTrip = new Trips();
@@ -148,4 +119,47 @@ public class TripController {
         return new ResponseEntity<>(createdTrip, HttpStatus.CREATED);
 
     }
+
+    private Map<String, Object> mapTripToResponse(List<Trips> trips) {
+        List<Map<String, Object>> tripsList = new ArrayList<>();
+
+        for (Trips trip : trips) {
+            Map<String, Object> tripMap = new LinkedHashMap<>();
+            tripMap.put("tripId", trip.getTripId().toHexString());
+            tripMap.put("organizerId", trip.getOrganizerId().toHexString());
+            tripMap.put("tripName", trip.getTripName());
+            tripMap.put("imageUrl", trip.getImageUrl());
+            tripMap.put("destination", trip.getDestination());
+            tripMap.put("startDate", trip.getStartDate());
+            tripMap.put("endDate", trip.getEndDate());
+            tripMap.put("budget", trip.getBudget());
+            tripMap.put("tripStatus", trip.getTripStatus());
+            tripMap.put("isGroupTrip", trip.isGroupTrip());
+
+            if (trip.getItinerary() != null) {
+                List<String> itineraryDates = trip.getItinerary().stream()
+                        .map(ObjectId::toString) // assuming itinerary is a date or timestamp
+                        .collect(Collectors.toList());
+                tripMap.put("itinerary", itineraryDates);
+            } else {
+                tripMap.put("itinerary", null);
+            }
+
+            if (trip.getMemberIds() != null) {
+                List<String> memberIds = trip.getMemberIds().stream()
+                        .map(ObjectId::toHexString) // assuming memberIds are ObjectIds
+                        .collect(Collectors.toList());
+                tripMap.put("memberIds", memberIds);
+            } else {
+                tripMap.put("memberIds", null);
+            }
+
+            tripsList.add(tripMap);
+        }
+
+        Map<String, Object> responseMap = new LinkedHashMap<>();
+        responseMap.put("trips", tripsList);
+        return responseMap;
+    }
+
 }

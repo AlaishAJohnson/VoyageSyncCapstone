@@ -56,7 +56,7 @@ public class FeedbackController {
     }
 
     // Submit feedback
-    @PostMapping
+    @PostMapping("/new")
     public ResponseEntity<Map<String, Object>> submitFeedback(@RequestBody Feedback feedback) {
         // Check if the user is a participant
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
