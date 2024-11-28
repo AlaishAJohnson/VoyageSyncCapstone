@@ -13,6 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/service-availability")
+@CrossOrigin(origins = "http://localhost:8081")
 public class ServiceAvailabilityController {
     private final ServiceAvailabilityService serviceAvailabilityService;
     public ServiceAvailabilityController(final ServiceAvailabilityService serviceAvailabilityService) {

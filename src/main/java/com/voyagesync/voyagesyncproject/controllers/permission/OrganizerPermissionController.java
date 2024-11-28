@@ -4,6 +4,7 @@ import com.voyagesync.voyagesyncproject.models.permissions.OrganizerPermissions;
 import com.voyagesync.voyagesyncproject.services.permissions.OrganizerPermissionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/trips/organizer/permissions")
+@CrossOrigin(origins = "http://localhost:8081")
 public class OrganizerPermissionController {
     private final OrganizerPermissionService organizerPermissionService;
 

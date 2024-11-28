@@ -17,6 +17,7 @@ import java.util.LinkedHashMap;
 
 @RestController
 @RequestMapping("/api/vendors/feedback")
+@CrossOrigin(origins = "http://localhost:8081")
 public class FeedbackController {
 
     private final FeedbackService feedbackService;

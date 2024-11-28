@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/services")
+@CrossOrigin(origins = "http://localhost:8081")
 public class ServiceController {
     private final ServicesService servicesService;
     private final VendorService vendorService;

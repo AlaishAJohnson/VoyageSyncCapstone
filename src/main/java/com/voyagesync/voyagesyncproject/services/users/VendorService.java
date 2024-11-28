@@ -24,11 +24,17 @@ public class VendorService {
     }
 
     public Vendors getVendorById(ObjectId vendorId) {
+        // Log the vendorId received
+        System.out.println("Vendor ID received in Service: " + vendorId);
         return vendorRepository.findById(vendorId).orElse(null);
     }
     // Method to get vendors by business name
     public List<Vendors> getVendorsByName(String businessName) {
         return vendorRepository.findByBusinessName(businessName);
+    }
+
+    public Vendors getVendorByRepresentativeId(ObjectId userId) {
+        return vendorRepository.findByRepresentativeId(userId).orElse(null);
     }
 
     // Method to get vendors by business type

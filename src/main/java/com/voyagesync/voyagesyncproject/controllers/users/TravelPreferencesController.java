@@ -13,6 +13,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/travel-preferences")
+@CrossOrigin(origins = "http://localhost:8081")
 public class TravelPreferencesController {
     private final TravelPreferenceService travelPreferenceService;
     public TravelPreferencesController(final TravelPreferenceService travelPreferenceService) {

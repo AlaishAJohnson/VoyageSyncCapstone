@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/vendors")
+@CrossOrigin(origins = "http://localhost:8081")
 public class VendorController {
     private final VendorService vendorService;
 
@@ -26,6 +27,35 @@ public class VendorController {
         List<Vendors> vendorsList = vendorService.getAllVendors();
         List<Map<String, Object>> response = vendorsList.stream().map(this::mapVendorsToResponse).collect(Collectors.toList());
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/by-user/{userId}")
+    public ResponseEntity<Map<String, Object>> getVendorByUserId(@PathVariable String userId) {
+        try {
+            ObjectId userObjectId = new ObjectId(userId); // Convert String to ObjectId
+            Vendors vendor = vendorService.getVendorByRepresentativeId(userObjectId); // Get vendor based on representativeId (userId)
+            if (vendor == null) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Vendor not found
+            }
+            return new ResponseEntity<>(mapVendorsToResponse(vendor), HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // Invalid userId format
+        }
+    }
+
+    @GetMapping("/{vendorId}")
+    public ResponseEntity<Map<String, Object>> getVendorById(@PathVariable String vendorId) {
+        try {
+            ObjectId objectId = new ObjectId(vendorId); // Convert String to ObjectId
+            Vendors vendor = vendorService.getVendorById(objectId); // Pass ObjectId to the service
+            if (vendor == null) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Vendor not found
+            }
+            return new ResponseEntity<>(mapVendorsToResponse(vendor), HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            // Handle invalid ObjectId format
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     // New endpoint to filter vendors by name

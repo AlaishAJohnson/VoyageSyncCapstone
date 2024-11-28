@@ -5,6 +5,7 @@ import com.voyagesync.voyagesyncproject.services.messaging.ThreadService;
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/threads")
+@CrossOrigin(origins = "http://localhost:8081")
 public class ThreadController {
     private final ThreadService threadService;
     public ThreadController(final ThreadService threadService) {

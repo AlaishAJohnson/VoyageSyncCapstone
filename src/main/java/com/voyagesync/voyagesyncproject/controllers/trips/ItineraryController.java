@@ -4,6 +4,7 @@ import com.voyagesync.voyagesyncproject.models.trips.Itinerary;
 import com.voyagesync.voyagesyncproject.services.trips.ItineraryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +13,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/itinerary")
+@CrossOrigin(origins = "http://localhost:8081")
 public class ItineraryController {
     private final ItineraryService itineraryService;
     public ItineraryController(final ItineraryService itineraryService) {
