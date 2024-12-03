@@ -7,12 +7,21 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ServiceAvailabilityRepository extends MongoRepository<ServiceAvailability, ObjectId> {
     List<ServiceAvailability> findByServiceIdAndDateOfService(ObjectId serviceId, LocalDate dateOfService);
-    List<ServiceAvailability> findByServiceId(ObjectId serviceId);
+    List<ServiceAvailability> findByServiceId(List<ObjectId> serviceId);
     void deleteByServiceId(ObjectId serviceId);
+
+    Optional<ServiceAvailability> findById(String id);
+
+
+    List<ServiceAvailability> findByServiceIdIn(List<ObjectId> serviceIds);
+
+//    public List<ServiceAvailability> findByServiceIdIn(List<ObjectId> serviceIds);
+
 
     // List<ServiceAvailability> findByIsAvailable(boolean isAvailable);
     // List<ServiceAvailability> findServiceAvailabilityIn(List<ObjectId> serviceAvailabilityIds);

@@ -20,7 +20,7 @@ import java.time.LocalTime;
 public class Bookings {
     @Id
     private ObjectId bookingId;
-    private String serviceId;
+    private ObjectId serviceId;
     private String vendorId;
     private LocalDate bookingDate;
     private LocalTime bookingTime;

@@ -3,6 +3,7 @@ package com.voyagesync.voyagesyncproject.controllers.bookings;
 import com.voyagesync.voyagesyncproject.enums.ConfirmationStatus;
 import com.voyagesync.voyagesyncproject.models.bookings.Bookings;
 import com.voyagesync.voyagesyncproject.services.bookings.BookingService;
+import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,13 @@ public class BookingsController {
 
     public BookingsController(final BookingService bookingService) {
         this.bookingService = bookingService;
+    }
+
+    @GetMapping("/vendor/{vendorId}")
+    public ResponseEntity<List<Map<String, Object>>> getByVendorId(@PathVariable ObjectId vendorId) {
+        List<Bookings> bookings = bookingService.getByVendorId(vendorId);
+        List<Map<String, Object>> response = bookings.stream().map(this::mapBookingsToResponse).collect(Collectors.toList());
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping

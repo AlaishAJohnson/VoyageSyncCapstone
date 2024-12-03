@@ -34,7 +34,6 @@ public class Users {
     private TravelPreferences travelPreferences;
     private LocalDateTime createdAt;
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;
-    private boolean active;
 
     @Nullable private List<ObjectId> trips;
     @Nullable private List<ObjectId> friendIds;

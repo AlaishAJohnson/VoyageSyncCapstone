@@ -7,6 +7,7 @@ import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -21,9 +22,11 @@ public class ServiceAvailabilityService {
     }
 
 
-    public List<ServiceAvailability> getServiceAvailabilityByServiceId(final ObjectId serviceId) {
-        return serviceAvailabilityRepository.findByServiceId(serviceId);
+    public List<ServiceAvailability> getServiceAvailabilityByServiceIds(List<ObjectId> serviceIds) {
+        return serviceAvailabilityRepository.findByServiceIdIn(serviceIds);
     }
+
+
 
     // Create service availability for a new service
     @Transactional
@@ -41,7 +44,7 @@ public class ServiceAvailabilityService {
     // Update service availability when the service is updated
     @Transactional
     public void updateAvailabilityForService(Services existingService, Services newService) {
-        List<ServiceAvailability> availabilities = serviceAvailabilityRepository.findByServiceId(existingService.getServiceId());
+        List<ServiceAvailability> availabilities = serviceAvailabilityRepository.findByServiceId(Collections.singletonList(existingService.getServiceId()));
         for (ServiceAvailability availability : availabilities) {
             availability.setAvailableSlots(newService.getAvailableSlots()); // Update available slots
             availability.setAvailable(newService.isAvailable());            // Update availability status
@@ -96,4 +99,5 @@ public class ServiceAvailabilityService {
         // Delete the service availability from the repository
         serviceAvailabilityRepository.delete(existingServiceAvailability);
     }
+
 }

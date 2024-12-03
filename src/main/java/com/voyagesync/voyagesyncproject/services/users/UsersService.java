@@ -114,6 +114,7 @@ public class UsersService {
         if (user.getId() == null || !usersRepository.existsById(user.getId())) {
             throw new IllegalArgumentException("User with given ID does not exist.");
         }
+        // Ensure the user fields are updated and saved
         usersRepository.save(user);
     }
 
@@ -142,13 +143,5 @@ public class UsersService {
             return usersRepository.save(user);
         }
         return null;
-    }
-
-    public Users updateActivationStatus(String userId, boolean isActive){
-        ObjectId userObjectId = new ObjectId(userId);
-        Users user = usersRepository.findById(userObjectId).orElseThrow(() -> new RuntimeException("User not found."));
-
-        user.setActive(isActive);
-        return usersRepository.save(user);
     }
 }

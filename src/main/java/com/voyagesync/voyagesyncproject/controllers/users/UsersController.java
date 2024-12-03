@@ -213,8 +213,8 @@ public class UsersController {
             // Handle additional role-specific data
             String role = newUser.getRole();
             if ("vendor".equals(role)) {
-                Vendors newVendor = createVendor(userDetails, savedUser.getId());
-                vendorService.createVendor(newVendor);
+                Vendors newVendor = createVendor(userDetails, savedUser.getId()); // Create a Vendors object
+                vendorService.createVendor(newVendor, savedUser.getId());
             } else if ("admin".equals(role)) {
                 Admins newAdmin = new Admins();
                 newAdmin.setUserId(savedUser.getId());
@@ -237,7 +237,6 @@ public class UsersController {
         }
     }
 
-    // UPDATE METHODS
 
     @PutMapping("/{userId}/linkPreferences/{preferencesId}")
     public ResponseEntity<String> linkPreferences(@PathVariable String userId, @PathVariable String preferencesId) {
@@ -272,15 +271,7 @@ public class UsersController {
         return ResponseEntity.ok(updatedPreferences);
     }
 
-    @PutMapping("/{userId}/activation")
-    public ResponseEntity<Users> updateActivationStatus(@PathVariable String userId, @RequestParam boolean isActive){
-        try{
-            Users updatedUser = usersService.updateActivationStatus(userId, isActive);
-            return ResponseEntity.ok(updatedUser);
-        } catch(Exception e){
-            return new ResponseEntity<>("Failed to update user." + e.getMessage(), HttpStatus.BAD_REQUEST); 
-        }
-    }
+
 
     private Vendors createVendor(Map<String, Object> userDetails, ObjectId userId) {
         Vendors vendor = new Vendors();

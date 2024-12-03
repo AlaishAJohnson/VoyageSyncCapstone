@@ -3,13 +3,14 @@ package com.voyagesync.voyagesyncproject.services.bookings;
 import com.voyagesync.voyagesyncproject.enums.ConfirmationStatus;
 import com.voyagesync.voyagesyncproject.models.bookings.Bookings;
 import com.voyagesync.voyagesyncproject.repositories.bookings.BookingsRepository;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Service
-public class BookingService {
+public class BookingService{
     private final BookingsRepository bookingsRepository;
     public BookingService(final BookingsRepository bookingsRepository) {
         this.bookingsRepository = bookingsRepository;
@@ -35,5 +36,10 @@ public class BookingService {
     public Bookings createBooking(Bookings booking) {
         return bookingsRepository.save(booking);
     }
-    
+
+    public List<Bookings> getByVendorId(ObjectId vendorId) {
+        // Query bookings repository with ObjectId
+        return bookingsRepository.findByVendorId(vendorId);
+    }
+
 }
