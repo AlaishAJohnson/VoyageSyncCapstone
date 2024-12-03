@@ -143,4 +143,12 @@ public class UsersService {
         }
         return null;
     }
+
+    public Users updateActivationStatus(String userId, boolean isActive){
+        ObjectId userObjectId = new ObjectId(userId);
+        Users user = usersRepository.findById(userObjectId).orElseThrow(() -> new RuntimeException("User not found."));
+
+        user.setActive(isActive);
+        return usersRepository.save(user);
+    }
 }

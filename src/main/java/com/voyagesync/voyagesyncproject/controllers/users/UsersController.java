@@ -237,6 +237,7 @@ public class UsersController {
         }
     }
 
+    // UPDATE METHODS
 
     @PutMapping("/{userId}/linkPreferences/{preferencesId}")
     public ResponseEntity<String> linkPreferences(@PathVariable String userId, @PathVariable String preferencesId) {
@@ -271,7 +272,15 @@ public class UsersController {
         return ResponseEntity.ok(updatedPreferences);
     }
 
-
+    @PutMapping("/{userId}/activation")
+    public ResponseEntity<Users> updateActivationStatus(@PathVariable String userId, @RequestParam boolean isActive){
+        try{
+            Users updatedUser = usersService.updateActivationStatus(userId, isActive);
+            return ResponseEntity.ok(updatedUser);
+        } catch(Exception e){
+            return new ResponseEntity<>("Failed to update user." + e.getMessage(), HttpStatus.BAD_REQUEST); 
+        }
+    }
 
     private Vendors createVendor(Map<String, Object> userDetails, ObjectId userId) {
         Vendors vendor = new Vendors();
