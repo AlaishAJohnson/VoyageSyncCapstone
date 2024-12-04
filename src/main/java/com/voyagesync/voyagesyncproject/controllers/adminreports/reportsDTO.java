@@ -1,5 +1,11 @@
 package com.voyagesync.voyagesyncproject.controllers.adminreports;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
+
 public class reportsDTO {
     private long userCount;
     private long tripCount;
