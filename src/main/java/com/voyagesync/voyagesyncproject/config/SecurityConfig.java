@@ -26,6 +26,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/login").permitAll()
                         .requestMatchers("/api/service-availability/**").permitAll()
                         .requestMatchers("/api/vendors/feedback/new").permitAll()
+                        .requestMatchers("/api/reports/platform-usage").permitAll()
+                        .requestMatchers("/api/reports/generate").permitAll()
 
                         // Restrict access to other endpoints based on roles
                         .requestMatchers("/api/service/**").hasRole("VENDOR")
