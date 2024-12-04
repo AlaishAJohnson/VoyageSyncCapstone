@@ -213,8 +213,8 @@ public class UsersController {
             // Handle additional role-specific data
             String role = newUser.getRole();
             if ("vendor".equals(role)) {
-                Vendors newVendor = createVendor(userDetails, savedUser.getId());
-                vendorService.createVendor(newVendor);
+                Vendors newVendor = createVendor(userDetails, savedUser.getId()); // Create a Vendors object
+                vendorService.createVendor(newVendor, savedUser.getId());
             } else if ("admin".equals(role)) {
                 Admins newAdmin = new Admins();
                 newAdmin.setUserId(savedUser.getId());

@@ -57,6 +57,14 @@ public class Vendors {
     @Field("services")
     private List<ObjectId> services;
 
+    @Field("email")
+    private String email;
+
+    @Field("password")
+    private String password;
+
+    @Field("username")
+    private String username;
 
 
 }

@@ -32,16 +32,16 @@ public class VendorController {
     @GetMapping("/by-user/{userId}")
     public ResponseEntity<Map<String, Object>> getVendorByUserId(@PathVariable String userId) {
         try {
-            ObjectId userObjectId = new ObjectId(userId); // Convert String to ObjectId
-            Vendors vendor = vendorService.getVendorByRepresentativeId(userObjectId); // Get vendor based on representativeId (userId)
-            if (vendor == null) {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Vendor not found
-            }
+            // Convert userId (String) to ObjectId
+            ObjectId userObjectId = new ObjectId(userId);
+
+            Vendors vendor = vendorService.getVendorByRepresentativeId(userObjectId);
             return new ResponseEntity<>(mapVendorsToResponse(vendor), HttpStatus.OK);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // Invalid userId format
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
 
     @GetMapping("/{vendorId}")
     public ResponseEntity<Map<String, Object>> getVendorById(@PathVariable String vendorId) {
@@ -104,12 +104,33 @@ public class VendorController {
                 .map(ObjectId::toHexString).collect(Collectors.toList());
         vendorMap.put("vendorPermissions", vendorPermissionIds);
 
-        vendorMap.put("bookings", vendors.getBookings() != null ?
-                vendors.getBookings().stream().map(ObjectId::toHexString).collect(Collectors.toList()) : null);
+        vendorMap.put("bookings", vendorService.getBookingsForVendor(vendors.getVendorId()).stream()
+                .map(booking -> booking.getBookingId().toHexString()).collect(Collectors.toList()));
 
         vendorMap.put("services", vendors.getServices() != null ?
                 vendors.getServices().stream().map(ObjectId::toHexString).collect(Collectors.toList()) : null);
 
         return vendorMap;
     }
+
+    @PutMapping("/update")
+    public ResponseEntity<?> updateVendorProfile(@RequestBody Map<String, Object> updatedData) {
+        try {
+            String vendorId = (String) updatedData.get("vendorId");
+            ObjectId vendorObjectId = new ObjectId(vendorId);
+
+            boolean isUpdated = vendorService.updateVendor(vendorObjectId, updatedData);
+
+            if (isUpdated) {
+                return new ResponseEntity<>("Vendor profile updated successfully", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("Vendor not found", HttpStatus.NOT_FOUND);
+            }
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>("Invalid vendor ID format", HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error updating vendor profile", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

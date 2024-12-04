@@ -14,4 +14,7 @@ public interface BookingsRepository extends MongoRepository<Bookings, ObjectId> 
     List<Bookings> findByConfirmationStatus(ConfirmationStatus confirmationStatus);
     List<Bookings> findByBookingDate(LocalDate bookingDate);
     List<Bookings> findByNumberOfParticipants(int numberOfParticipants);
+
+    List<Bookings> findByVendorId(ObjectId vendorId);
+
 }

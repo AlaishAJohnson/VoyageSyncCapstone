@@ -114,6 +114,7 @@ public class UsersService {
         if (user.getId() == null || !usersRepository.existsById(user.getId())) {
             throw new IllegalArgumentException("User with given ID does not exist.");
         }
+        // Ensure the user fields are updated and saved
         usersRepository.save(user);
     }
 

@@ -44,7 +44,7 @@ public class ServiceAvailabilityController {
 //    } // returning an empty array, needs to be debugged
 
     // Create Service Availability (Restricted to Vendor Role)
-    @PreAuthorize("hasRole('ROLE_VENDOR')")
+//    @PreAuthorize("hasRole('ROLE_VENDOR') or hasRole('ROLE_ADMIN')")
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public ServiceAvailability createServiceAvailability(@RequestBody ServiceAvailability serviceAvailability) {
@@ -52,14 +52,14 @@ public class ServiceAvailabilityController {
     }
 
     // Update Service Availability (Restricted to Vendor Role)
-    @PreAuthorize("hasRole('ROLE_VENDOR')")
+//    @PreAuthorize("hasRole('ROLE_VENDOR') or hasRole('ROLE_ADMIN')")
     @PutMapping("/update/{id}")
     public ServiceAvailability updateServiceAvailability(@PathVariable("id") String serviceAvailabilityId, @RequestBody ServiceAvailability serviceAvailability) {
         return serviceAvailabilityService.updateServiceAvailability(serviceAvailabilityId, serviceAvailability);
     }
 
     // Delete Service Availability (Restricted to Vendor Role)
-    @PreAuthorize("hasRole('ROLE_VENDOR')")
+//    @PreAuthorize("hasRole('ROLE_VENDOR') or hasRole('ROLE_ADMIN')")
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteServiceAvailability(@PathVariable("id") String serviceAvailabilityId) {
