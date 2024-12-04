@@ -1,29 +1,32 @@
 import React, { useEffect } from 'react';
 import { Image, StyleSheet, View, Text, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router'; 
-import { useAuth } from '../hook/auth'; 
+import { useRouter } from 'expo-router';
+import { useAuth } from '../hook/auth';
 import logo from '../assets/logo.png';
 import CustomButton from '../constants/CustomButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
-  const { userData, isAuthenticated, logout } = useAuth(); 
+  const { userData, isAuthenticated, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     console.log('User Data:', userData);
     console.log('Authenticated:', isAuthenticated);
 
-    
+
     if (isAuthenticated && userData) {
-      
+
       const timer = setTimeout(() => {
         if (userData.role === 'admin') {
-          router.push('/adminTabs');  
+          router.push('/adminTabs');
         } else if (userData.role === 'user') {
           router.push('/userTabs');
+        } else if (userData.role === 'vendor') {
+          router.push('/vendorTabs');
         }
-      }, 500); 
+
+      }, 500);
 
       return () => clearTimeout(timer);
     }
@@ -69,16 +72,16 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center', 
+    justifyContent: 'center',
     alignItems: 'center',
-    height: '100%',     
+    height: '100%',
   },
   imageContainer: {
     alignItems: 'center',
   },
   logo: {
-    width: 400,  
-    height: 400, 
+    width: 400,
+    height: 400,
     resizeMode: 'contain',
   },
   textContainer: {
