@@ -28,6 +28,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/vendors/feedback/new").permitAll()
                         .requestMatchers("/api/reports/platform-usage").permitAll()
                         .requestMatchers("/api/reports/generate").permitAll()
+                        .requestMatchers("/api/users/").permitAll()
+                        .requestMatchers("/api/users/{userId}").permitAll()
+                        .requestMatchers("/api/admins/{userId}/verification-status").permitAll()
+                        .requestMatchers("/api/admins/delete/{userId}").permitAll()
+                        .requestMatchers("/api/vendors/by-user/{userId}").permitAll()
+                        .requestMatchers("/api/vendors").permitAll()
+                        .requestMatchers("/api/vendors/{userId}").permitAll()
+                        .requestMatchers("/api/bookings/vendor/{vendorId}").permitAll()
+                        .requestMatchers("/api/metrics/{vendorId}").permitAll()
+
 
                         // Restrict access to other endpoints based on roles
                         .requestMatchers("/api/service/**").hasRole("VENDOR")

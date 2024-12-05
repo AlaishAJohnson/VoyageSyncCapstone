@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +47,10 @@ public class reportsController {
 
     @PostMapping("/generate")
     public ResponseEntity<report> generateReport() {
-        ObjectId adminId = new ObjectId();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String adminId = authentication.getName();
+
+        //ObjectId adminId = new ObjectId();
         String reportId = reportsService.saveReport(adminId.toString());
 
         reportsDTO metrics = reportsService.fetchPlatformUsage();
