@@ -1,14 +1,13 @@
 package com.voyagesync.voyagesyncproject.controllers.vendorreports;
 
-import com.voyagesync.voyagesyncproject.controllers.vendorreports.VendorReport;
-import com.voyagesync.voyagesyncproject.controllers.vendorreports.VendorReportsDTO;
-import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
-
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
+import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.stereotype.Service;
 
 @Service
 public class VendorReportsService {
@@ -68,17 +67,20 @@ public class VendorReportsService {
     // Private helper methods for metrics calculations
 
     private int getBookingsCount(String vendorId) {
+        ObjectId objectId = new ObjectId(vendorId);
         return (int) mongoTemplate.getCollection("Bookings")
-                .countDocuments(new org.bson.Document("vendorId", vendorId));
+                .countDocuments(new org.bson.Document("vendorId", objectId));
     }
 
     private int getServicesCount(String vendorId) {
+        ObjectId objectId = new ObjectId(vendorId);
         return (int) mongoTemplate.getCollection("Services")
-                .countDocuments(new org.bson.Document("vendorId", vendorId));
+                .countDocuments(new org.bson.Document("vendorId", objectId));
     }
 
     private int getFeedbackCount(String vendorId) {
+        ObjectId objectId = new ObjectId(vendorId);
         return (int) mongoTemplate.getCollection("Feedback")
-                .countDocuments(new org.bson.Document("vendorId", vendorId));
+                .countDocuments(new org.bson.Document("vendorId", objectId));
     }
 }

@@ -36,7 +36,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/vendors").permitAll()
                         .requestMatchers("/api/vendors/{userId}").permitAll()
                         .requestMatchers("/api/bookings/vendor/{vendorId}").permitAll()
-                        .requestMatchers("/api/metrics/{vendorId}").permitAll()
+                        .requestMatchers("/api/vendor-reports/metrics").permitAll()
+                        .requestMatchers("/api/vendor-reports/generate").permitAll()
 
 
                         // Restrict access to other endpoints based on roles

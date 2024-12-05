@@ -1,17 +1,17 @@
 package com.voyagesync.voyagesyncproject.controllers.vendorreports;
 
-import com.voyagesync.voyagesyncproject.controllers.vendorreports.VendorReportsService;
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-
-import java.util.Date;
-import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:8081")
 @RestController
@@ -22,14 +22,14 @@ public class VendorReportsController {
     private VendorReportsService vendorReportsService;
 
     @GetMapping("/metrics")
-    public ResponseEntity<VendorReportsDTO> getVendorMetrics(@RequestAttribute("vendorId") String vendorId) {
+    public ResponseEntity<VendorReportsDTO> getVendorMetrics(@RequestParam("vendorId") String vendorId) {
         // Fetch vendor-specific metrics
         VendorReportsDTO metrics = vendorReportsService.fetchVendorMetrics(vendorId);
         return ResponseEntity.ok(metrics);
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<VendorReport> generateVendorReport(@RequestAttribute("vendorId") String vendorId) {
+    public ResponseEntity<VendorReport> generateVendorReport(@RequestParam("vendorId") String vendorId) {
         // Generate a new vendor report
         String reportId = vendorReportsService.saveReport(vendorId);
 
