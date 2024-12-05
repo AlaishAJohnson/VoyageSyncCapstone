@@ -27,7 +27,10 @@ const VendorLayout = () => {
               options={{
                 headerShown: false,
                 tabBarIcon: ({ focused }) => (
-                  <TabIcon icon="file-tray-full-outline" focused={focused} name="Bookings" />
+                  <TabIcon icon="file-tray-full-outline" 
+                  focused={focused} 
+                  name="Bookings" 
+                  />
                 ),
               }}
             />
@@ -73,4 +76,12 @@ const VendorLayout = () => {
 
 export default VendorLayout
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+  iconContainer: {
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+iconLabel: {
+  fontSize: 10, 
+  marginTop: 2, 
+},});
