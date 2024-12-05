@@ -2,7 +2,7 @@ import { StyleSheet, Text, TouchableOpacity, Alert, View, Platform, Dimensions }
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PieChart as RNChart } from 'react-native-chart-kit'; // For mobile
-import { PieChart as WebPieChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar, Cell } from "recharts"; // For web
+import { PieChart as WebPieChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar, Cell, Pie} from "recharts"; // For web
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
 import RenderHTML from 'react-native-render-html'; // For rendering HTML in mobile
 import axios from 'axios';
@@ -71,7 +71,7 @@ const VendorAnalytics = () => {
         setLoading(true);
         try {
             console.log('Fetching metrics for vendorId:', vendorId); // Debugging log
-            const response = await axios.get(`${BACKEND_URL}/api/metrics?vendorId=${vendorId}`, {
+            const response = await axios.get(`${BACKEND_URL}/api/vendor-reports/metrics?vendorId=${vendorId}`, {
                 headers: {
                     'Authorization': authHeader,
                 },
@@ -100,7 +100,7 @@ const VendorAnalytics = () => {
         setLoading(true);
         try {
             console.log('Generating report for vendorId:', vendorId); // Debugging log
-            const response = await axios.post(`${BACKEND_URL}/api/generate/${vendorId}`, {}, {
+            const response = await axios.post(`${BACKEND_URL}/api/vendor-reports/generate?vendorId=${vendorId}`, {}, {
                 headers: {
                     'Authorization': authHeader,
                 },
@@ -139,18 +139,24 @@ const VendorAnalytics = () => {
                 <h1 style={styles.chartTitle}>Vendor Metrics</h1>
                 {/* Pie Chart */}
                 <div style={styles.chartContainer}>
-                    <WebPieChart
-                        width={500}
-                        height={300}
+                <WebPieChart width={500} height={300}>
+                    <Pie
                         data={validChartData}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        dataKey="count"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        fill="#8884d8"
+                        label
                     >
-                        <Tooltip />
-                        <Legend />
                         {validChartData.map((entry, index) => (
-                            <Cell key={index} fill={pieChartColors[index]} />
+                            <Cell key={`cell-${index}`} fill={pieChartColors[index]} />
                         ))}
-                    </WebPieChart>
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                </WebPieChart>
                 </div>
 
                 {/* Metrics Table */}
@@ -254,10 +260,12 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 16,
+        textAlign: 'center',
     },
     chartContainer: {
         justifyContent: 'center',
         alignItems: 'center',
+        display: 'flex'
     },
     card: {
         marginTop: 20,
