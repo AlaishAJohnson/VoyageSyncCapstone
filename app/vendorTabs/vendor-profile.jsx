@@ -141,11 +141,7 @@ const VendorProfile = () => {
           </View>
           <View style={styles.section}>
             <Text style={styles.label}>Username:</Text>
-              {userData ? (
-              <Text style={styles.value}>{userData.username}</Text>
-            ) : (
-              <Text style={styles.value}>Loading...</Text>
-            )}
+            <Text style={styles.value}>{userData.username}</Text>
           </View>
           <View style={styles.section}>
             <Text style={styles.label}>Country of Registration:</Text>
