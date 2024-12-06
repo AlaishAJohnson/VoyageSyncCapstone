@@ -72,7 +72,7 @@ public class BookingsController {
     private Map<String, Object> mapBookingsToResponse(Bookings bookings) {
         Map<String, Object> bookingMap = new LinkedHashMap<>();
         bookingMap.put("bookingId", bookings.getBookingId().toHexString());
-        bookingMap.put("serviceId", bookings.getServiceId());
+        bookingMap.put("serviceId", bookings.getServiceId().toHexString());
         bookingMap.put("vendorId", bookings.getVendorId());
         bookingMap.put("bookingDate", bookings.getBookingDate());
         bookingMap.put("bookingTime", bookings.getBookingTime());

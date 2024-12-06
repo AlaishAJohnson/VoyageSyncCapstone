@@ -1,10 +1,11 @@
 package com.voyagesync.voyagesyncproject.services.bookings;
 
+import com.voyagesync.voyagesyncproject.models.bookings.ServiceDetails;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
-import java.util.Map;
+
 @Setter
 @Getter
 public class ServiceWithVendorDTO {
@@ -15,8 +16,9 @@ public class ServiceWithVendorDTO {
     private Double price;
     private String vendorBusinessName;
     private String vendorId;
+    private String location;
     private double averageRating;
-    private List<Map<String, Object>> serviceAvailability;
+    private List<ServiceDetails> details; // Updated to reflect the ServiceDetails model directly
 
     // Getters and Setters
 
@@ -76,11 +78,11 @@ public class ServiceWithVendorDTO {
         this.averageRating = averageRating;
     }
 
-    public List<Map<String, Object>> getServiceAvailability() {
-        return serviceAvailability;
+    public List<ServiceDetails> getDetails() {
+        return details;
     }
 
-    public void setServiceAvailability(List<Map<String, Object>> serviceAvailability) {
-        this.serviceAvailability = serviceAvailability;
+    public void setDetails(List<ServiceDetails> details) {
+        this.details = details;
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "Services")
@@ -17,8 +18,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Services {
+
     @Id
-    private ObjectId serviceId;
+    private ObjectId id;
 
     @Field("vendorId")
     private ObjectId vendorId;
@@ -27,24 +29,40 @@ public class Services {
 
     private String serviceDescription;
 
-    private List<ServiceAvailability> serviceAvailability; // Store ObjectIds only
+    private Double price;
 
-    private double price;
-
+    @Field("location")
     private String location;
 
-    // Convenience method to calculate available slots using ServiceAvailability (will be handled in the service layer)
+    // The details field now holds ServiceDetails objects with a timeFrame field as a string
+    private List<ServiceDetails> details = new ArrayList<>(); // List of ServiceDetails objects
+
+    // Convenience method to calculate available slots using the "details" field
     public int getAvailableSlots() {
-        // Sum all available slots from serviceAvailability list (to be fetched manually from ServiceAvailability repository)
-        return 0; // Placeholder - logic will be moved to ServicesService class
+        int totalAvailableSlots = 0;
+        for (ServiceDetails detail : details) {
+            totalAvailableSlots += detail.getOpenSlots(); // Add open slots from each service detail
+        }
+        return totalAvailableSlots;
     }
 
-    // A method to check if the service is available (will be handled in the service layer)
+    // A method to check if the service is available based on the "details" field
     public boolean isAvailable() {
-        // Placeholder - logic will be moved to ServicesService class
-        return false; // Placeholder
+        return details != null && !details.isEmpty() && getAvailableSlots() > 0;
     }
 
-    // Optional: Service details field
-    private ServiceAvailability details;
+    // Optional: Method to update available slots after a booking
+    public void updateAvailableSlots(int slotsBooked) {
+        for (ServiceDetails detail : details) {
+            if (detail.getOpenSlots() >= slotsBooked) {
+                detail.setOpenSlots(detail.getOpenSlots() - slotsBooked); // Reduce open slots by booked amount
+                break;
+            }
+        }
+    }
+
+    // Optional: Add a method to add ServiceDetails to the service
+    public void addServiceDetail(ServiceDetails serviceDetail) {
+        this.details.add(serviceDetail);
+    }
 }

@@ -9,18 +9,18 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ServiceRepository extends MongoRepository<Services, ObjectId> {
+public interface ServiceRepository extends MongoRepository<Services, String> {
 
-    List<Services> findByServiceIdIn(List<ObjectId> serviceIds);
+    List<Services> findByIdIn(List<ObjectId> ids);
 
     List<Services> findByLocation(String location);
 
-    List<Services> findByPrice(double price);
+    List<Services> findByPrice(Double price);
 
     @Query("{ 'vendorId': ?0 }")
     List<Services> findByVendorId(ObjectId vendorId);
 
-    // Method to find services based on availability (customize the query as needed)
-    @Query("{ 'serviceAvailability.serviceAvailabilityId': { $in: ?0 } }")
-    List<Services> findByServiceAvailability(List<ObjectId> serviceAvailabilityIds);
+    // Custom query to find services based on the details field (if necessary)
+    @Query("{ 'details.start': { $gte: ?0 }, 'details.end': { $lte: ?1 } }")
+    List<Services> findByDetailsBetween(String startDate, String endDate);
 }
