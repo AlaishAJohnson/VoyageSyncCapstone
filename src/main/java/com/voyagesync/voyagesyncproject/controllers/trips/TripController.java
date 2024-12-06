@@ -9,10 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -43,27 +40,10 @@ public class TripController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        final Map<String, Object> tripMap = new LinkedHashMap<>();
+        List<Trips> tripsList = Collections.singletonList(trip);
+        Map<String, Object> responseMap = mapTripToResponse(tripsList);
 
-        tripMap.put("tripId", trip.getTripId().toHexString());
-        tripMap.put("organizerId", trip.getOrganizerId().toHexString());
-        tripMap.put("tripName", trip.getTripName());
-        tripMap.put("destination", trip.getDestination());
-        tripMap.put("startDate", trip.getStartDate());
-        tripMap.put("endDate", trip.getEndDate());
-        tripMap.put("budget", trip.getBudget());
-        tripMap.put("tripStatus", trip.getTripStatus());
-        tripMap.put("isGroupTrip", trip.isGroupTrip());
-        tripMap.put("imageUrl", trip.getImageUrl());
-
-        if (trip.getItinerary() != null) {
-            tripMap.put("itinerary", trip.getItinerary());
-        }
-        if (trip.getMemberIds() != null) {
-            tripMap.put("memberIds", trip.getMemberIds());
-        }
-
-        return new ResponseEntity<>(tripMap, HttpStatus.OK);
+        return new ResponseEntity<>(responseMap, HttpStatus.OK);
     }
 
 

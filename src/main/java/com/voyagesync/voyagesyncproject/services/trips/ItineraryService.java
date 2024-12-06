@@ -2,6 +2,7 @@ package com.voyagesync.voyagesyncproject.services.trips;
 
 import com.voyagesync.voyagesyncproject.models.trips.Itinerary;
 import com.voyagesync.voyagesyncproject.repositories.trips.ItineraryRepository;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,4 +18,7 @@ public class ItineraryService {
         return itineraryRepository.findAll();
     }
 
+    public Itinerary getItineraryById(final ObjectId id) {
+        return itineraryRepository.findByItineraryId(id);
+    }
 }
