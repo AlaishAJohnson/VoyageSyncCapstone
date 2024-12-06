@@ -152,22 +152,23 @@ public class UsersController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         try {
-            // Validate the credentials
+
             Users user = usersService.login(loginRequest.getUsernameOrEmail(), loginRequest.getPassword());
 
             if (user != null) {
-                // Use the helper function to map the user object to the response format
-                Map<String, Object> userResponse = mapUserToResponse(user);
 
-                // Return the mapped response as JSON
+                Map<String, Object> userResponse = mapUserToResponse(user);
+                if (!user.isActivated()) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(Map.of("message", "Your account is not activated. Please contact support."));
+                }
+
                 return ResponseEntity.ok(userResponse);
             } else {
-                // Return an error if the login failed
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body("Invalid credentials"); // Non-JSON error message for clarity
+                        .body("Invalid credentials");
             }
         } catch (Exception e) {
-            // Log and handle unexpected errors
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An error occurred while processing your request.");
         }
@@ -206,6 +207,7 @@ public class UsersController {
             newUser.setRole(userDetails.get("role").toString());
             newUser.setVerificationStatus(VerificationStatus.PENDING);
             newUser.setCreatedAt(LocalDateTime.now());
+            newUser.setActivated(true);
 
 
             Users savedUser = usersService.createUser(newUser);
@@ -273,6 +275,7 @@ public class UsersController {
 
 
 
+
     private Vendors createVendor(Map<String, Object> userDetails, ObjectId userId) {
         Vendors vendor = new Vendors();
         vendor.setBusinessName((String) userDetails.get("businessName"));
@@ -294,6 +297,20 @@ public class UsersController {
     }
 
 
+    /* UPDATE METHODS */
+    @PutMapping("/{userId}/activation")
+    public ResponseEntity<?> activateUser(@PathVariable String userId, boolean activated) {
+        try {
+            Users updatedUser = usersService.updateActivationStatus(userId, activated);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "User created successfully");
+            response.put("users",mapUserToResponse(updatedUser));
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return new ResponseEntity<>(Map.of("message", "Failed to activate user: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
     /* Helper Functions */
 
     private Map<String, Object> mapUserToResponse(Users users) {
@@ -308,6 +325,7 @@ public class UsersController {
         userMap.put("role", users.getRole());
         userMap.put("verificationStatus", users.getVerificationStatus());
         userMap.put("createdAt", users.getCreatedAt());
+        userMap.put("activated", users.isActivated());
 
         if(users.getTravelPreferences() != null) {
             TravelPreferences preferences = users.getTravelPreferences();

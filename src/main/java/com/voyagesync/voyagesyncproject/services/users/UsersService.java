@@ -131,6 +131,13 @@ public class UsersService {
         return usersRepository.findById(userObjectId).orElse(null);
     }
 
+    public Users updateActivationStatus(String userId, boolean activated) {
+        ObjectId userObjectId = new ObjectId(userId);
+        Users user = usersRepository.findById(userObjectId).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setActivated(activated);
+        return usersRepository.save(user);
+
+    }
     public Users linkTravelPreference(String userId, String preferencesId) {
         ObjectId userObjectId = new ObjectId(userId);
         Users user = usersRepository.findById(userObjectId).orElse(null);
