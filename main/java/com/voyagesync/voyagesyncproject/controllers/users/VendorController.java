@@ -42,7 +42,6 @@ public class VendorController {
         }
     }
 
-
     @GetMapping("/{vendorId}")
     public ResponseEntity<Map<String, Object>> getVendorById(@PathVariable String vendorId) {
         try {
@@ -71,7 +70,7 @@ public class VendorController {
     public ResponseEntity<List<Map<String, Object>>> getVendorsByType(@PathVariable String businessType) {
         List<Vendors> vendorsList = vendorService.getVendorsByType(businessType);
         List<Map<String, Object>> response = vendorsList.stream().map(this::mapVendorsToResponse).collect(Collectors.toList());
-                return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/industry")
@@ -84,7 +83,7 @@ public class VendorController {
     // Helper method to create the vendor map
     private Map<String, Object> mapVendorsToResponse(Vendors vendors) {
         Map<String, Object> vendorMap = new LinkedHashMap<>();
-        vendorMap.put("vendorId", vendors.getVendorId().toHexString());
+        vendorMap.put("vendorId", vendors.get_id().toHexString());  // Updated to use _id
         vendorMap.put("businessName", vendors.getBusinessName());
         vendorMap.put("businessRegistrationNumber", vendors.getBusinessRegistrationNumber());
         vendorMap.put("countryOfRegistration", vendors.getCountryOfRegistration());
@@ -104,7 +103,7 @@ public class VendorController {
                 .map(ObjectId::toHexString).collect(Collectors.toList());
         vendorMap.put("vendorPermissions", vendorPermissionIds);
 
-        vendorMap.put("bookings", vendorService.getBookingsForVendor(vendors.getVendorId()).stream()
+        vendorMap.put("bookings", vendorService.getBookingsForVendor(vendors.get_id()).stream()  // Updated to use _id
                 .map(booking -> booking.getBookingId().toHexString()).collect(Collectors.toList()));
 
         vendorMap.put("services", vendors.getServices() != null ?
@@ -117,7 +116,7 @@ public class VendorController {
     public ResponseEntity<?> updateVendorProfile(@RequestBody Map<String, Object> updatedData) {
         try {
             String vendorId = (String) updatedData.get("vendorId");
-            ObjectId vendorObjectId = new ObjectId(vendorId);
+            ObjectId vendorObjectId = new ObjectId(vendorId);  // Correctly parse vendorId to ObjectId
 
             boolean isUpdated = vendorService.updateVendor(vendorObjectId, updatedData);
 
@@ -132,5 +131,4 @@ public class VendorController {
             return new ResponseEntity<>("Error updating vendor profile", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
 }
