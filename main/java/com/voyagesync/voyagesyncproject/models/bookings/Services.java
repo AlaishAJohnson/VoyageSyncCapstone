@@ -38,5 +38,4 @@ public class Services {
 
     private String timeFrame;
 
-
 }
