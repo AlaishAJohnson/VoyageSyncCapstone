@@ -36,6 +36,7 @@ public class VendorService {
 
 
     public Vendors getVendorById(ObjectId vendorId) {
+
         return vendorRepository.findById(vendorId).orElse(null);
     }
 
@@ -44,9 +45,9 @@ public class VendorService {
         return vendorRepository.findByBusinessName(businessName);
     }
 
-    public Vendors getVendorByRepresentativeId(ObjectId userObjectId) {
-        return vendorRepository.findByRepresentativeId(userObjectId)
-                .orElseThrow(() -> new IllegalArgumentException("Vendor not found for user ID: " + userObjectId));
+    public Vendors getVendorByRepresentativeId(ObjectId representativeId) {
+        return vendorRepository.findByRepresentativeId(representativeId)
+                .orElseThrow(() -> new IllegalArgumentException("Vendor not found for user ID: " + representativeId));
     }
 
 
@@ -78,6 +79,7 @@ public class VendorService {
 
     // Method to check if a vendor exists by vendorId
     public boolean existsById(ObjectId vendorId) {
+
         return vendorRepository.existsById(vendorId);
     }
 
