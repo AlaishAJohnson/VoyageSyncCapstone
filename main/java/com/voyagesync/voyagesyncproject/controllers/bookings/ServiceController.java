@@ -1,6 +1,5 @@
 package com.voyagesync.voyagesyncproject.controllers.bookings;
 
-import com.voyagesync.voyagesyncproject.models.bookings.ServiceDetails;
 import com.voyagesync.voyagesyncproject.models.bookings.Services;
 import com.voyagesync.voyagesyncproject.services.bookings.ServiceWithVendorDTO;
 import com.voyagesync.voyagesyncproject.services.bookings.ServicesService;
@@ -12,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,7 +30,7 @@ public class ServiceController {
     }
 
     // Fetch a single service with vendor info
-    @GetMapping("/{id}")
+    @GetMapping("/by-id/{id}")
     public ResponseEntity<ServiceWithVendorDTO> getServiceById(@PathVariable ObjectId id) {
         try {
             ServiceWithVendorDTO serviceResponse = servicesService.getServiceById(id); // Fetch service with vendor details
@@ -112,13 +110,6 @@ public class ServiceController {
     @PostMapping
     public ResponseEntity<Services> createService(@RequestBody Services service) {
         try {
-            // Ensure that details is present when creating a service
-            if (service.getDetails() == null || service.getDetails().isEmpty()) {
-                ServiceDetails defaultDetails = new ServiceDetails();
-                defaultDetails.setTimeFrame("Be Sure to Insert Your TimeFrame Vendor!"); // Default time frame as string
-                service.setDetails(Collections.singletonList(defaultDetails)); // Add default ServiceDetails
-            }
-
             Services createdService = servicesService.createService(service);
             return new ResponseEntity<>(createdService, HttpStatus.CREATED);
         } catch (Exception e) {
@@ -131,13 +122,6 @@ public class ServiceController {
     @PutMapping("/update/{serviceId}")
     public ResponseEntity<Services> updateService(@PathVariable ObjectId serviceId, @RequestBody Services service) {
         try {
-            // Ensure that details is present when updating
-            if (service.getDetails() == null || service.getDetails().isEmpty()) {
-                ServiceDetails defaultDetails = new ServiceDetails();
-                defaultDetails.setTimeFrame("This service is available from 10 AM to 12 AM"); // Default time frame as string
-                service.setDetails(Collections.singletonList(defaultDetails)); // Add default ServiceDetails
-            }
-
             Services updatedService = servicesService.updateService(serviceId, service);
             return ResponseEntity.ok(updatedService);
         } catch (Exception e) {
