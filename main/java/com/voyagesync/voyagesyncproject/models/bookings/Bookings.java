@@ -1,11 +1,10 @@
 package com.voyagesync.voyagesyncproject.models.bookings;
 
 import com.voyagesync.voyagesyncproject.enums.ConfirmationStatus;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -26,16 +25,14 @@ public class Bookings {
     private LocalTime bookingTime;
     private ConfirmationStatus confirmationStatus = ConfirmationStatus.PENDING;
     private String itineraryId;
-
-    private int numberOfParticipants;
+    @Setter
+    @Getter
+    @Transient
+    private String serviceName;
 
     // getter for numberOfParticipants
-    public int getNumberOfParticipants() {
-        return numberOfParticipants;
-    }
+    @Setter
+    @Getter
+    private int numberOfParticipants;
 
-    // setter for numberOfParticipants (if needed)
-    public void setNumberOfParticipants(int numberOfParticipants) {
-        this.numberOfParticipants = numberOfParticipants;
-    }
 }
