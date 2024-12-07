@@ -35,7 +35,7 @@ const VendorServices = () => {
                     headers: { Authorization: authHeader },
                 });
                 if (response.data && response.data.vendorId) {
-                    setVendorId(response.data.vendorId);
+                    setVendorId(response.data.vendorId.toString()); // Ensure it's treated as a string
                 } else {
                     throw new Error('No vendor found for this user.');
                 }
@@ -81,27 +81,24 @@ const VendorServices = () => {
                 serviceDescription: serviceDescription.trim(),
                 price: parseFloat(price),
                 location: location.trim(),
-                details: [
-                    {
-                        timeFrame: timeFrame.trim(),
-                        openSlots: openSlots ? parseInt(openSlots) : 0,
-                        duration: duration.trim(),
-                        typeOfService: typeOfService.trim(),
-                    },
-                ],
+                timeFrame: timeFrame.trim(),
+                openSlots: openSlots ? parseInt(openSlots) : 0,
+                duration: duration.trim(),
+                typeOfService: typeOfService.trim(),
+                vendorId: vendorId, // Ensure vendorId is treated as a string
             };
 
-            if (serviceToUpdate && serviceToUpdate.serviceId) {
+            if (serviceToUpdate && serviceToUpdate.serviceIdAsString) {
                 // Update existing service
                 const response = await axios.put(
-                    `${BACKEND_URL}/api/services/update/${serviceToUpdate.serviceId}`,
+                    `${BACKEND_URL}/api/services/update/${serviceToUpdate.serviceIdAsString}`,
                     serviceData,
                     { headers: { Authorization: authHeader } }
                 );
 
                 setServices((prevServices) =>
                     prevServices.map((service) =>
-                        service.serviceId === serviceToUpdate.serviceId ? response.data : service
+                        service.serviceIdAsString === serviceToUpdate.serviceIdAsString ? response.data : service
                     )
                 );
                 Alert.alert('Service updated successfully!');
@@ -109,7 +106,7 @@ const VendorServices = () => {
                 // Create new service
                 const response = await axios.post(
                     `${BACKEND_URL}/api/services`,
-                    { ...serviceData, vendorId },
+                    serviceData,
                     { headers: { Authorization: authHeader } }
                 );
                 setServices((prevServices) => [...prevServices, response.data]);
@@ -124,19 +121,18 @@ const VendorServices = () => {
     };
 
     // Delete a Service
-    const deleteService = async (serviceId) => {
+    const deleteService = async (serviceIdAsString) => {
         try {
-            await axios.delete(`${BACKEND_URL}/api/services/delete/${serviceId}`, {
+            await axios.delete(`${BACKEND_URL}/api/services/delete/${serviceIdAsString}`, {
                 headers: { Authorization: authHeader },
             });
-            setServices((prevServices) => prevServices.filter((service) => service.serviceId !== serviceId));
+            setServices((prevServices) => prevServices.filter((service) => service.serviceIdAsString !== serviceIdAsString));
             Alert.alert('Service deleted successfully.');
         } catch (err) {
             console.error('Error deleting service:', err.message);
             Alert.alert('Failed to delete service.');
         }
     };
-
 
     // Reset Service Form
     const resetServiceForm = () => {
@@ -165,7 +161,6 @@ const VendorServices = () => {
         if (vendorId) fetchVendorServices();
     }, [vendorId]);
 
-
     // Pre-fill form with all fields when updating a service
     const handleUpdatePress = (item) => {
         setServiceToUpdate(item); // Set the entire service object to `serviceToUpdate`
@@ -174,10 +169,10 @@ const VendorServices = () => {
             serviceDescription: item.serviceDescription || '',
             price: item.price ? item.price.toString() : '',
             location: item.location || '',
-            timeFrame: item.details?.[0]?.timeFrame || '',
-            openSlots: item.details?.[0]?.openSlots?.toString() || '',
-            duration: item.details?.[0]?.duration || '',
-            typeOfService: item.details?.[0]?.typeOfService || '',
+            timeFrame: item.timeFrame || '',
+            openSlots: item.openSlots?.toString() || '',
+            duration: item.duration || '',
+            typeOfService: item.typeOfService || '',
         });
         setShowModal(true);
     };
@@ -190,13 +185,16 @@ const VendorServices = () => {
     };
 
     const renderServiceCard = ({ item }) => (
-        <View style={styles.card} key={item.serviceId}>
+        <View style={styles.card} key={item.serviceIdAsString}>
             <Text style={styles.title}>{item.serviceName}</Text>
             <Text style={styles.description}>{item.serviceDescription}</Text>
             <Text style={styles.price}>Price: ${item.price}</Text>
             <Text style={styles.location}>Location: {item.location}</Text>
-            <Text style={styles.timeFrame}>Time Frame: {item.details.map((d) => d.timeFrame).join(', ')}</Text>
-            <TouchableOpacity style={styles.deleteButton} onPress={() => deleteService(item.serviceId)}>
+            <Text style={styles.timeFrame}>Time Frame: {item.timeFrame}</Text>
+            <Text style={styles.duration}>Duration: {item.duration}</Text>
+            <Text style={styles.typeOfService}>Service Type: {item.typeOfService}</Text>
+            <Text style={styles.openSlots}>Available Slots: {item.openSlots}</Text>
+            <TouchableOpacity style={styles.deleteButton} onPress={() => deleteService(item.serviceIdAsString)}>
                 <Text style={styles.buttonText}>Delete</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -227,68 +225,79 @@ const VendorServices = () => {
     return (
         <SafeAreaView style={styles.safeArea}>
             <TouchableOpacity style={styles.addButton} onPress={handleAddServicePress}>
-                <Text style={styles.addButtonText}>+ Add Service</Text>
+                <Text style={styles.buttonText}>Add New Service</Text>
             </TouchableOpacity>
+
             <FlatList
                 data={services}
-                keyExtractor={(item, index) => (item.serviceId ? item.serviceId.toString() : index.toString())}
                 renderItem={renderServiceCard}
+                keyExtractor={(item) => {
+                    const key = item.serviceIdAsString || item.serviceId || item._id || '';
+                    return key.toString();  // Make sure the key is a string, and handle undefined values.
+                    }
+                }
             />
-            {/* Modal for creating or updating services */}
-            <Modal visible={showModal} animationType="slide">
-                <View style={styles.modalContent}>
+
+            {/* Modal for adding or updating a service */}
+            <Modal visible={showModal} animationType="slide" onRequestClose={resetServiceForm}>
+                <View style={styles.modalContainer}>
+                    <Text style={styles.modalTitle}>
+                        {serviceToUpdate ? 'Update Service' : 'Add New Service'}
+                    </Text>
+
                     <TextInput
                         style={styles.input}
-                        placeholder="Service Name"
                         value={newService.serviceName}
-                        onChangeText={(text) => setNewService({ ...newService, serviceName: text })}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, serviceName: text }))}
+                        placeholder="Service Name"
                     />
                     <TextInput
                         style={styles.input}
-                        placeholder="Service Description"
                         value={newService.serviceDescription}
-                        onChangeText={(text) => setNewService({ ...newService, serviceDescription: text })}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, serviceDescription: text }))}
+                        placeholder="Service Description"
                     />
                     <TextInput
                         style={styles.input}
+                        value={newService.price}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, price: text }))}
                         placeholder="Price"
                         keyboardType="numeric"
-                        value={newService.price}
-                        onChangeText={(text) => setNewService({ ...newService, price: text })}
                     />
                     <TextInput
                         style={styles.input}
-                        placeholder="Location"
                         value={newService.location}
-                        onChangeText={(text) => setNewService({ ...newService, location: text })}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, location: text }))}
+                        placeholder="Location"
                     />
                     <TextInput
                         style={styles.input}
-                        placeholder="Time Frame"
                         value={newService.timeFrame}
-                        onChangeText={(text) => setNewService({ ...newService, timeFrame: text })}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, timeFrame: text }))}
+                        placeholder="Time Frame"
                     />
                     <TextInput
                         style={styles.input}
+                        value={newService.openSlots}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, openSlots: text }))}
                         placeholder="Open Slots"
                         keyboardType="numeric"
-                        value={newService.openSlots}
-                        onChangeText={(text) => setNewService({ ...newService, openSlots: text })}
                     />
                     <TextInput
                         style={styles.input}
-                        placeholder="Duration"
                         value={newService.duration}
-                        onChangeText={(text) => setNewService({ ...newService, duration: text })}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, duration: text }))}
+                        placeholder="Duration"
                     />
                     <TextInput
                         style={styles.input}
-                        placeholder="Type of Service"
                         value={newService.typeOfService}
-                        onChangeText={(text) => setNewService({ ...newService, typeOfService: text })}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, typeOfService: text }))}
+                        placeholder="Type of Service"
                     />
+
                     <TouchableOpacity style={styles.saveButton} onPress={handleSaveService}>
-                        <Text style={styles.buttonText}>Save</Text>
+                        <Text style={styles.buttonText}>{serviceToUpdate ? 'Update' : 'Save'}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.cancelButton} onPress={resetServiceForm}>
                         <Text style={styles.buttonText}>Cancel</Text>
@@ -300,23 +309,104 @@ const VendorServices = () => {
 };
 
 const styles = StyleSheet.create({
-    safeArea: { flex: 1, paddingTop: 20, backgroundColor: '#fff' },
-    card: { padding: 10, borderWidth: 1, marginBottom: 10 },
-    title: { fontSize: 18, fontWeight: 'bold' },
-    description: { fontSize: 14, marginVertical: 5 },
-    price: { fontSize: 14, marginVertical: 5 },
-    location: { fontSize: 14, marginVertical: 5 },
-    timeFrame: { fontSize: 14, marginVertical: 5 },
-    deleteButton: { backgroundColor: '#e70505', padding: 10, marginTop: 10, alignItems: 'center', borderRadius: 20, fontSize:16 },
-    updateButton: { backgroundColor: '#5fa6f5', padding: 10, marginTop: 10, alignItems: 'center', borderRadius: 20, fontSize:16 },
-    buttonText: { color: '#fff', fontSize: 10 },
-    addButton: { backgroundColor: '#5fa6f5', padding: 15, margin: 20, alignItems: 'center', borderRadius: 20 },
-    addButtonText: { color: '#fff', fontSize: 20 },
-    modalContent: { padding: 20, backgroundColor: '#fff', flex: 1, justifyContent: 'center' },
-    input: { borderWidth: 1, padding: 10, marginVertical: 5, borderRadius: 5 },
-    saveButton: { backgroundColor: '#07a253', padding: 10, marginTop: 20, alignItems: 'center', borderRadius: 20 },
-    cancelButton: { backgroundColor: '#bbbaba', padding: 10, marginTop: 10, alignItems: 'center', borderRadius: 20 },
-    errorText: { color: 'red', textAlign: 'center', marginTop: 20 },
+    safeArea: {
+        flex: 1,
+        padding: 10,
+        backgroundColor: '#fff',
+    },
+    card: {
+        backgroundColor: '#f1f1f1',
+        padding: 15,
+        marginBottom: 10,
+        borderRadius: 8,
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
+    description: {
+        fontSize: 16,
+        marginVertical: 5,
+    },
+    price: {
+        fontSize: 14,
+        color: '#333',
+    },
+    location: {
+        fontSize: 14,
+    },
+    timeFrame: {
+        fontSize: 14,
+    },
+    duration: {
+        fontSize: 14,
+    },
+    typeOfService: {
+        fontSize: 14,
+    },
+    openSlots: {
+        fontSize: 14,
+    },
+    deleteButton: {
+        backgroundColor: '#e74c3c',
+        padding: 10,
+        marginVertical: 5,
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    updateButton: {
+        backgroundColor: '#0B7784',
+        padding: 10,
+        marginVertical: 5,
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+    addButton: {
+        backgroundColor: '#0B7784',
+        padding: 15,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    modalContainer: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: '#fff',
+    },
+    modalTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 15,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        padding: 10,
+        marginBottom: 15,
+        borderRadius: 5,
+    },
+    saveButton: {
+        backgroundColor: '#0B7784',
+        padding: 15,
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    cancelButton: {
+        backgroundColor: '#e74c3c',
+        padding: 15,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 16,
+        textAlign: 'center',
+    },
 });
 
 export default VendorServices;
