@@ -1,6 +1,5 @@
 package com.voyagesync.voyagesyncproject.services.bookings;
 
-import com.voyagesync.voyagesyncproject.models.bookings.ServiceDetails;
 import com.voyagesync.voyagesyncproject.models.bookings.Services;
 import com.voyagesync.voyagesyncproject.models.users.Vendors;
 import com.voyagesync.voyagesyncproject.repositories.bookings.ServiceRepository;
@@ -12,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,38 +43,37 @@ public class ServicesService {
         return serviceRepository.findByIdIn(serviceIds);
     }
 
-    // Fetch a single service by its ID with vendor info and details
+    // Fetch a single service by its ID with vendor info
     public ServiceWithVendorDTO getServiceById(ObjectId serviceId) {
-        Services service = serviceRepository.findById(String.valueOf(serviceId))
+        Services service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Service not found"));
 
         return mapServiceWithVendorToDTO(service);
     }
 
-    // Map a service to ServiceWithVendorDTO, including details
+    // Map a service to ServiceWithVendorDTO, including vendor details and root-level fields
     public ServiceWithVendorDTO mapServiceWithVendorToDTO(Services service) {
         // Find vendor based on vendorId
         Optional<Vendors> vendorOptional = vendorRepository.findById(service.getVendorId());
 
         ServiceWithVendorDTO response = new ServiceWithVendorDTO();
-        response.setServiceId(service.getId().toHexString());
+        response.setServiceId(service.getId());
         response.setServiceName(service.getServiceName());
         response.setServiceDescription(service.getServiceDescription());
         response.setPrice(service.getPrice());
         response.setLocation(service.getLocation());
+        response.setDuration(service.getDuration());
+        response.setTypeOfService(service.getTypeOfService());
+        response.setTimeFrame(service.getTimeFrame());
+        response.setAverageRating(getAverageRatingForService(service.getId()));
+        response.setOpenSlots(service.getOpenSlots());
+
 
         // Map vendor details if available
         vendorOptional.ifPresent(vendor -> {
             response.setVendorBusinessName(vendor.getBusinessName());
-            response.setVendorId(vendor.getVendorId().toHexString());
+            response.setVendorId(vendor.getVendorId());
         });
-
-        // Fetch the average rating for the service
-        response.setAverageRating(getAverageRatingForService(service.getId()));
-
-        // Return the details directly from the Service object
-        response.setDetails(service.getDetails());
-
         return response;
     }
 
@@ -97,17 +94,17 @@ public class ServicesService {
         return count > 0 ? totalRating / count : 0.0;
     }
 
-    // Create a new service with details field
+    // Create a new service
     public Services createService(Services service) {
         // Save the service to the repository
         Services savedService = serviceRepository.save(service);
-
         return savedService;
     }
 
+    // Update an existing service
     public Services updateService(ObjectId serviceId, Services updatedService) {
         // Fetch the existing service
-        Services existingService = serviceRepository.findById(String.valueOf(serviceId))
+        Services existingService = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Service not found"));
 
         // Merge the updated fields with the existing service, with validation
@@ -127,60 +124,29 @@ public class ServicesService {
             existingService.setLocation(updatedService.getLocation());
         }
 
-        // Handle the 'details' field (merge or replace)
-        if (updatedService.getDetails() != null && !updatedService.getDetails().isEmpty()) {
-            List<ServiceDetails> mergedDetails = getServiceDetails(updatedService, existingService);
-            existingService.setDetails(mergedDetails);
-        } else if (updatedService.getDetails() == null) {
-            // Log or handle cases where 'details' is missing (optional)
-            log.warn("Details not provided in update, retaining existing details");
+        if (updatedService.getDuration() != null) {
+            existingService.setDuration(updatedService.getDuration());
+        }
+
+        if (updatedService.getTypeOfService() != null) {
+            existingService.setTypeOfService(updatedService.getTypeOfService());
+        }
+
+        if (updatedService.getTimeFrame() != null) {
+            existingService.setTimeFrame(updatedService.getTimeFrame());
         }
 
         // Save and return the updated service
         return serviceRepository.save(existingService);
     }
 
-    private List<ServiceDetails> getServiceDetails(Services updatedService, Services existingService) {
-        List<ServiceDetails> mergedDetails = new ArrayList<>();
-
-        // If the updatedService has details, merge them
-        if (updatedService.getDetails() != null) {
-            for (int i = 0; i < updatedService.getDetails().size(); i++) {
-                ServiceDetails newDetail = updatedService.getDetails().get(i);
-                ServiceDetails oldDetail = (i < existingService.getDetails().size())
-                        ? existingService.getDetails().get(i)
-                        : null; // Handle case where updatedService has more details than existing
-
-                // Merge fields from old and new details
-                if (oldDetail != null) {
-                    if (newDetail.getTimeFrame() == null) {
-                        newDetail.setTimeFrame(oldDetail.getTimeFrame());
-                    }
-                    if (newDetail.getDuration() == null) {
-                        newDetail.setDuration(oldDetail.getDuration());
-                    }
-                    if (newDetail.getTypeOfService() == null) {
-                        newDetail.setTypeOfService(oldDetail.getTypeOfService());
-                    }
-                }
-
-                mergedDetails.add(newDetail);
-            }
-        } else {
-            // If no details are provided in the update, retain the existing details
-            mergedDetails = existingService.getDetails();
-        }
-
-        return mergedDetails;
-    }
-
     // Delete an existing service
     public void deleteService(ObjectId serviceId) {
-        if (!serviceRepository.existsById(String.valueOf(serviceId))) {
+        if (!serviceRepository.existsById(serviceId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Service not found");
         }
 
-        serviceRepository.deleteById(String.valueOf(serviceId));
+        serviceRepository.deleteById(serviceId);
     }
 
     // Fetch services by vendor ID
@@ -188,5 +154,4 @@ public class ServicesService {
         log.debug("Fetching services for vendorId: {}", vendorId);
         return serviceRepository.findByVendorId(vendorId);
     }
-
 }
