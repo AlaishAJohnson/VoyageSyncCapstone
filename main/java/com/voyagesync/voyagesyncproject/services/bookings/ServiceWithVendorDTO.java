@@ -1,5 +1,7 @@
 package com.voyagesync.voyagesyncproject.services.bookings;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Getter;
 import lombok.Setter;
 import org.bson.types.ObjectId;
@@ -12,6 +14,10 @@ public class ServiceWithVendorDTO {
     @Getter
     private ObjectId serviceId;
 
+    @Setter
+    @Getter
+    private ObjectId vendorId;
+
     private String serviceName;
 
     private String serviceDescription;
@@ -21,10 +27,6 @@ public class ServiceWithVendorDTO {
     @Setter
     @Getter
     private String vendorBusinessName;
-
-    @Setter
-    @Getter
-    private ObjectId vendorId;
 
     private String location;
 
@@ -46,5 +48,14 @@ public class ServiceWithVendorDTO {
     @Getter
     @Setter
     private Integer openSlots;
+
+
+    public String getServiceIdAsString() {
+        return serviceId != null ? serviceId.toHexString() : null;
+    }
+
+    public String getVendorIdAsString() {
+        return vendorId != null ? vendorId.toHexString() : null;
+    }
 
 }
