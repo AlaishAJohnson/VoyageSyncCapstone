@@ -19,41 +19,55 @@ import java.util.List;
 @AllArgsConstructor
 public class Vendors {
     @Id
-    private ObjectId vendorId;
+    private ObjectId _id;
+
     @Field("businessName")
     private String businessName;
+
     @Field("businessRegistrationNumber")
     private String businessRegistrationNumber;
+
     @Field("countryOfRegistration")
     private String countryOfRegistration;
+
     @Field("businessAddress")
     private String businessAddress;
+
     @Field("businessPhoneNumber")
     private String businessPhoneNumber;
+
     @Field("businessType")
     private String businessType;
+
     @Field("industry")
     private String industry;
+
     @Field("proofOfRegistration")
     private byte[] proofOfRegistration;
+
     @Field("verificationStatus")
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;
+
     @Field("rejectionReason")
     private String rejectionReason;
 
     // Representative Information
     @Field("representativeRole")
     private String representativeRole;
+
     @Field("representativeId")
     private ObjectId representativeId;
 
     // Permission Information
     @Field("permissionAssignmentDate")
     private LocalDateTime permissionAssignmentDate;
+
     @Field("vendorPermissions")
     private List<ObjectId> vendorPermissions;
+
     @Field("bookings")
     private List<ObjectId> bookings;
+
     @Field("services")
     private List<ObjectId> services;
 
@@ -65,6 +79,4 @@ public class Vendors {
 
     @Field("username")
     private String username;
-
-
 }
