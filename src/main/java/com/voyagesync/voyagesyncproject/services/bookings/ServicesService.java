@@ -1,15 +1,18 @@
 package com.voyagesync.voyagesyncproject.services.bookings;
 
-import com.voyagesync.voyagesyncproject.dto.ServiceResponse;
 import com.voyagesync.voyagesyncproject.models.bookings.ServiceAvailability;
 import com.voyagesync.voyagesyncproject.models.bookings.Services;
 import com.voyagesync.voyagesyncproject.models.users.Vendors;
 import com.voyagesync.voyagesyncproject.repositories.bookings.ServiceRepository;
 import com.voyagesync.voyagesyncproject.repositories.users.VendorRepository;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import com.voyagesync.voyagesyncproject.services.bookings.ServiceWithVendorDTO;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +26,7 @@ public class ServicesService {
     private final VendorRepository vendorRepository;
     private final FeedbackService feedbackService;
     private final ServiceAvailabilityService serviceAvailabilityService;
-    
+    private static final Logger log = LoggerFactory.getLogger(ServicesService.class);
 
     public ServicesService(final ServiceRepository serviceRepository, final VendorRepository vendorRepository, final FeedbackService feedbackService, ServiceAvailabilityService serviceAvailabilityService) {
         this.serviceRepository = serviceRepository;
@@ -32,99 +35,87 @@ public class ServicesService {
         this.serviceAvailabilityService = serviceAvailabilityService;
     }
 
+    // Fetch services by location
+    public List<Services> getByLocation(String location) {
+        return serviceRepository.findByLocation(location);
+    }
+
+    // Fetch services by price
+    public List<Services> getByPrice(Double price) {
+        return serviceRepository.findByPrice(price);
+    }
+
+    // Fetch all services
     public List<Services> getAllServices() {
         return serviceRepository.findAll();
     }
 
+    // Fetch services by service IDs
     public List<Services> getServicesById(List<ObjectId> serviceIds) {
         return serviceRepository.findByServiceIdIn(serviceIds);
     }
-    public ServiceResponse getServiceById(ObjectId serviceId) {
+
+    // Fetch a single service by its ID
+    public ServiceWithVendorDTO getServiceById(ObjectId serviceId) {
         Services service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Service not found"));
 
-        return mapServiceWithVendorToResponse(service);
+        return mapServiceWithVendorToDTO(service);
     }
 
-
-
-
+    // Calculate the average rating for a service
     public double getAverageRatingForService(ObjectId serviceId) {
         List<Vendors> vendors = vendorRepository.findAll();
         double totalRating = 0.0;
         int count = 0;
 
         for (Vendors vendor : vendors) {
-            // Check if the vendor's services contain the given serviceId
             if (vendor.getServices().contains(serviceId)) {
-                // Get the average rating for this vendor
                 double averageRating = feedbackService.getAverageRatingByVendorId(vendor.getVendorId());
-
-                // Add to total rating and count
                 totalRating += averageRating;
-                count++; // Increment count of vendors contributing to the total rating
+                count++;
             }
         }
 
-        // Return the average rating across all vendors that offer this service
-        return count > 0 ? totalRating / count : 0.0; // Avoid division by zero
+        return count > 0 ? totalRating / count : 0.0;
     }
 
-
-    //nonsense
-    public List<Services> getByLocation(String location){
-        return serviceRepository.getByLocation(location);
-    }
-
-    public List<Services> getByPrice(String price){
-        return serviceRepository.getByPrice(Double.parseDouble(price));
-    }
-
-    //idk
-    
-    public List<Services> getByAvailability(List<ObjectId> serviceAvailabilityIds){
-        return serviceRepository.getByServiceAvailability(serviceAvailabilityIds);
-    }
-
-    /* 
-    public List<Services> findByDate(LocalDate dateOfService){
-        return serviceRepository.getByDateOfService(dateOfService);
-    }
-
-    public List<Services> findByDateTime(LocalDate dateOfService, LocalTime timeOfService){
-        return serviceRepository.getByDateTime(dateOfService, timeOfService);
-    }
-    */
-
-    //Location, price, availability, date, date/time
-
-    /* */
-    public List<ServiceResponse> getAllServicesWithVendorInfo() {
+    // Fetch all services with vendor information
+    public List<ServiceWithVendorDTO> getAllServicesWithVendorInfo() {
         List<Services> services = getAllServices();
         return services.stream()
-                .map(this::mapServiceWithVendorToResponse)
+                .map(this::mapServiceWithVendorToDTO)
                 .collect(Collectors.toList());
     }
 
+    // Map a service to ServiceWithVendorDTO
+    public ServiceWithVendorDTO mapServiceWithVendorToDTO(Services service) {
+        // Find vendor based on vendorId
+        Optional<Vendors> vendorOptional = vendorRepository.findById(service.getVendorId());
 
-    private ServiceResponse mapServiceWithVendorToResponse(Services service) {
-        List<Vendors> vendors = vendorRepository.findAll();
-        Optional<Vendors> vendor = vendors.stream()
-                .filter(v -> v.getServices().contains(service.getServiceId()))
-                .findFirst();
-
-        ServiceResponse response = new ServiceResponse();
+        ServiceWithVendorDTO response = new ServiceWithVendorDTO();
         response.setServiceId(service.getServiceId().toHexString());
         response.setServiceName(service.getServiceName());
         response.setServiceDescription(service.getServiceDescription());
         response.setPrice(service.getPrice());
 
-        vendor.ifPresent(v -> response.setVendorBusinessName(v.getBusinessName()));
+        // Map vendor details if available
+        vendorOptional.ifPresent(vendor -> {
+            response.setVendorBusinessName(vendor.getBusinessName());
+            response.setVendorId(vendor.getVendorId().toHexString());
+        });
+
+        // Fetch the average rating for the service
         response.setAverageRating(getAverageRatingForService(service.getServiceId()));
 
-        // Get service availability using the new method
-        List<ServiceAvailability> availabilities = serviceAvailabilityService.getServiceAvailabilityByServiceId(service.getServiceId());
+        // Service Availability: extracting details related to service availability
+        List<ObjectId> serviceAvailabilityIds = service.getServiceAvailability().stream()
+                .map(ServiceAvailability::getServiceAvailabilityId) // Extract ObjectId from each ServiceAvailability
+                .collect(Collectors.toList());
 
+        List<ServiceAvailability> availabilities = serviceAvailabilityService.getServiceAvailabilityByServiceIds(serviceAvailabilityIds);
+
+        // Map availability details
         List<Map<String, Object>> serviceAvailabilityList = availabilities.stream()
                 .map(avail -> {
                     Map<String, Object> availabilityMap = new LinkedHashMap<>();
@@ -142,51 +133,62 @@ public class ServicesService {
         return response;
     }
 
-    // vendors creating a service --> linked to serviceController & serviceRepo
-    // ^^^ similar method for updating and deleting a service
-    // all linked to the serviceController and serviceRepo
-    // Create a new service (already restricted to vendors by controller)
+    // Create a new service
     public Services createService(Services service) {
-        //creating service availability for the new service before saving it
+        // Create availability for the service before saving it
         serviceAvailabilityService.createAvailabilityForService(service);
-        // save the new service
         return serviceRepository.save(service);
     }
 
-    // Updating an existing service
+    // Update an existing service
     public Services updateService(String serviceId, Services service) {
         ObjectId id = new ObjectId(serviceId);
-        //retrieve the existing service by its ID
         Optional<Services> existingServiceOptional = serviceRepository.findById(id);
         if (existingServiceOptional.isEmpty()) {
             throw new IllegalArgumentException("Service with ID " + serviceId + " not found.");
         }
         Services existingService = existingServiceOptional.get();
 
-        // update the necessary fields in the service
+        // Update service details
         existingService.setServiceName(service.getServiceName());
         existingService.setServiceDescription(service.getServiceDescription());
         existingService.setPrice(service.getPrice());
         existingService.setLocation(service.getLocation());
 
-        // update the service availability as well
+        // Update availability information for the service
         serviceAvailabilityService.updateAvailabilityForService(existingService, service);
 
-        // save the updated service
         return serviceRepository.save(existingService);
     }
 
-    // Deleting an existing service
+    // Delete an existing service
     public void deleteService(String serviceId) {
         ObjectId id = new ObjectId(serviceId);
 
         if (!serviceRepository.existsById(id)) {
             throw new IllegalArgumentException("Service with ID " + serviceId + " not found.");
         }
-        // handle the deletion of service availability before deleting the service
         serviceAvailabilityService.deleteAvailabilityForService(id);
-        // delete the service
         serviceRepository.deleteById(id);
+    }
+
+    // Fetch services by vendor ID
+    public List<Services> getServicesByVendorId(ObjectId vendorId) {
+        // Debug log to check vendorId
+        System.out.println("Fetching services for vendorId: " + vendorId);
+
+        // Query the database for services by vendorId
+        List<Services> services = serviceRepository.findByVendorId(vendorId);
+
+        // Log the result
+        System.out.println("Found services: " + services);
+
+        return services;
+    }
+
+    // Fetch services by availability
+    public List<Services> getServicesByAvailability(List<ObjectId> serviceAvailabilityIds) {
+        return serviceRepository.findByServiceAvailability(serviceAvailabilityIds);
     }
 
 }

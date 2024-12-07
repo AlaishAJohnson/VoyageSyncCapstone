@@ -62,7 +62,6 @@ public class UsersController {
 
     }
 
-
     @GetMapping("/{userId}")
     public ResponseEntity<Map<String, Object>> getUserById(@PathVariable String userId) {
         try {
@@ -78,7 +77,6 @@ public class UsersController {
                     .body(Map.of("message", "An error occurred: " + e.getMessage()));
         }
     }
-
 
     @GetMapping("/name/{firstName}/{lastName}")
     public ResponseEntity<List<Map<String, Object>>> getUserByName(@PathVariable("firstName") String firstName, @PathVariable("lastName") String lastName) {
@@ -154,8 +152,6 @@ public class UsersController {
     }
 
 
-
-
     /* POST METHODS */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
@@ -181,9 +177,6 @@ public class UsersController {
                     .body("An error occurred while processing your request.");
         }
     }
-
-
-
 
     @PostMapping("/create-user")
     public ResponseEntity<Map<String, Object>> createUser(@RequestBody Map<String, Object> userDetails) {
@@ -223,8 +216,8 @@ public class UsersController {
             // Handle additional role-specific data
             String role = newUser.getRole();
             if ("vendor".equals(role)) {
-                Vendors newVendor = createVendor(userDetails, savedUser.getId());
-                vendorService.createVendor(newVendor);
+                Vendors newVendor = createVendor(userDetails, savedUser.getId()); // Create a Vendors object
+                vendorService.createVendor(newVendor, savedUser.getId());
             } else if ("admin".equals(role)) {
                 Admins newAdmin = new Admins();
                 newAdmin.setUserId(savedUser.getId());
@@ -248,6 +241,21 @@ public class UsersController {
     }
 
 
+    /* UPDATE METHODS */
+    @PutMapping("/{userId}/activation")
+    public ResponseEntity<?> activateUser(@PathVariable String userId, boolean activated) {
+        try {
+            Users updatedUser = usersService.updateActivationStatus(userId, activated);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "User created successfully");
+            response.put("users", mapUserToResponse(updatedUser));
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return new ResponseEntity<>(Map.of("message", "Failed to activate user: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
     @PutMapping("/{userId}/linkPreferences/{preferencesId}")
     public ResponseEntity<String> linkPreferences(@PathVariable String userId, @PathVariable String preferencesId) {
         try {
@@ -273,17 +281,40 @@ public class UsersController {
         }
     }
 
-
-    // Create or Update Travel Preferences
     @PutMapping("/preferences/{preferencesId}")
     public ResponseEntity<TravelPreferences> updateTravelPreferences(@PathVariable String preferencesId, @RequestBody TravelPreferences newPreferences) {
         TravelPreferences updatedPreferences = travelPreferenceService.updateOrCreateTravelPreference(preferencesId, newPreferences);
         return ResponseEntity.ok(updatedPreferences);
     }
 
+    @PutMapping("/update/{userId}")
+    public ResponseEntity<?> updateUser(@PathVariable("userId") String userId, @RequestBody Map<String, Object> updates) {
+        try {
+            Users userToUpdate = new Users();
+            ObjectId userObjectId = new ObjectId(userId);
+            userToUpdate.setId(userObjectId);
 
+            if (updates.containsKey("username")) userToUpdate.setUsername((String) updates.get("username"));
+            if (updates.containsKey("email")) userToUpdate.setEmail((String) updates.get("email"));
+            if (updates.containsKey("phoneNumber")) userToUpdate.setPhoneNumber((String) updates.get("phoneNumber"));
+            if (updates.containsKey("firstName")) userToUpdate.setFirstName((String) updates.get("firstName"));
+            if (updates.containsKey("lastName")) userToUpdate.setLastName((String) updates.get("lastName"));
+            if (updates.containsKey("password")) userToUpdate.setPassword((String) updates.get("password"));
 
+            usersService.updateUser(userToUpdate);
 
+            Users updatedUser = usersService.getUserById(userId);
+            Map<String, Object> response = mapUserToResponse(updatedUser);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+        /* Helper Functions */
     private Vendors createVendor(Map<String, Object> userDetails, ObjectId userId) {
         Vendors vendor = new Vendors();
         vendor.setBusinessName((String) userDetails.get("businessName"));
@@ -303,24 +334,6 @@ public class UsersController {
 
         return vendor;
     }
-
-
-    /* UPDATE METHODS */
-    @PutMapping("/{userId}/activation")
-    public ResponseEntity<?> activateUser(@PathVariable String userId, boolean activated) {
-        try {
-            Users updatedUser = usersService.updateActivationStatus(userId, activated);
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "User created successfully");
-            response.put("users", mapUserToResponse(updatedUser));
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return new ResponseEntity<>(Map.of("message", "Failed to activate user: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-    /* Helper Functions */
-
     private Map<String, Object> mapUserToResponse(Users users) {
         Map<String, Object> userMap = new LinkedHashMap<>();
         userMap.put("userId", users.getId().toHexString());
@@ -362,4 +375,5 @@ public class UsersController {
 
         return userMap;
     }
+
 }

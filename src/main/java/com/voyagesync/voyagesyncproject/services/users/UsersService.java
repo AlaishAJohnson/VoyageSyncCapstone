@@ -114,7 +114,19 @@ public class UsersService {
         if (user.getId() == null || !usersRepository.existsById(user.getId())) {
             throw new IllegalArgumentException("User with given ID does not exist.");
         }
-        usersRepository.save(user);
+
+        Users existingUser = usersRepository.findById(user.getId()).orElseThrow(
+                () -> new IllegalArgumentException("User with given ID does not exist.")
+        );
+
+        if (user.getUsername() != null) existingUser.setUsername(user.getUsername());
+        if (user.getEmail() != null) existingUser.setEmail(user.getEmail());
+        if (user.getPhoneNumber() != null) existingUser.setPhoneNumber(user.getPhoneNumber());
+        if (user.getFirstName() != null) existingUser.setFirstName(user.getFirstName());
+        if (user.getLastName() != null) existingUser.setLastName(user.getLastName());
+        if (user.getPassword() != null) existingUser.setPassword(user.getPassword());
+
+        usersRepository.save(existingUser);
     }
 
     public Optional<Users> findUserById(String id) {
