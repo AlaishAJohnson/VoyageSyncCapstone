@@ -30,8 +30,12 @@ const SignIn = () => {
   
       if (!response.ok) {
         const errorResponse = await response.text();
-        console.log('Error response:', errorResponse);
-        Alert.alert('Error', errorResponse || 'Login failed. Please try again.');
+        if (response.status === 401) {
+          Alert.alert('Login Failed', 'Incorrect username/email or password.');
+        } else {
+          console.log('Error response:', errorResponse);
+          Alert.alert('Error', errorResponse || 'Login failed. Please try again.');
+        }
         return;
       }
   
@@ -41,7 +45,9 @@ const SignIn = () => {
       if (!user) {
         throw new Error('No user data returned');
       }
-
+  
+      
+      
       await AsyncStorage.setItem('userId', user.userId);
   
       const userData = {
@@ -52,6 +58,7 @@ const SignIn = () => {
         phoneNumber: user.phoneNumber,
         role: user.role,
         verificationStatus: user.verificationStatus,
+        activationStatus: user.activated,
         trips: user.trips,
         travelPreferences: user.travelPreferences,
       };
@@ -72,6 +79,7 @@ const SignIn = () => {
       setLoading(false);
     }
   };
+  
    
 
   return (

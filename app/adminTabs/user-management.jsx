@@ -4,31 +4,59 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
-// Sample user data (you will replace this with data from your database)
-const usersData = [
-  { id: '1', name: 'Alice Smith', username: 'alice123', role: 'User', profileImage: { uri: 'https://static.vecteezy.com/system/resources/previews/014/194/216/non_2x/avatar-icon-human-a-person-s-badge-social-media-profile-symbol-the-symbol-of-a-person-vector.jpg' } },
-  { id: '2', name: 'Bob Johnson', username: 'bobbiej', role: 'Admin', profileImage: { uri: 'https://thumbs.dreamstime.com/b/unknown-male-avatar-profile-image-businessman-vector-unknown-male-avatar-profile-image-businessman-vector-profile-179373829.jpg' } },
-  { id: '3', name: 'Charlie Brown', username: 'charlie_brown', role: 'Vendor', profileImage: { uri: 'https://png.pngtree.com/thumb_back/fh260/background/20230611/pngtree-an-avatar-of-a-man-with-a-beard-and-tie-image_2960737.jpg' } } // Add more users as needed
-];
-
 const UserManagement = () => {
-  const [filteredUsers, setFilteredUsers] = useState(usersData);
+  const [usersData, setUsersData] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState(null);
 
   useEffect(() => {
-    // Filter users based on selected role
+    const fetchUsers = async () => {
+      try {
+        const authHeader = 'Basic ' + btoa('admin:admin'); 
+        const response = await fetch('http://localhost:8080/api/users/', {
+          method: 'GET', 
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: authHeader,
+          },
+        });
+  
+        if (!response.ok) {
+          console.error('Error fetching users: HTTP status', response.status);
+          return;
+        }
+  
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setUsersData(data);
+          setFilteredUsers(data);
+        } else {
+          console.error('Data is not in the expected array format:', data);
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+  
+    fetchUsers();
+  }, []);
+  
+
+  useEffect(() => {
+    
     const roleFiltered = selectedRole
       ? usersData.filter(user => user.role === selectedRole)
       : usersData;
 
     setFilteredUsers(roleFiltered);
-  }, [selectedRole]);
+  }, [selectedRole, usersData]);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
     const searchFiltered = usersData.filter(user =>
-      user.name.toLowerCase().includes(query.toLowerCase()) ||
+      user.firstName.toLowerCase().includes(query.toLowerCase()) ||
+      user.lastName.toLowerCase().includes(query.toLowerCase()) ||
       user.username.toLowerCase().includes(query.toLowerCase())
     );
     setFilteredUsers(searchFiltered);
@@ -37,17 +65,20 @@ const UserManagement = () => {
   const renderUser = ({ item }) => (
     <TouchableOpacity 
       style={styles.card}
-      onPress={() => router.push('/components/[id]')}
-
-
+      onPress={() => {
+        console.log("Navigating to user profile with ID:", item.userId);
+        router.push(`/components/${item.userId}`); 
+      }} 
     >
-      <Image source={item.profileImage} style={styles.cardImage} />
+      <Image source={{ uri: item.profileImage }} style={styles.cardImage} />
       <View style={styles.cardContent}>
-        <Text style={styles.cardName}>{item.name}</Text>
+        <Text style={styles.cardName}>{item.firstName} {item.lastName}</Text>
         <Text style={styles.cardUsername}>{item.username}</Text>
       </View>
     </TouchableOpacity>
   );
+  
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -75,7 +106,7 @@ const UserManagement = () => {
       <FlatList
         data={filteredUsers}
         renderItem={renderUser}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.userId}
         style={styles.userList}
       />
     </SafeAreaView>
@@ -144,7 +175,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 60,
-    overflow: 'hidden'
+    overflow: 'hidden',
   },
   cardContent: {
     padding: 10,
@@ -157,6 +188,10 @@ const styles = StyleSheet.create({
   cardUsername: {
     fontSize: 14,
     color: '#555',
+  },
+  cardFriendText: {
+    fontSize: 12,
+    color: '#666',
   },
 });
 
