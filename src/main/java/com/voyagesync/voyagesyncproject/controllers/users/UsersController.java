@@ -64,13 +64,21 @@ public class UsersController {
 
 
     @GetMapping("/{userId}")
-    public ResponseEntity<Users> getUserById(@PathVariable String userId) {
-        Users user = usersService.getUserById(userId);
-        if (user != null) {
-            return ResponseEntity.ok(user);
+    public ResponseEntity<Map<String, Object>> getUserById(@PathVariable String userId) {
+        try {
+            Users user = usersService.getUserById(userId);
+            if (user != null) {
+                Map<String, Object> userResponse = mapUserToResponse(user);
+                return ResponseEntity.ok(userResponse);
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "User not found with ID: " + userId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "An error occurred: " + e.getMessage()));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
+
 
     @GetMapping("/name/{firstName}/{lastName}")
     public ResponseEntity<List<Map<String, Object>>> getUserByName(@PathVariable("firstName") String firstName, @PathVariable("lastName") String lastName) {
@@ -160,7 +168,7 @@ public class UsersController {
                 Map<String, Object> userResponse = mapUserToResponse(user);
                 if (!user.isActivated()) {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                            .body(Map.of("message", "Your account is not activated. Please contact support."));
+                            .body("Your account is not activated. Please contact support.");
                 }
 
                 return ResponseEntity.ok(userResponse);
@@ -304,7 +312,7 @@ public class UsersController {
             Users updatedUser = usersService.updateActivationStatus(userId, activated);
             Map<String, Object> response = new HashMap<>();
             response.put("message", "User created successfully");
-            response.put("users",mapUserToResponse(updatedUser));
+            response.put("users", mapUserToResponse(updatedUser));
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -337,6 +345,13 @@ public class UsersController {
             userMap.put("travelPreferences", preferencesMap);
         } else {
             userMap.put("travelPreferences", null);
+        }
+
+        if (users.getRole().equals("user") && users.getFriendIds() != null) {
+            List<String> friendIds = users.getFriendIds().stream()
+                    .map(ObjectId::toHexString)
+                    .collect(Collectors.toList());
+            userMap.put("friendIds", friendIds);
         }
 
         List<String> tripIds = (users.getTrips() != null) ?
