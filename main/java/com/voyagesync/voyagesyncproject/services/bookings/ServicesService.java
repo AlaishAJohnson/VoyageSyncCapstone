@@ -53,8 +53,8 @@ public class ServicesService {
 
     // Map a service to ServiceWithVendorDTO, including vendor details and root-level fields
     public ServiceWithVendorDTO mapServiceWithVendorToDTO(Services service) {
-        // Find vendor based on vendorId
-        Optional<Vendors> vendorOptional = vendorRepository.findById(service.getVendorId());
+        // Find vendor based on _id (vendorId has been replaced with _id)
+        Optional<Vendors> vendorOptional = vendorRepository.findById(service.getVendorId()); // service.getVendorId() should be get_id()
 
         ServiceWithVendorDTO response = new ServiceWithVendorDTO();
         response.setServiceId(service.getId());
@@ -68,11 +68,10 @@ public class ServicesService {
         response.setAverageRating(getAverageRatingForService(service.getId()));
         response.setOpenSlots(service.getOpenSlots());
 
-
         // Map vendor details if available
         vendorOptional.ifPresent(vendor -> {
             response.setVendorBusinessName(vendor.getBusinessName());
-            response.setVendorId(vendor.getVendorId());
+            response.setVendorId(vendor.get_id()); // updated to use get_id() instead of getVendorId()
         });
         return response;
     }
@@ -85,7 +84,7 @@ public class ServicesService {
 
         for (Vendors vendor : vendors) {
             if (vendor.getServices().contains(serviceId)) {
-                double averageRating = feedbackService.getAverageRatingByVendorId(vendor.getVendorId());
+                double averageRating = feedbackService.getAverageRatingByVendorId(vendor.get_id()); // Use vendor.get_id() instead of getVendorId()
                 totalRating += averageRating;
                 count++;
             }
