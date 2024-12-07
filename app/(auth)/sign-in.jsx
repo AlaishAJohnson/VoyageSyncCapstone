@@ -61,6 +61,7 @@ const SignIn = () => {
         activationStatus: user.activated,
         trips: user.trips,
         travelPreferences: user.travelPreferences,
+        friendIds: user.friendIds
       };
   
       await AsyncStorage.setItem('userData', JSON.stringify(userData));

@@ -94,7 +94,7 @@ const UserAuthForm = () => {
                     <TextInput style={[styles.input, styles.halfWidthInput]} placeholder='Last Name' placeholderTextColor='white' value={lastName} onChangeText={setLastName} />
                 </View>
 
-                <TextInput style={styles.input} placeholder='Phone Number' placeholderTextColor='white' value={phoneNumber} onChangeText={setPhoneNumber} />
+                <TextInput style={styles.input} placeholder='Phone Number' placeholderTextColor='white' keyboardType="phone-pad" value={phoneNumber} onChangeText={setPhoneNumber} />
                 <TextInput style={styles.input} placeholder='Username' placeholderTextColor='white' value={username} onChangeText={setUsername} autoCapitalize="none" />
                 <TextInput style={styles.input} placeholder='Email' placeholderTextColor='white' value={email} onChangeText={setEmail} />
                 <TextInput style={styles.input} placeholder='Password' placeholderTextColor='white' value={password} onChangeText={setPassword} secureTextEntry />
