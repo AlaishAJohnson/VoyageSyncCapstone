@@ -13,10 +13,9 @@ const VendorHome = () => {
     const [vendorId, setVendorId] = useState(null);
 
     // Fetch vendor ID from AsyncStorage or backend
-    // Basic Authentication header
     const authHeader = 'Basic ' + btoa('admin:admin');
 
-// Fetch vendor ID
+    // Fetch vendor ID
     const getVendorId = async () => {
         try {
             const storedUserId = await AsyncStorage.getItem('userId');
@@ -31,6 +30,7 @@ const VendorHome = () => {
                 console.log('Response from backend for vendor data:', response.data);
 
                 if (response.data && response.data.vendorId) {
+                    // Assuming vendorId is returned as an ObjectId, we can leave it as is
                     setVendorId(response.data.vendorId);
                 } else {
                     throw new Error('No vendor found for this user');
@@ -44,7 +44,7 @@ const VendorHome = () => {
         }
     };
 
-// Fetch all bookings for the vendor
+    // Fetch all bookings for the vendor
     const fetchAllBookings = async () => {
         if (!vendorId) {
             console.error('Vendor ID is missing, cannot fetch bookings');
@@ -78,7 +78,6 @@ const VendorHome = () => {
         }
     };
 
-
     // Initialize vendor ID and bookings on component mount
     useEffect(() => {
         const initialize = async () => {
@@ -95,14 +94,16 @@ const VendorHome = () => {
     }, [vendorId]);
 
     // Render booking card
+
     const renderBookingCard = ({ item }) => (
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity style={styles.card} >
             <Text style={styles.title}>Here are Your Booking Information</Text>
-            <Text style={styles.body}>Booking ID: {item.bookingId}</Text>
+            <Text style={styles.body}>Booking ID: {item.bookingId.toString()}</Text>
             <Text style={styles.date}>Date: {new Date(item.bookingDate).toDateString()}</Text>
             <Text style={styles.time}>Time: {new Date(item.bookingTime).toLocaleTimeString()}</Text>
             <Text style={styles.confirmationStatus}>Status: {item.confirmationStatus}</Text>
-            <Text style={styles.itineraryId}>Itinerary ID: {item.itineraryId}</Text>
+            <Text style={styles.itineraryId}>Itinerary ID: {item.itineraryId.toString()}</Text>
+            <Text style={styles.serviceId}>Service ID: {item.serviceId.toString()}</Text>
         </TouchableOpacity>
     );
 
@@ -127,7 +128,7 @@ const VendorHome = () => {
             <View style={styles.container}>
                 <FlatList
                     data={bookings}
-                    keyExtractor={(item) => item.bookingId.toString()} // Use MongoDB's `_id`
+                    keyExtractor={(item) => item.bookingId?.toString()}
                     renderItem={renderBookingCard}
                     contentContainerStyle={{ paddingBottom: 16 }}
                     ListEmptyComponent={<Text style={styles.emptyText}>No bookings available.</Text>}
@@ -156,6 +157,10 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    body: {
+        fontSize: 14,
+        marginVertical: 4,
     },
     date: {
         fontSize: 14,
