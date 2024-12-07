@@ -42,6 +42,7 @@ public class VendorController {
         }
     }
 
+
     @GetMapping("/{vendorId}")
     public ResponseEntity<Map<String, Object>> getVendorById(@PathVariable String vendorId) {
         try {

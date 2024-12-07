@@ -1,29 +1,29 @@
 package com.voyagesync.voyagesyncproject.controllers.vendorreports;
 
 import java.util.Date;
-
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Getter
 @Setter
-
 @Document(collection = "VReports")
 public class VendorReport {
-    @Id
-    private String reportId;  // The unique ID for this vendor report
-    private String vendorId;  // Vendor ID, linked to the vendor collection
-    private Date createdAt;   // Date when the report was created
-    private VendorReportsDTO metrics; // Metrics for the vendor (bookingsCount, servicesCount, feedbackCount)
 
-    public String getReportId() {
-        return reportId;
+    @Id
+    private String _id;
+    private String vendorId;
+    private Date createdAt;
+    private VendorReportsDTO metrics;
+
+    // Getters and Setters
+    public String get_id() {
+        return _id;
     }
 
-    public void setReportId(String reportId) {
-        this.reportId = reportId;
+    public void set_id(String _id) {
+        this._id = _id;
     }
 
     public String getVendorId() {

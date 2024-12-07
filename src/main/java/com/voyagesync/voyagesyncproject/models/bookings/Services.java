@@ -9,16 +9,15 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.util.List;
-
 @Document(collection = "Services")
 @TypeAlias("")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Services {
+
     @Id
-    private ObjectId serviceId;
+    private ObjectId id;
 
     @Field("vendorId")
     private ObjectId vendorId;
@@ -27,24 +26,17 @@ public class Services {
 
     private String serviceDescription;
 
-    private List<ServiceAvailability> serviceAvailability; // Store ObjectIds only
-
-    private double price;
+    private Double price;
 
     private String location;
 
-    // Convenience method to calculate available slots using ServiceAvailability (will be handled in the service layer)
-    public int getAvailableSlots() {
-        // Sum all available slots from serviceAvailability list (to be fetched manually from ServiceAvailability repository)
-        return 0; // Placeholder - logic will be moved to ServicesService class
-    }
+    private Integer openSlots;
 
-    // A method to check if the service is available (will be handled in the service layer)
-    public boolean isAvailable() {
-        // Placeholder - logic will be moved to ServicesService class
-        return false; // Placeholder
-    }
+    private String duration;
 
-    // Optional: Service details field
-    private ServiceAvailability details;
+    private String typeOfService;
+
+    private String timeFrame;
+
+
 }

@@ -1,13 +1,13 @@
 package com.voyagesync.voyagesyncproject.controllers.vendorreports;
 
+import org.bson.types.ObjectId;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
-import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.stereotype.Service;
 
 @Service
 public class VendorReportsService {
@@ -30,14 +30,14 @@ public class VendorReportsService {
     }
 
     /**
-     * Save a new vendor report to the database.
+     * Generate and save a new vendor report to the database.
      *
      * @param vendorId The vendor's ID.
-     * @return The report ID of the saved report.
+     * @return The generated VendorReport object.
      */
-    public String saveReport(String vendorId) {
+    public VendorReport generateVendorReport(String vendorId) {
         VendorReport vendorReport = new VendorReport();
-        vendorReport.setReportId(UUID.randomUUID().toString());
+        vendorReport.set_id(UUID.randomUUID().toString());
         vendorReport.setVendorId(vendorId);
         vendorReport.setCreatedAt(new Date());
 
@@ -45,7 +45,7 @@ public class VendorReportsService {
         vendorReport.setMetrics(metrics);
 
         mongoTemplate.save(vendorReport, "VReports"); // Save to the correct collection
-        return vendorReport.getReportId();
+        return vendorReport;
     }
 
     /**
@@ -67,20 +67,28 @@ public class VendorReportsService {
     // Private helper methods for metrics calculations
 
     private int getBookingsCount(String vendorId) {
-        ObjectId objectId = new ObjectId(vendorId);
-        return (int) mongoTemplate.getCollection("Bookings")
-                .countDocuments(new org.bson.Document("vendorId", objectId));
+        return (int) mongoTemplate.count(
+                org.springframework.data.mongodb.core.query.Query.query(
+                        org.springframework.data.mongodb.core.query.Criteria.where("vendorId").is(new ObjectId(vendorId))
+                ),
+                "Bookings"
+        );
     }
-
     private int getServicesCount(String vendorId) {
-        ObjectId objectId = new ObjectId(vendorId);
-        return (int) mongoTemplate.getCollection("Services")
-                .countDocuments(new org.bson.Document("vendorId", objectId));
+        return (int) mongoTemplate.count(
+                org.springframework.data.mongodb.core.query.Query.query(
+                        org.springframework.data.mongodb.core.query.Criteria.where("vendorId").is(new ObjectId(vendorId))
+                ),
+                "Services"
+        );
     }
 
     private int getFeedbackCount(String vendorId) {
-        ObjectId objectId = new ObjectId(vendorId);
-        return (int) mongoTemplate.getCollection("Feedback")
-                .countDocuments(new org.bson.Document("vendorId", objectId));
+        return (int) mongoTemplate.count(
+                org.springframework.data.mongodb.core.query.Query.query(
+                        org.springframework.data.mongodb.core.query.Criteria.where("vendorId").is(new ObjectId(vendorId))
+                ),
+                "Feedback"
+        );
     }
 }

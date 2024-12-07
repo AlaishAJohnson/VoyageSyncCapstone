@@ -7,20 +7,30 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ServiceRepository extends MongoRepository<Services, ObjectId> {
 
-    List<Services> findByServiceIdIn(List<ObjectId> serviceIds);
+    // Find services by a list of IDs
+    List<Services> findByIdIn(List<ObjectId> ids);
 
-    List<Services> findByLocation(String location);
+//    // Find services by location
+//    List<Services> findByLocation(String location);
+//
+//    // Find services by price
+//    List<Services> findByPrice(Double price);
 
-    List<Services> findByPrice(double price);
-
+    // Find services by vendorId
     @Query("{ 'vendorId': ?0 }")
     List<Services> findByVendorId(ObjectId vendorId);
 
-    // Method to find services based on availability (customize the query as needed)
-    @Query("{ 'serviceAvailability.serviceAvailabilityId': { $in: ?0 } }")
-    List<Services> findByServiceAvailability(List<ObjectId> serviceAvailabilityIds);
+
+    @Query("{ 'timeFrame': ?0 }")
+    List<Services> findByTimeFrame(String timeFrame);
+
+    // Find services by open slots
+    List<Services> findByOpenSlotsGreaterThanEqual(Integer openSlots);
+
+    Optional<Services> findById(ObjectId serviceId);
 }

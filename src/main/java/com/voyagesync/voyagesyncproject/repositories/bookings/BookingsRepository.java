@@ -10,11 +10,12 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface BookingsRepository extends MongoRepository<Bookings, ObjectId> {
+public interface BookingsRepository extends MongoRepository<Bookings, ObjectId>, CustomBookingsRepository {
+
+    // Regular find methods remain here
     List<Bookings> findByConfirmationStatus(ConfirmationStatus confirmationStatus);
     List<Bookings> findByBookingDate(LocalDate bookingDate);
     List<Bookings> findByNumberOfParticipants(int numberOfParticipants);
-
     List<Bookings> findByVendorId(ObjectId vendorId);
 
 }
