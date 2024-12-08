@@ -91,7 +91,6 @@ public class UsersService {
         return user;
     }
 
-
     /* POST Methods */
 
     public Users createUser(Users user) {
@@ -106,7 +105,6 @@ public class UsersService {
         }
         return usersRepository.save(user);
     }
-
 
     /* UPDATE METHODS */
 
@@ -150,16 +148,5 @@ public class UsersService {
         return usersRepository.save(user);
 
     }
-    public Users linkTravelPreference(String userId, String preferencesId) {
-        ObjectId userObjectId = new ObjectId(userId);
-        Users user = usersRepository.findById(userObjectId).orElse(null);
-        ObjectId preferenceObjectId = new ObjectId(preferencesId);
-        TravelPreferences travelPreference = travelPreferenceRepository.findById(preferenceObjectId).orElse(null);
-        if (travelPreference != null) {
-            assert user != null;
-            user.setTravelPreferences(travelPreference);
-            return usersRepository.save(user);
-        }
-        return null;
-    }
+
 }

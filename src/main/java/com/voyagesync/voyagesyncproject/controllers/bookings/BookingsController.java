@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,11 +32,17 @@ public class BookingsController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping
+    @GetMapping("/")
     public ResponseEntity<List<Map<String, Object>>> getAllBookings() {
         List<Bookings> bookingsList = bookingService.getAllBookings();
         List<Map<String, Object>> response = bookingsList.stream().map(this::mapBookingsToResponse).collect(Collectors.toList());
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> getBookingById(@PathVariable ObjectId id) {
+        Bookings booking = bookingService.getBookingById(id);
+        Map<String, Object> response = mapBookingsToResponse(booking);
+        return new ResponseEntity<>(response, HttpStatus.FOUND);
     }
 
     @GetMapping("/status/{confirmationStatus}")
@@ -68,12 +75,56 @@ public class BookingsController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    /* Update Methods */
+    @PutMapping("/accept/{bookingId}")
+    public ResponseEntity<Map<String, Object>> acceptBooking(@PathVariable ObjectId bookingId) {
+        Bookings updatedBooking = bookingService.updateBookingStatus(bookingId, ConfirmationStatus.CONFIRMED);
+        Map<String, Object> response = mapBookingsToResponse(updatedBooking);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PutMapping("/cancel/{bookingId}")
+    public ResponseEntity<Map<String, Object>> cancelBooking(@PathVariable ObjectId bookingId) {
+        Bookings updatedBooking = bookingService.updateBookingStatus(bookingId, ConfirmationStatus.CANCELLED);
+        Map<String, Object> response = mapBookingsToResponse(updatedBooking);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PutMapping("/reschedule/{bookingId}")
+    public ResponseEntity<Map<String, Object>> rescheduleBooking(
+            @PathVariable ObjectId bookingId,
+            @RequestParam("newDate") LocalDate newDate,
+            @RequestParam("newTime") LocalTime newTime) {
+
+        try {
+            Bookings updatedBooking = bookingService.rescheduleBooking(bookingId, newDate, newTime);
+            Map<String, Object> response = mapBookingsToResponse(updatedBooking);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+
+    @PutMapping("/reject/{bookingId}")
+    public ResponseEntity<Map<String, Object>> rejectBooking(@PathVariable ObjectId bookingId) {
+        try {
+            Bookings rejectedBooking = bookingService.rejectBooking(bookingId);
+
+            Map<String, Object> response = mapBookingsToResponse(rejectedBooking);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
     /* HELPER FUNCTIONS */
     private Map<String, Object> mapBookingsToResponse(Bookings bookings) {
         Map<String, Object> bookingMap = new LinkedHashMap<>();
         bookingMap.put("bookingId", bookings.getBookingId().toHexString());
-        bookingMap.put("serviceId", bookings.getServiceId());
-        bookingMap.put("vendorId", bookings.getVendorId());
+        bookingMap.put("serviceId", bookings.getServiceId().toHexString());
+        bookingMap.put("vendorId", bookings.getVendorId().toHexString());
         bookingMap.put("bookingDate", bookings.getBookingDate());
         bookingMap.put("bookingTime", bookings.getBookingTime());
         bookingMap.put("confirmationStatus", bookings.getConfirmationStatus());

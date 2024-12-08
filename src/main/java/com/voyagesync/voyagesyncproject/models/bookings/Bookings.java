@@ -21,7 +21,7 @@ public class Bookings {
     @Id
     private ObjectId bookingId;
     private ObjectId serviceId;
-    private String vendorId;
+    private ObjectId vendorId;
     private LocalDate bookingDate;
     private LocalTime bookingTime;
     private ConfirmationStatus confirmationStatus = ConfirmationStatus.PENDING;
@@ -29,13 +29,5 @@ public class Bookings {
 
     private int numberOfParticipants;
 
-    // getter for numberOfParticipants
-    public int getNumberOfParticipants() {
-        return numberOfParticipants;
-    }
 
-    // setter for numberOfParticipants (if needed)
-    public void setNumberOfParticipants(int numberOfParticipants) {
-        this.numberOfParticipants = numberOfParticipants;
-    }
 }

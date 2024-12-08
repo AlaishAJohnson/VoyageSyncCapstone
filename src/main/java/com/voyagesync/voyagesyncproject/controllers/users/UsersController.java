@@ -1,5 +1,6 @@
 package com.voyagesync.voyagesyncproject.controllers.users;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.voyagesync.voyagesyncproject.dto.LoginRequest;
 import com.voyagesync.voyagesyncproject.enums.VerificationStatus;
 import com.voyagesync.voyagesyncproject.models.users.Admins;
@@ -151,6 +152,41 @@ public class UsersController {
         }
     }
 
+    @GetMapping("/{userId}/travel-preferences/{preferenceId}")
+    public ResponseEntity<Map<String, Object>> getUserTravelPreferences(@PathVariable String userId, @PathVariable String preferenceId) {
+        try {
+            // Find the user by userId
+            Optional<Users> userOptional = usersService.findUserById(userId);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+
+            Users user = userOptional.get();
+
+            // Fetch the referenced TravelPreferences using the preferenceId
+            Optional<TravelPreferences> preferencesOptional = travelPreferenceService.findById(preferenceId);
+            if (preferencesOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+
+            TravelPreferences preferences = preferencesOptional.get();
+
+            // Ensure that the travelPreferences in the user document match the provided preferenceId
+            if (!preferences.getPreferenceId().toString().equals(user.getTravelPreferences().toString())) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+
+            // Create the response with userId and travel preferences
+            Map<String, Object> response = new HashMap<>();
+            response.put("userId", userId);
+            response.put("travelPreferences", preferences);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     /* POST METHODS */
     @PostMapping("/login")
@@ -216,7 +252,7 @@ public class UsersController {
             // Handle additional role-specific data
             String role = newUser.getRole();
             if ("vendor".equals(role)) {
-                Vendors newVendor = createVendor(userDetails, savedUser.getId()); // Create a Vendors object
+                Vendors newVendor = createVendor(userDetails, savedUser.getId());
                 vendorService.createVendor(newVendor, savedUser.getId());
             } else if ("admin".equals(role)) {
                 Admins newAdmin = new Admins();
@@ -286,6 +322,8 @@ public class UsersController {
         TravelPreferences updatedPreferences = travelPreferenceService.updateOrCreateTravelPreference(preferencesId, newPreferences);
         return ResponseEntity.ok(updatedPreferences);
     }
+
+
 
     @PutMapping("/update/{userId}")
     public ResponseEntity<?> updateUser(@PathVariable("userId") String userId, @RequestBody Map<String, Object> updates) {
