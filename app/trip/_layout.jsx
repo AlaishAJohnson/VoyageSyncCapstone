@@ -15,7 +15,7 @@ const TripLayout = () => {
         <Stack.Screen 
             name='trip-details'
             options={{
-                title: 'Trip Deatils',
+                title: 'Trip Details',
                 headerBackTitle: 'Home'
             }}
         />

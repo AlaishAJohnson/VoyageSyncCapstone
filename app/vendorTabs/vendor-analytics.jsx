@@ -71,7 +71,7 @@ const VendorAnalytics = () => {
         setLoading(true);
         try {
             console.log('Fetching metrics for vendorId:', vendorId); // Debugging log
-            const response = await axios.get(`${BACKEND_URL}/api/metrics?vendorId=${vendorId}`, {
+            const response = await axios.get(`${BACKEND_URL}/api/vendor-report/metrics?vendorId=${vendorId}`, {
                 headers: {
                     'Authorization': authHeader,
                 },
