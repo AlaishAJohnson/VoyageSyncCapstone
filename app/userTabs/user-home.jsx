@@ -68,7 +68,7 @@ const UserHome = () => {
         },
       });
   
-      // console.log('Fetched Trips:', response.data); 
+    
   
       const tripsData = Array.isArray(response.data.trips) ? response.data.trips : [];
   
