@@ -1,49 +1,195 @@
 package com.voyagesync.voyagesyncproject.controllers.messaging;
 
 import com.voyagesync.voyagesyncproject.models.messaging.Messages;
+import com.voyagesync.voyagesyncproject.repositories.messaging.MessagesRepository;
 import com.voyagesync.voyagesyncproject.services.messaging.MessageService;
+import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/threads/messages")
 @CrossOrigin(origins = "http://localhost:8081")
 public class MessageController {
     private final MessageService messageService;
-    public MessageController(final MessageService messageService) {
+    private final MessagesRepository messagesRepository;
+
+    public MessageController(final MessageService messageService, MessagesRepository messagesRepository) {
         this.messageService = messageService;
+        this.messagesRepository = messagesRepository;
     }
 
-    @GetMapping
+    /* Get Methods */
+    @GetMapping("/")
     public ResponseEntity<List<Map<String, Object>>> getAllMessages() {
         List<Messages> messagesList = messageService.getAllMessages();
-        List<Map<String, Object>> response = messagesList.stream().map(messages -> {
-            Map<String,Object> messageMap = new LinkedHashMap<>();
-            messageMap.put("messageId", messages.getMessageId().toHexString());
-            messageMap.put("senderId", messages.getSenderId().toHexString());
-            messageMap.put("receiverId", messages.getReceiverId().toHexString());
-            messageMap.put("threadId", messages.getThreadId().toHexString());
+        List<Map<String, Object>> response = messagesList.stream()
+                .map(this::mapMessageToResponse)
+                .toList();
 
-            if(messages.getTripId() != null) {
-                messageMap.put("tripId", messages.getTripId().toHexString());
-            } else {
-                messageMap.put("tripId", null);
-            }
-            messageMap.put("content", messages.getContent());
-            messageMap.put("timeSent", messages.getTimeSent());
-            messageMap.put("timeReceived", messages.getTimeReceived());
-            messageMap.put("messageStatus", messages.getMessageStatus());
-            messageMap.put("messageType", messages.getMessageType());
-            return messageMap;
-        }).toList();
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/{messageId}")
+    public ResponseEntity<Map<String, Object>> getMessageById(@PathVariable String messageId) {
+        ObjectId messageObjectId = new ObjectId(messageId);
+        Optional<Messages> messageOptional = messagesRepository.findById(messageObjectId);
+
+        if (messageOptional.isEmpty()) {
+            return new ResponseEntity<>(Map.of("error", "Message not found"), HttpStatus.NOT_FOUND);
+        }
+
+        Map<String, Object> response = mapMessageToResponse(messageOptional.get());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/sender/{senderId}")
+    public ResponseEntity<List<Map<String, Object>>> getMessagesBySenderId(@PathVariable String senderId) {
+        ObjectId senderObjectId = new ObjectId(senderId);
+        List<Messages> messages = messageService.getMessagesBySenderId(senderObjectId);
+
+        List<Map<String, Object>> response = messages.stream()
+                .map(this::mapMessageToResponse)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/receiver/{receiverId}")
+    public ResponseEntity<List<Map<String, Object>>> getMessagesByReceiverId(@PathVariable String receiverId) {
+        ObjectId receiverObjectId = new ObjectId(receiverId);
+        List<Messages> messages = messageService.getMessagesByReceiverId(receiverObjectId);
+
+        List<Map<String, Object>> response = messages.stream()
+                .map(this::mapMessageToResponse)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    /* Post Methods*/
+
+    @PostMapping("/create/{senderId}/{receiverId}")
+    public ResponseEntity<Map<String, Object>> sendMessage(
+            @PathVariable String senderId,
+            @PathVariable String receiverId,
+            @RequestBody Map<String, Object> messageRequest) {
+
+        ObjectId senderObjectId = new ObjectId(senderId);
+        ObjectId receiverObjectId = new ObjectId(receiverId);
+
+        Messages message = new Messages();
+        message.setSenderId(senderObjectId);
+        message.setReceiverId(receiverObjectId);
+        message.setContent((String) messageRequest.get("content"));
+
+        String messageTypeStr = (String) messageRequest.get("messageType");
+        Messages.MessageType messageType = Messages.MessageType.valueOf(messageTypeStr.toUpperCase());
+        message.setMessageType(messageType);
+
+        message.setMessageStatus(Messages.MessageStatus.PENDING);
+
+        message.setThreadId(new ObjectId((String) messageRequest.get("threadId")));
+
+        LocalDateTime now = LocalDateTime.now();
+        message.setTimeSent(now);
+        message.setTimeReceived(now);
+
+        Messages savedMessage = messagesRepository.save(message);
+
+        Map<String, Object> response = mapMessageToResponse(savedMessage);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+
+
+    /* Put Methods*/
+    @PutMapping("/update/{messageId}")
+    public ResponseEntity<Map<String, Object>> updateMessage(@PathVariable String messageId, @RequestBody Map<String, Object> messageRequest) {
+        ObjectId messageObjectId = new ObjectId(messageId);
+        Optional<Messages> messageOptional = messagesRepository.findById(messageObjectId);
+
+        if (messageOptional.isEmpty()) {
+            return new ResponseEntity<>(Map.of("error", "Message not found"), HttpStatus.NOT_FOUND);
+        }
+
+        Messages message = messageOptional.get();
+        message.setContent((String) messageRequest.get("content"));
+        message.setMessageStatus(Messages.MessageStatus.PENDING);
+
+        Messages updatedMessage = messagesRepository.save(message);
+        Map<String, Object> response = mapMessageToResponse(updatedMessage);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PutMapping("/{messageId}/read")
+    public ResponseEntity<Map<String, Object>> markMessageAsRead(@PathVariable String messageId) {
+        ObjectId messageObjectId = new ObjectId(messageId);
+        Optional<Messages> messageOptional = messagesRepository.findById(messageObjectId);
+
+        if (messageOptional.isEmpty()) {
+            return new ResponseEntity<>(Map.of("error", "Message not found"), HttpStatus.NOT_FOUND);
+        }
+
+        Messages message = messageOptional.get();
+        message.setMessageStatus(Messages.MessageStatus.READ);
+        Messages updatedMessage = messagesRepository.save(message);
+
+        Map<String, Object> response = mapMessageToResponse(updatedMessage);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
+    /* Delete Methods */
+    @DeleteMapping("/delete/{messageId}")
+    public ResponseEntity<Map<String, Object>> deleteMessage(@PathVariable String messageId) {
+        ObjectId messageObjectId = new ObjectId(messageId);
+
+        Optional<Messages> messageOptional = messagesRepository.findById(messageObjectId);
+        if (messageOptional.isEmpty()) {
+            return new ResponseEntity<>(Map.of("error", "Message not found"), HttpStatus.NOT_FOUND);
+        }
+
+        messagesRepository.deleteById(messageObjectId);
+
+        return new ResponseEntity<>(Map.of("message", "Message deleted successfully"), HttpStatus.OK);
+    }
+    // Helper Function
+    public Map<String, Object> mapMessageToResponse(Messages message) {
+        Map<String, Object> messageMap = new LinkedHashMap<>();
+
+
+        messageMap.put("messageId", message.getMessageId().toHexString());
+        messageMap.put("senderId", message.getSenderId().toHexString());
+        messageMap.put("receiverId", message.getReceiverId().toHexString());
+        messageMap.put("threadId", message.getThreadId().toHexString());
+
+
+        if (message.getTripId() != null) {
+            messageMap.put("tripId", message.getTripId().toHexString());
+        } else {
+            messageMap.put("tripId", null);
+        }
+
+
+        messageMap.put("content", message.getContent());
+        messageMap.put("timeSent", message.getTimeSent());
+        messageMap.put("timeReceived", message.getTimeReceived());
+        messageMap.put("messageStatus", message.getMessageStatus());
+        messageMap.put("messageType", message.getMessageType());
+
+        return messageMap;
     }
 }

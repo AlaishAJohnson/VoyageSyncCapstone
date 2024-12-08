@@ -33,7 +33,8 @@ public class Messages {
     public enum MessageStatus {
         PENDING,
         SENT,
-        ERROR
+        ERROR,
+        READ
     }
 
     public enum MessageType {
