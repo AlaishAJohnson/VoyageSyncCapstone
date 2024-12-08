@@ -94,6 +94,10 @@ public class ServicesService {
             response.setVendorId(vendor.getVendorId().toHexString());
         });
 
+        response.setLocation(service.getLocation());
+        response.setTimeFrame(service.getTimeFrame());
+        response.setDuration(service.getDuration());
+        response.setTypeOfService(service.getTypeOfService());
         response.setAverageRating(getAverageRatingForService(service.getServiceId()));
         response.setOpenSlots(service.getOpenSlots());
         return response;

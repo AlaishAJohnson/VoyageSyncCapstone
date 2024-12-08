@@ -28,12 +28,13 @@ public class Services {
     private String serviceDescription;
     private double price;
     private String location;
-
+    private String typeOfService;
     public int openSlots;
     public boolean isAvailable;
     public LocalDate serviceDate;
     public LocalTime serviceTime;
-
+    public String timeFrame;
+    private String duration;
 
 
 

@@ -15,5 +15,11 @@ public class ServiceWithVendorDTO {
     private String vendorId;
     private double averageRating;
     private double openSlots;
+    private String location;
+    private String timeFrame;
+    private String duration;
+    private String typeOfService;
+
+
 
 }
