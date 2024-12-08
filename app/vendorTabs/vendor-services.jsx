@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, Alert, TextInput, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,69 +11,145 @@ const VendorServices = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [vendorId, setVendorId] = useState(null);
+    const [newService, setNewService] = useState({
+        serviceName: '',
+        serviceDescription: '',
+        price: '',
+        location: '',
+        timeFrame: '',
+        openSlots: '',
+        duration: '',
+        typeOfService: '',
+    });
+    const [showModal, setShowModal] = useState(false);
+    const [serviceToUpdate, setServiceToUpdate] = useState(null);
 
-    // Basic Authentication Header
     const authHeader = 'Basic ' + btoa('admin:admin');
 
     // Fetch Vendor ID
     const getVendorId = async () => {
         try {
             const storedUserId = await AsyncStorage.getItem('userId');
-            console.log('Stored userId from AsyncStorage:', storedUserId);
-
             if (storedUserId) {
                 const response = await axios.get(`${BACKEND_URL}/api/vendors/by-user/${storedUserId}`, {
-                    headers: { 'Authorization': authHeader },
+                    headers: { Authorization: authHeader },
                 });
-                console.log('Response from backend for vendor data:', response.data);
-
                 if (response.data && response.data.vendorId) {
-                    setVendorId(response.data.vendorId);
+                    setVendorId(response.data.vendorId.toString()); // Ensure it's treated as a string
                 } else {
-                    throw new Error('No vendor found for this user');
+                    throw new Error('No vendor found for this user.');
                 }
             } else {
-                throw new Error('User ID not found');
+                throw new Error('User ID not found.');
             }
-        } catch (error) {
-            console.error('Error retrieving vendor ID:', error);
+        } catch (err) {
+            console.error('Error fetching vendor ID:', err.message);
             setError('Failed to retrieve vendor ID. Please try again.');
         }
     };
 
     // Fetch Services for the Vendor
     const fetchVendorServices = async () => {
-        if (!vendorId) {
-            console.error('Vendor ID is missing, cannot fetch services');
-            return;
-        }
-
+        if (!vendorId) return;
         setLoading(true);
         setError(null);
-
         try {
-            const url = `${BACKEND_URL}/api/services/by-vendor/${vendorId}`;
-            console.log('Fetching services for vendorId:', vendorId);
-
-            const response = await axios.get(url, {
-                headers: { 'Authorization': authHeader },
+            const response = await axios.get(`${BACKEND_URL}/api/services/by-vendor/${vendorId}`, {
+                headers: { Authorization: authHeader },
             });
-            console.log('Response data from services API:', response.data);
-
-            if (response.data && Array.isArray(response.data)) {
-                setServices(response.data);
-            } else {
-                throw new Error('No services found');
-            }
+            setServices(response.data || []);
         } catch (err) {
-            console.error('Error fetching services:', err);
-            setError('Failed to fetch services. Please try again.');
+            console.error('Error fetching services:', err.message);
+            setError('Error fetching services.');
         } finally {
             setLoading(false);
         }
     };
 
-    // Initialize vendor ID and services on component mount
+    // Add or Update a Service
+    const handleSaveService = async () => {
+        const { serviceName, serviceDescription, price, location, timeFrame, openSlots, duration, typeOfService } = newService;
+
+        if (!serviceName || !serviceDescription || !price || !location || !timeFrame) {
+            Alert.alert('Please fill in all required fields.');
+            return;
+        }
+
+        try {
+            const serviceData = {
+                serviceName: serviceName.trim(),
+                serviceDescription: serviceDescription.trim(),
+                price: parseFloat(price),
+                location: location.trim(),
+                timeFrame: timeFrame.trim(),
+                openSlots: openSlots ? parseInt(openSlots) : 0,
+                duration: duration.trim(),
+                typeOfService: typeOfService.trim(),
+                vendorId: vendorId, // Ensure vendorId is treated as a string
+            };
+
+            if (serviceToUpdate && serviceToUpdate.serviceIdAsString) {
+                // Update existing service
+                const response = await axios.put(
+                    `${BACKEND_URL}/api/services/update/${serviceToUpdate.serviceIdAsString}`,
+                    serviceData,
+                    { headers: { Authorization: authHeader } }
+                );
+
+                setServices((prevServices) =>
+                    prevServices.map((service) =>
+                        service.serviceIdAsString === serviceToUpdate.serviceIdAsString ? response.data : service
+                    )
+                );
+                Alert.alert('Service updated successfully!');
+            } else {
+                // Create new service
+                const response = await axios.post(
+                    `${BACKEND_URL}/api/services`,
+                    serviceData,
+                    { headers: { Authorization: authHeader } }
+                );
+                setServices((prevServices) => [...prevServices, response.data]);
+                Alert.alert('Service added successfully!');
+            }
+        } catch (err) {
+            console.error('Error saving service:', err.response?.data || err.message);
+            Alert.alert('Failed to save service. Please check your inputs.');
+        } finally {
+            resetServiceForm();
+        }
+    };
+
+    // Delete a Service
+    const deleteService = async (serviceIdAsString) => {
+        try {
+            await axios.delete(`${BACKEND_URL}/api/services/delete/${serviceIdAsString}`, {
+                headers: { Authorization: authHeader },
+            });
+            setServices((prevServices) => prevServices.filter((service) => service.serviceIdAsString !== serviceIdAsString));
+            Alert.alert('Service deleted successfully.');
+        } catch (err) {
+            console.error('Error deleting service:', err.message);
+            Alert.alert('Failed to delete service.');
+        }
+    };
+
+    // Reset Service Form
+    const resetServiceForm = () => {
+        setNewService({
+            serviceName: '',
+            serviceDescription: '',
+            price: '',
+            location: '',
+            timeFrame: '',
+            openSlots: '',
+            duration: '',
+            typeOfService: '',
+        });
+        setServiceToUpdate(null);
+        setShowModal(false);
+    };
+
     useEffect(() => {
         const initialize = async () => {
             await getVendorId();
@@ -81,23 +157,53 @@ const VendorServices = () => {
         initialize();
     }, []);
 
-    // Fetch services whenever vendorId changes
     useEffect(() => {
-        if (vendorId) {
-            fetchVendorServices();
-        }
+        if (vendorId) fetchVendorServices();
     }, [vendorId]);
 
-    // Render Service Card
+    // Pre-fill form with all fields when updating a service
+    const handleUpdatePress = (item) => {
+        setServiceToUpdate(item); // Set the entire service object to `serviceToUpdate`
+        setNewService({
+            serviceName: item.serviceName || '',
+            serviceDescription: item.serviceDescription || '',
+            price: item.price ? item.price.toString() : '',
+            location: item.location || '',
+            timeFrame: item.timeFrame || '',
+            openSlots: item.openSlots?.toString() || '',
+            duration: item.duration || '',
+            typeOfService: item.typeOfService || '',
+        });
+        setShowModal(true);
+    };
+
+    // Add New Service Button
+    const handleAddServicePress = () => {
+        setServiceToUpdate(null);
+        resetServiceForm();
+        setShowModal(true);
+    };
+
     const renderServiceCard = ({ item }) => (
-        <TouchableOpacity style={styles.card}>
-            <Text style={styles.title}>Service: {item.serviceName}</Text>
-            <Text style={styles.description}>Description: {item.serviceDescription}</Text>
+        <View style={styles.card} key={item.serviceIdAsString}>
+            <Text style={styles.title}>{item.serviceName}</Text>
+            <Text style={styles.description}>{item.serviceDescription}</Text>
             <Text style={styles.price}>Price: ${item.price}</Text>
-            <Text style={styles.availability}>
-                Availability: {item.serviceAvailability.length > 0 ? 'Available' : 'Not Available'}
-            </Text>
-        </TouchableOpacity>
+            <Text style={styles.location}>Location: {item.location}</Text>
+            <Text style={styles.timeFrame}>Time Frame: {item.timeFrame}</Text>
+            <Text style={styles.duration}>Duration: {item.duration}</Text>
+            <Text style={styles.typeOfService}>Service Type: {item.typeOfService}</Text>
+            <Text style={styles.openSlots}>Available Slots: {item.openSlots}</Text>
+            <TouchableOpacity style={styles.deleteButton} onPress={() => deleteService(item.serviceIdAsString)}>
+                <Text style={styles.buttonText}>Delete</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={styles.updateButton}
+                onPress={() => handleUpdatePress(item)}
+            >
+                <Text style={styles.buttonText}>Update</Text>
+            </TouchableOpacity>
+        </View>
     );
 
     if (loading) {
@@ -118,15 +224,86 @@ const VendorServices = () => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <View style={styles.container}>
-                <FlatList
-                    data={services}
-                    keyExtractor={(item) => item.serviceId}
-                    renderItem={renderServiceCard}
-                    contentContainerStyle={{ paddingBottom: 16 }}
-                    ListEmptyComponent={<Text style={styles.emptyText}>No services available.</Text>}
-                />
-            </View>
+            <TouchableOpacity style={styles.addButton} onPress={handleAddServicePress}>
+                <Text style={styles.buttonText}>Add New Service</Text>
+            </TouchableOpacity>
+
+            <FlatList
+                data={services}
+                renderItem={renderServiceCard}
+                keyExtractor={(item) => {
+                    const key = item.serviceIdAsString || item.serviceId || item._id || '';
+                    return key.toString();  // Make sure the key is a string, and handle undefined values.
+                    }
+                }
+            />
+
+            {/* Modal for adding or updating a service */}
+            <Modal visible={showModal} animationType="slide" onRequestClose={resetServiceForm}>
+                <View style={styles.modalContainer}>
+                    <Text style={styles.modalTitle}>
+                        {serviceToUpdate ? 'Update Service' : 'Add New Service'}
+                    </Text>
+
+                    <TextInput
+                        style={styles.input}
+                        value={newService.serviceName}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, serviceName: text }))}
+                        placeholder="Service Name"
+                    />
+                    <TextInput
+                        style={styles.input}
+                        value={newService.serviceDescription}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, serviceDescription: text }))}
+                        placeholder="Service Description"
+                    />
+                    <TextInput
+                        style={styles.input}
+                        value={newService.price}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, price: text }))}
+                        placeholder="Price"
+                        keyboardType="numeric"
+                    />
+                    <TextInput
+                        style={styles.input}
+                        value={newService.location}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, location: text }))}
+                        placeholder="Location"
+                    />
+                    <TextInput
+                        style={styles.input}
+                        value={newService.timeFrame}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, timeFrame: text }))}
+                        placeholder="Time Frame"
+                    />
+                    <TextInput
+                        style={styles.input}
+                        value={newService.openSlots}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, openSlots: text }))}
+                        placeholder="Open Slots"
+                        keyboardType="numeric"
+                    />
+                    <TextInput
+                        style={styles.input}
+                        value={newService.duration}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, duration: text }))}
+                        placeholder="Duration"
+                    />
+                    <TextInput
+                        style={styles.input}
+                        value={newService.typeOfService}
+                        onChangeText={(text) => setNewService((prev) => ({ ...prev, typeOfService: text }))}
+                        placeholder="Type of Service"
+                    />
+
+                    <TouchableOpacity style={styles.saveButton} onPress={handleSaveService}>
+                        <Text style={styles.buttonText}>{serviceToUpdate ? 'Update' : 'Save'}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.cancelButton} onPress={resetServiceForm}>
+                        <Text style={styles.buttonText}>Cancel</Text>
+                    </TouchableOpacity>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -134,43 +311,101 @@ const VendorServices = () => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
+        padding: 10,
         backgroundColor: '#fff',
     },
-    container: {
-        flex: 1,
-        padding: 16,
-    },
     card: {
-        backgroundColor: 'rgba(11, 119, 132, 0.2)',
-        borderRadius: 12,
-        padding: 12,
-        marginBottom: 16,
-        elevation: 3,
+        backgroundColor: '#f1f1f1',
+        padding: 15,
+        marginBottom: 10,
+        borderRadius: 8,
     },
     title: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
     },
     description: {
-        fontSize: 14,
-        marginVertical: 4,
+        fontSize: 16,
+        marginVertical: 5,
     },
     price: {
         fontSize: 14,
-        marginVertical: 4,
+        color: '#333',
     },
-    availability: {
+    location: {
         fontSize: 14,
-        color: '#555',
+    },
+    timeFrame: {
+        fontSize: 14,
+    },
+    duration: {
+        fontSize: 14,
+    },
+    typeOfService: {
+        fontSize: 14,
+    },
+    openSlots: {
+        fontSize: 14,
+    },
+    deleteButton: {
+        backgroundColor: '#e74c3c',
+        padding: 10,
+        marginVertical: 5,
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    updateButton: {
+        backgroundColor: '#0B7784',
+        padding: 10,
+        marginVertical: 5,
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+    addButton: {
+        backgroundColor: '#0B7784',
+        padding: 15,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    modalContainer: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: '#fff',
+    },
+    modalTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 15,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        padding: 10,
+        marginBottom: 15,
+        borderRadius: 5,
+    },
+    saveButton: {
+        backgroundColor: '#0B7784',
+        padding: 15,
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    cancelButton: {
+        backgroundColor: '#e74c3c',
+        padding: 15,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginTop: 10,
     },
     errorText: {
         color: 'red',
-        textAlign: 'center',
-    },
-    emptyText: {
-        textAlign: 'center',
         fontSize: 16,
-        color: '#555',
+        textAlign: 'center',
     },
 });
 

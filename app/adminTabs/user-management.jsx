@@ -1,39 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import axios from 'axios';
-import { getAuthHeader } from './auth.jsx';
 
 const UserManagement = () => {
   const [usersData, setUsersData] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  // Fetch users from the database
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/users/', getAuthHeader()); // Replace with your backend API
-        setUsersData(response.data);
-        setFilteredUsers(response.data);
-      } catch (err) {
-        console.error('Error fetching users:', err);
-        setError('Failed to fetch users. Please try again later.');
-      } finally {
-        setLoading(false);
+        const authHeader = 'Basic ' + btoa('admin:admin'); 
+        const response = await fetch('http://localhost:8080/api/users/', {
+          method: 'GET', 
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: authHeader,
+          },
+        });
+  
+        if (!response.ok) {
+          console.error('Error fetching users: HTTP status', response.status);
+          return;
+        }
+  
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setUsersData(data);
+          setFilteredUsers(data);
+        } else {
+          console.error('Data is not in the expected array format:', data);
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error);
       }
     };
-
+  
     fetchUsers();
   }, []);
+  
 
-  // Filter users by role
   useEffect(() => {
+    
     const roleFiltered = selectedRole
       ? usersData.filter(user => user.role === selectedRole)
       : usersData;
@@ -41,142 +52,61 @@ const UserManagement = () => {
     setFilteredUsers(roleFiltered);
   }, [selectedRole, usersData]);
 
-  // Search users
   const handleSearch = (query) => {
     setSearchQuery(query);
     const searchFiltered = usersData.filter(user =>
       user.firstName.toLowerCase().includes(query.toLowerCase()) ||
+      user.lastName.toLowerCase().includes(query.toLowerCase()) ||
       user.username.toLowerCase().includes(query.toLowerCase())
     );
     setFilteredUsers(searchFiltered);
   };
 
   const renderUser = ({ item }) => (
-    <TouchableOpacity
-      style={[
-        styles.card,
-        item.verificationStatus === 'REJECTED' && styles.rejectedCard, // Apply red hue if status is 'rejected'
-      ]}
-      onPress={() => router.push(`/components/${item.id}`)}
+    <TouchableOpacity 
+      style={styles.card}
+      onPress={() => {
+        console.log("Navigating to user profile with ID:", item.userId);
+        router.push(`/components/${item.userId}`); 
+      }} 
     >
-      <Image source={{ uri: item.profileImage?.uri || 'https://via.placeholder.com/50'}} style={styles.cardImage} />
+      <Image source={{ uri: item.profileImage }} style={styles.cardImage} />
       <View style={styles.cardContent}>
         <Text style={styles.cardName}>{item.firstName} {item.lastName}</Text>
         <Text style={styles.cardUsername}>{item.username}</Text>
-
-        {item.verificationStatus === 'REJECTED' && (
-          <Text style={styles.rejectedLabel}>Rejected</Text>
-        )}
-
-        {/* Action Buttons */}
-        {item.role !== 'ADMIN' && ( // Exclude buttons if the role is admin
-          <View style={styles.actionButtons}>
-            {(item.verificationStatus === 'PENDING' || item.verificationStatus === 'REJECTED') && (
-              <TouchableOpacity
-                style={styles.verifyButton}
-                onPress={() => handleAction(item.userId, 'verify')}
-              >
-                <Text style={styles.buttonText}>Verify</Text>
-              </TouchableOpacity>
-            )}
-            {item.verificationStatus === 'PENDING' && (
-              <TouchableOpacity
-                style={styles.rejectButton}
-                onPress={() => handleAction(item.userId, 'reject')}
-              >
-                <Text style={styles.buttonText}>Reject</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={styles.removeButton}
-              onPress={() => handleAction(item.userId, 'remove')}
-            >
-              <Text style={styles.buttonText}>Remove</Text>
-            </TouchableOpacity>
-          </View>
-        )}
       </View>
     </TouchableOpacity>
   );
-
-  const handleAction = async (userId, action) => {
-    console.log(`Action: ${action}, UserId: ${userId}`);
-    try{
-      const headers = {
-        'Content-Type': 'application/json', 
-        ...await getAuthHeader()            
-      };
-
-      switch (action) {
-        case 'verify':
-          await axios.put(`http://localhost:8080/api/admins/${userId}/verification-status?newStatus=VERIFIED`, {headers});
-          Alert.alert('Confirmation', `Do you want to verify user ${userId}?`, [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Yes', onPress: () => Alert.alert('User Verified', `User ${userId} has been verified.`) },
-          ]);
-        break;
-        case 'reject':
-          await axios.put(`http://localhost:8080/api/admins/${userId}/verification-status?newStatus=REJECTED`, {headers});
-          Alert.alert('User Rejected', `User ${userId} has been rejected.`);
-          break;
-        case 'remove':
-          await axios.delete(`http://localhost:8080/api/admins/delete/${userId}`, {headers});
-          Alert.alert('User Removed', `User ${userId} has been removed.`);
-          break;
-        default:
-          console.error('Unknown action:', action);
-      }
-    } catch (error) {
-      console.error('Error while performing action:', error);
-      Alert.alert('Error', `There was an error performing the action. Please try again.`);
-    }
-  };
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#0B7784" />
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.errorText}>{error}</Text>
-      </SafeAreaView>
-    );
-  }
+  
+  
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.searchContainer}>
         <Ionicons name='search' color='black' size={20} />
-        <TextInput
-          placeholder='Search Users'
-          placeholderTextColor="#333"
+        <TextInput 
+          placeholder='Search Users' 
+          placeholderTextColor="#333" 
           value={searchQuery}
           onChangeText={handleSearch}
           style={styles.searchText}
         />
       </View>
       <View style={styles.roleFilterContainer}>
-        {['admin', 'vendor', 'user'].map(role => (
-          <TouchableOpacity
-            key={role}
+        {['Admin', 'Vendor', 'User'].map(role => (
+          <TouchableOpacity 
+            key={role} 
             style={[styles.roleButton, selectedRole === role && styles.activeRole]}
             onPress={() => setSelectedRole(selectedRole === role ? null : role)}
           >
-            <Text style={styles.roleButtonText}>
-              {role.charAt(0).toUpperCase() + role.slice(1)}
-            </Text>
+            <Text style={styles.roleButtonText}>{role}</Text>
           </TouchableOpacity>
         ))}
       </View>
       <FlatList
         data={filteredUsers}
         renderItem={renderUser}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.userId}
         style={styles.userList}
       />
     </SafeAreaView>
@@ -259,74 +189,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
   },
-  errorText: {
-    color: 'red',
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 20,
+  cardFriendText: {
+    fontSize: 12,
+    color: '#666',
   },
-  actionButtons: {
-  flexDirection: 'row',
-  marginTop: 10,
-},
-verifyButton: {
-  backgroundColor: '#4CAF50', // Green
-  padding: 8,
-  borderRadius: 5,
-  marginRight: 5,
-},
-rejectButton: {
-  backgroundColor: '#FF5722', // Red
-  padding: 8,
-  borderRadius: 5,
-  marginRight: 5,
-},
-removeButton: {
-  backgroundColor: '#9E9E9E', // Grey
-  padding: 8,
-  borderRadius: 5,
-},
-buttonText: {
-  color: '#fff',
-  fontSize: 14,
-  textAlign: 'center',
-},
-
-rejectedLabel: {
-  color: '#F44336',
-  fontSize: 16,
-  fontWeight: 'bold',
-},
-rejectedCard: {
-  backgroundColor: '#ffe6e6',
-},
-actionButtons: {
-  flexDirection: 'row',
-  marginTop: 10,
-},
-verifyButton: {
-  backgroundColor: '#4CAF50',
-  padding: 8,
-  borderRadius: 5,
-  marginRight: 5,
-},
-rejectButton: {
-  backgroundColor: '#FF5722',
-  padding: 8,
-  borderRadius: 5,
-  marginRight: 5,
-},
-removeButton: {
-  backgroundColor: '#9E9E9E',
-  padding: 8,
-  borderRadius: 5,
-},
-buttonText: {
-  color: '#fff',
-  fontSize: 14,
-  textAlign: 'center',
-},
 });
-
 
 export default UserManagement;

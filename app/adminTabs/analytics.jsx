@@ -1,10 +1,14 @@
+import { StyleSheet, Text, TouchableOpacity, Alert, View, Platform, Dimensions } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, Alert, View, Dimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BarChart } from 'react-native-chart-kit';
+import { BarChart as RNBarChart } from 'react-native-chart-kit'; // For mobile
+import { BarChart as WebBarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar } from "recharts"; // For web
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
 import axios from 'axios';
-import * as FileSystem from 'expo-file-system';
-import { getAuthHeader } from './auth.jsx'; // Adjust this import based on your project structure
+
+import { getAuthHeader } from './auth.jsx';
+
+const screenWidth = Dimensions.get("window").width;
 
 const Analytics = () => {
   const [loading, setLoading] = useState(false);
@@ -18,7 +22,6 @@ const Analytics = () => {
 
   useEffect(() => {
     const fetchMetrics = async () => {
-      setLoading(true);
       try {
         const response = await axios.get('http://localhost:8080/api/reports/platform-usage', getAuthHeader());
         setMetrics(response.data);
@@ -37,11 +40,18 @@ const Analytics = () => {
     setLoading(true);
     try {
       const response = await axios.post('http://localhost:8080/api/reports/generate', {}, getAuthHeader());
-      const json = JSON.stringify(response.data, null, 2);
-      const fileUri = FileSystem.documentDirectory + 'report.json';
 
-      await FileSystem.writeAsStringAsync(fileUri, json);
-      Alert.alert('Success', `Report saved at: ${fileUri}`);
+      // Create a downloadable JSON file
+      const jsonBlob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(jsonBlob);
+
+      // Trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'report.json';
+      link.click();
+
+      Alert.alert('Success', 'Report generated successfully.');
     } catch (err) {
       console.error('Error generating report:', err);
       Alert.alert('Error', 'Failed to generate report.');
@@ -50,64 +60,103 @@ const Analytics = () => {
     }
   };
 
-  const chartData = {
-    labels: ['Users', 'Trips', 'Bookings', 'Feedback'],
-    datasets: [
-      {
-        data: [metrics.userCount, metrics.tripCount, metrics.bookingCount, metrics.feedbackCount],
-      },
-    ],
-  };
+  const chartData = [
+    { name: "Users", count: metrics.userCount || 0 },
+    { name: "Trips", count: metrics.tripCount || 0 },
+    { name: "Bookings", count: metrics.bookingCount || 0 },
+    { name: "Feedback", count: metrics.feedbackCount || 0 },
+  ];
 
-  const chartConfig = {
-    backgroundGradientFrom: '#f6f6f6',
-    backgroundGradientTo: '#f6f6f6',
-    color: (opacity = 1) => `rgba(11, 119, 132, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(51, 51, 51, ${opacity})`,
-    barPercentage: 0.5,
-  };
+  // Ensure all counts are valid numbers
+  const validChartData = chartData.map((item) => ({
+    name: item.name,
+    count: isNaN(Number(item.count)) ? 0 : Number(item.count),
+  }));
 
+  if (Platform.OS === 'web') {
+    // Render web-specific chart and table
+    return (
+        <div style={styles.container}>
+          <h1 style={styles.chartTitle}>Platform Usage Metrics</h1>
+          {/* Bar Chart */}
+          <div style={styles.chartContainer}>
+            <WebBarChart
+                width={500}
+                height={300}
+                data={validChartData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="count" fill="#0B7784" />
+            </WebBarChart>
+          </div>
+          {/* Metrics Table */}
+          <TableContainer component={Paper} style={styles.tableContainer}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell><strong>Metric</strong></TableCell>
+                  <TableCell align="right"><strong>Count</strong></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell>Users</TableCell>
+                  <TableCell align="right">{metrics.userCount}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Trips</TableCell>
+                  <TableCell align="right">{metrics.tripCount}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Bookings</TableCell>
+                  <TableCell align="right">{metrics.bookingCount}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Feedback</TableCell>
+                  <TableCell align="right">{metrics.feedbackCount}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+          {/* Generate Report Button */}
+          <TouchableOpacity style={styles.card} onPress={generateReport} disabled={loading}>
+            <Text style={styles.cardText}>{loading ? 'Generating...' : 'Generate Report'}</Text>
+          </TouchableOpacity>
+        </div>
+    );
+  }
+
+  // Render mobile-specific chart
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.chartTitle}>Platform Usage Metrics</Text>
-
-      {loading && <ActivityIndicator size="large" color="#0B7784" />}
-
-      {/* Bar Chart */}
-      <View style={styles.chartContainer}>
-        <BarChart
-          data={chartData}
-          width={Dimensions.get('window').width - 40}
-          height={220}
-          chartConfig={chartConfig}
-          fromZero
-          showValuesOnTopOfBars
-          style={{ borderRadius: 16 }}
-        />
-      </View>
-
-      {/* Metrics Table */}
-      <View style={styles.tableContainer}>
-        {[
-          { label: 'Users', value: metrics.userCount },
-          { label: 'Trips', value: metrics.tripCount },
-          { label: 'Bookings', value: metrics.bookingCount },
-          { label: 'Feedback', value: metrics.feedbackCount },
-        ].map((item, index) => (
-          <View key={index} style={styles.tableRow}>
-            <Text style={styles.tableCell}>{item.label}</Text>
-            <Text style={styles.tableCell}>{item.value}</Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Generate Report Button */}
-      <TouchableOpacity style={styles.card} onPress={generateReport} disabled={loading}>
-        <Text style={styles.cardText}>{loading ? 'Generating...' : 'Generate Report'}</Text>
-      </TouchableOpacity>
-
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-    </SafeAreaView>
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.chartTitle}>Platform Usage Metrics</Text>
+        <View style={styles.chartContainer}>
+          <RNBarChart
+              data={{
+                labels: ["Users", "Trips", "Bookings", "Feedback"],
+                datasets: [{ data: validChartData.map((item) => item.count) }],
+              }}
+              width={screenWidth - 40}
+              height={220}
+              chartConfig={{
+                backgroundGradientFrom: "#fff",
+                backgroundGradientTo: "#fff",
+                color: (opacity = 1) => `rgba(11, 119, 132, ${opacity})`,
+                barPercentage: 0.5,
+              }}
+              verticalLabelRotation={30}
+          />
+        </View>
+        {/* Generate Report Button */}
+        <TouchableOpacity style={styles.card} onPress={generateReport} disabled={loading}>
+          <Text style={styles.cardText}>{loading ? 'Generating...' : 'Generate Report'}</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
   );
 };
 
@@ -143,17 +192,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
   },
-  tableRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  tableCell: {
-    fontSize: 16,
-    color: '#333',
-  },
   chartTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -162,7 +200,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   card: {
-    marginTop: 20,
+    margin: 10,
     padding: 20,
     borderRadius: 10,
     backgroundColor: '#0B7784',
@@ -176,12 +214,6 @@ const styles = StyleSheet.create({
   cardText: {
     color: '#fff',
     fontSize: 16,
-    textAlign: 'center',
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 14,
-    marginTop: 10,
     textAlign: 'center',
   },
 });
