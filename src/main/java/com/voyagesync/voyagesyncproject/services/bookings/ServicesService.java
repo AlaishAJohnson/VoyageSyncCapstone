@@ -56,6 +56,9 @@ public class ServicesService {
     }
 
     // Fetch a single service by its ID
+    public Services getServiceByServiceId(ObjectId id) {
+        return serviceRepository.findById(id).orElse(null);
+    }
     public ServiceWithVendorDTO getServiceById(ObjectId serviceId) {
         Services service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Service not found"));

@@ -2,7 +2,9 @@ package com.voyagesync.voyagesyncproject.controllers.bookings;
 
 import com.voyagesync.voyagesyncproject.enums.ConfirmationStatus;
 import com.voyagesync.voyagesyncproject.models.bookings.Bookings;
+import com.voyagesync.voyagesyncproject.models.bookings.Services;
 import com.voyagesync.voyagesyncproject.services.bookings.BookingService;
+import com.voyagesync.voyagesyncproject.services.bookings.ServicesService;
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,15 +22,32 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/bookings")
 public class BookingsController {
     private final BookingService bookingService;
+    private final ServicesService servicesService;
 
-    public BookingsController(final BookingService bookingService) {
+    public BookingsController(final BookingService bookingService, final ServicesService servicesService) {
         this.bookingService = bookingService;
+        this.servicesService = servicesService;
     }
 
     @GetMapping("/vendor/{vendorId}")
     public ResponseEntity<List<Map<String, Object>>> getByVendorId(@PathVariable ObjectId vendorId) {
         List<Bookings> bookings = bookingService.getByVendorId(vendorId);
-        List<Map<String, Object>> response = bookings.stream().map(this::mapBookingsToResponse).collect(Collectors.toList());
+        List<Map<String, Object>> response = bookings.stream().map(booking -> {
+            Map<String, Object> bookingResponse = mapBookingsToResponse(booking);
+
+            // Get service details by serviceId
+            Services service = servicesService.getServiceByServiceId(booking.getServiceId());
+
+            // Map service details to the booking response
+            if (service != null) {
+                bookingResponse.put("serviceName", service.getServiceName());
+                bookingResponse.put("serviceDescription", service.getServiceDescription());
+                bookingResponse.put("servicePrice", service.getPrice());
+                bookingResponse.put("location", service.getLocation());
+            }
+
+            return bookingResponse;
+        }).collect(Collectors.toList());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
