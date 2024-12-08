@@ -196,7 +196,7 @@ const Profile = () => {
             <Ionicons name="fast-food" size={20} color="#0B7784" />
             <Text style={styles.subHeader}>Food</Text>
           </View>
-          <Text>{profileData.travelPreferences.food.join(', ')}</Text>
+          <Text>{(profileData.travelPreferences.food || []).join(', ')}</Text>
         </View>
 
         <View style={styles.preferenceSection}>
@@ -204,7 +204,7 @@ const Profile = () => {
             <Ionicons name="cloud" size={20} color="#0B7784" />
             <Text style={styles.subHeader}>Weather</Text>
           </View>
-          <Text>{profileData.travelPreferences.weather.join(', ')}</Text>
+          <Text>{(profileData.travelPreferences.weather || []).join(', ')}</Text>
         </View>
 
         <View style={styles.preferenceSection}>
@@ -212,7 +212,7 @@ const Profile = () => {
             <Ionicons name="heart" size={20} color="#0B7784" />
             <Text style={styles.subHeader}>Activities</Text>
           </View>
-          <Text>{profileData.travelPreferences.activities.join(', ')}</Text>
+          <Text>{(profileData.travelPreferences.activities || []).join(', ')}</Text>
         </View>
 
           <TouchableOpacity style={styles.editBtn} onPress={handelEditPreference}>

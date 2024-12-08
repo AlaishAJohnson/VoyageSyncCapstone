@@ -12,10 +12,8 @@ const VendorHome = () => {
     const [error, setError] = useState(null);
     const [vendorId, setVendorId] = useState(null);
 
-    // Fetch vendor ID from AsyncStorage or backend
     const authHeader = 'Basic ' + btoa('admin:admin');
 
-    // Fetch vendor ID
     const getVendorId = async () => {
         try {
             const storedUserId = await AsyncStorage.getItem('userId');
@@ -30,7 +28,6 @@ const VendorHome = () => {
                 console.log('Response from backend for vendor data:', response.data);
 
                 if (response.data && response.data.vendorId) {
-                    // Assuming vendorId is returned as an ObjectId, we can leave it as is
                     setVendorId(response.data.vendorId);
                 } else {
                     throw new Error('No vendor found for this user');
