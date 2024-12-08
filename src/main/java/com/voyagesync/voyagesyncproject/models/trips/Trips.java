@@ -24,7 +24,7 @@ public class Trips {
     private String destination;
     private LocalDate startDate;
     private LocalDate endDate;
-    private double budget;
+    private Double budget;
     private List<ObjectId> itinerary;
     private boolean isGroupTrip;
     @Nullable private List<ObjectId> memberIds;

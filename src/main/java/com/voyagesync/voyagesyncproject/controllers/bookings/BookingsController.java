@@ -35,10 +35,8 @@ public class BookingsController {
         List<Map<String, Object>> response = bookings.stream().map(booking -> {
             Map<String, Object> bookingResponse = mapBookingsToResponse(booking);
 
-            // Get service details by serviceId
             Services service = servicesService.getServiceByServiceId(booking.getServiceId());
 
-            // Map service details to the booking response
             if (service != null) {
                 bookingResponse.put("serviceName", service.getServiceName());
                 bookingResponse.put("serviceDescription", service.getServiceDescription());

@@ -152,6 +152,25 @@ public class UsersController {
         }
     }
 
+    @GetMapping("/{userId}/username")
+    public ResponseEntity<Map<String, String>> getUsernameByUserId(@PathVariable String userId) {
+        try {
+            Users user = usersService.getUsernameByUserId(userId);
+            if (user != null) {
+                Map<String, String> usernameResponse = new HashMap<>();
+                usernameResponse.put("username", user.getUsername());
+                return ResponseEntity.ok(usernameResponse);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error", "Username not found"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "An error occurred: " + e.getMessage()));
+        }
+    }
+
+
+
+
     @GetMapping("/{userId}/travel-preferences/{preferenceId}")
     public ResponseEntity<Map<String, Object>> getUserTravelPreferences(@PathVariable String userId, @PathVariable String preferenceId) {
         try {
@@ -187,6 +206,8 @@ public class UsersController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+
 
     /* POST METHODS */
     @PostMapping("/login")

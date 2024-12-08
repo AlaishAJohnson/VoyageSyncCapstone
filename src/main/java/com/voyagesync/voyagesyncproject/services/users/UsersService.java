@@ -69,6 +69,11 @@ public class UsersService {
     public boolean existsById(ObjectId userId) {
         return usersRepository.existsById(userId);
     }
+    public Users getUsernameByUserId(String userId) {
+        ObjectId userIdObj = new ObjectId(userId);
+        return usersRepository.findById(userIdObj).orElse(null);
+    }
+
 
     public boolean existByUsername(String username) {
         return usersRepository.existsByUsername(username);

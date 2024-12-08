@@ -1,8 +1,6 @@
 package com.voyagesync.voyagesyncproject.services.bookings;
 
-import com.voyagesync.voyagesyncproject.models.bookings.ServiceAvailability;
 import com.voyagesync.voyagesyncproject.models.bookings.Services;
-import com.voyagesync.voyagesyncproject.repositories.bookings.ServiceAvailabilityRepository;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -2,7 +2,7 @@ package com.voyagesync.voyagesyncproject.controllers.bookings; // ServiceControl
 
 import com.voyagesync.voyagesyncproject.models.bookings.Services;
 import com.voyagesync.voyagesyncproject.services.bookings.FeedbackService;
-import com.voyagesync.voyagesyncproject.services.bookings.ServiceWithVendorDTO;
+import com.voyagesync.voyagesyncproject.dto.ServiceWithVendorDTO;
 import com.voyagesync.voyagesyncproject.services.bookings.ServicesService;
 import com.voyagesync.voyagesyncproject.services.users.VendorService;
 import org.bson.types.ObjectId;
@@ -37,23 +37,6 @@ public class ServiceController {
         return ResponseEntity.ok(serviceResponse);
     }
 
-//    // Fetch a single service by serviceId
-//    @GetMapping("/{serviceId}")
-//    public ResponseEntity<ServiceWithVendorDTO> getServiceById(@PathVariable String serviceId) {
-//        try {
-//            ObjectId id = new ObjectId(serviceId);  // Convert string to ObjectId
-//            ServiceWithVendorDTO service = servicesService.getServiceById(id);  // Fetch service by ID
-//            if (service != null) {
-//                return ResponseEntity.ok(service);  // Return the service
-//            } else {
-//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);  // Service not found
-//            }
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);  // Internal server error
-//        }
-//    }
-
-    // Fetch all services with vendor info
     @GetMapping("/vendor")
     public ResponseEntity<List<ServiceWithVendorDTO>> getAllServicesWithVendorInfo() {
         List<ServiceWithVendorDTO> serviceResponses = servicesService.getAllServicesWithVendorInfo();
@@ -92,14 +75,14 @@ public class ServiceController {
     }
 
     // Fetch services by availability
-    @GetMapping("/availability")
-    public ResponseEntity<List<ServiceWithVendorDTO>> getServicesByAvailability(@RequestParam List<ObjectId> serviceAvailabilityIds) {
-        List<Services> services = servicesService.getServicesByAvailability(serviceAvailabilityIds);
-        List<ServiceWithVendorDTO> response = services.stream()
-                .map(servicesService::mapServiceWithVendorToDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
-    }
+//    @GetMapping("/availability")
+//    public ResponseEntity<List<ServiceWithVendorDTO>> getServicesByAvailability(@RequestParam List<ObjectId> serviceAvailabilityIds) {
+//        List<Services> services = servicesService.getServicesByAvailability(serviceAvailabilityIds);
+//        List<ServiceWithVendorDTO> response = services.stream()
+//                .map(servicesService::mapServiceWithVendorToDTO)
+//                .collect(Collectors.toList());
+//        return ResponseEntity.ok(response);
+//    }
 
     // Fetch services by vendor
     @GetMapping("/by-vendor/{vendorId}")
@@ -119,7 +102,6 @@ public class ServiceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body((List<ServiceWithVendorDTO>) errorResponse);
         }
     }
-
 
 
     // Fetch all services

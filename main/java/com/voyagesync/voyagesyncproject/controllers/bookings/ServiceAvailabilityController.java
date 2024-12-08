@@ -1,7 +1,5 @@
 package com.voyagesync.voyagesyncproject.controllers.bookings;
 
-import com.voyagesync.voyagesyncproject.models.bookings.ServiceAvailability;
-import com.voyagesync.voyagesyncproject.services.bookings.ServiceAvailabilityService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

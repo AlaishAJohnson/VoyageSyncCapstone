@@ -47,8 +47,6 @@ public class TripController {
     }
 
 
-
-
     @GetMapping("/organizer/{organizerId}")
     public ResponseEntity<Map<String, Object>> getTripsByOrganizer(@PathVariable String organizerId) {
         List<Trips> trips = tripService.getTripsByOrganizerId(organizerId);
@@ -75,30 +73,98 @@ public class TripController {
     }
 
 
-    @PostMapping("/create-trip")
-    public ResponseEntity<Object> createTrip(@RequestBody Map<String, Object> tripDetails, @RequestParam boolean isGroupTrip, @RequestParam String organizerId) {
+    @PostMapping("/create-trip/{organizerId}")
+    public ResponseEntity<Object> createTrip(
+            @PathVariable String organizerId,
+            @RequestBody Map<String, Object> tripDetails) {
+
         Trips newTrip = new Trips();
-        newTrip.setTripName(tripDetails.get("tripName").toString());
-        newTrip.setDestination(tripDetails.get("destination").toString());
+
+        System.out.println("Received trip details: " + tripDetails);
+
+        Object tripNameObj = tripDetails.get("tripName");
+        String tripName = null;
+        if (tripNameObj instanceof String) {
+            tripName = (String) tripNameObj;
+        } else if (tripNameObj instanceof Map) {
+            Map<String, Object> nestedTripName = (Map<String, Object>) tripNameObj;
+            tripName = nestedTripName.get("tripName").toString();
+        }
+        newTrip.setTripName(tripName);
+
+        Object destinationObj = tripDetails.get("destination");
+        String destination = null;
+        if (destinationObj instanceof String) {
+            destination = (String) destinationObj;
+        } else if (destinationObj instanceof Map) {
+            Map<String, Object> nestedDestination = (Map<String, Object>) destinationObj;
+            destination = nestedDestination.get("destination").toString();
+        }
+        newTrip.setDestination(destination);
+
         newTrip.setStartDate(LocalDate.parse(tripDetails.get("startDate").toString()));
         newTrip.setEndDate(LocalDate.parse(tripDetails.get("endDate").toString()));
-        newTrip.setBudget((double) tripDetails.get("budget"));
 
+        Object budgetObj = tripDetails.get("budget");
+        Double budget = null;
+
+        if (budgetObj instanceof Integer) {
+            budget = ((Integer) budgetObj).doubleValue();
+        } else if (budgetObj instanceof Double) {
+            budget = (Double) budgetObj;
+        } else if (budgetObj instanceof String) {
+            try {
+                budget = Double.valueOf((String) budgetObj);
+            } catch (NumberFormatException e) {
+                return new ResponseEntity<>("Invalid budget value", HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        if (budget != null) {
+            newTrip.setBudget(budget);
+        } else {
+            return new ResponseEntity<>("Invalid budget value", HttpStatus.BAD_REQUEST);
+        }
+
+        if (tripDetails.containsKey("imageUrl")) {
+            newTrip.setImageUrl(tripDetails.get("imageUrl").toString());
+        } else {
+            newTrip.setImageUrl(null);
+        }
         ObjectId organizerObjectId = new ObjectId(organizerId);
         newTrip.setOrganizerId(organizerObjectId);
-        if(isGroupTrip) {
-            List<ObjectId> memberIds = new ArrayList<>();
-            memberIds.add(organizerObjectId);
+
+        if (tripDetails.containsKey("memberIds")) {
+            List<ObjectId> memberIds = ((List<String>) tripDetails.get("memberIds"))
+                    .stream()
+                    .map(ObjectId::new)
+                    .collect(Collectors.toList());
+            if (!memberIds.contains(organizerObjectId)) {
+                memberIds.add(organizerObjectId);
+            }
             newTrip.setMemberIds(memberIds);
         } else {
-            newTrip.setMemberIds(null);
+            newTrip.setMemberIds(Collections.singletonList(organizerObjectId));
+        }
+
+        if (newTrip.getMemberIds().size() > 1) {
+            newTrip.setGroupTrip(true);
+        } else {
+            newTrip.setGroupTrip(false);
         }
 
         newTrip.setItinerary(new ArrayList<>());
-        Trips createdTrip = tripService.saveTrip(newTrip);
-        return new ResponseEntity<>(createdTrip, HttpStatus.CREATED);
 
+        Trips createdTrip = tripService.saveTrip(newTrip);
+        List<Trips> tripsList = Collections.singletonList(createdTrip);
+        Map<String, Object> response = mapTripToResponse(tripsList);
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
+
+
+
 
     private Map<String, Object> mapTripToResponse(List<Trips> trips) {
         List<Map<String, Object>> tripsList = new ArrayList<>();
