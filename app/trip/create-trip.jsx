@@ -185,7 +185,7 @@ const CreateTrip = () => {
 
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Create New Trip</Text>
 
       {/* Destination Search */}
@@ -284,7 +284,7 @@ const CreateTrip = () => {
       <TouchableOpacity style={styles.finishButton} onPress={handleFinishTrip}>
         <Text style={styles.finishButtonText}>Finish</Text>
       </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 };
 
