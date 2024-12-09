@@ -175,11 +175,11 @@ const VendorHome = () => {
                 {tabs.map((tab) => (
                     <TouchableOpacity
                         key={tab}
-                        style={[styles.tab1, selectedTab === tab && styles.activeTab1]}
+                        style={[styles.tab1, selectedTab === tab && styles.activeTab]}
                         onPress={() => setSelectedTab(tab)}
                     >
-                        <Text style={[styles.tabText1, selectedTab === tab && styles.activeTabText1]}>
-                            {tab} {/* Keep the tab name static */}
+                        <Text style={[styles.tabText, selectedTab === tab && styles.activeTabText]}>
+                            {tab}
                         </Text>
                     </TouchableOpacity>
                 ))}
@@ -244,9 +244,7 @@ const styles= StyleSheet.create({
     },
     tab1: {
         width: 120,
-        height: 40,
-        //paddingVertical: 8,
-        //paddingHorizontal: 8,
+        height: 35,
         borderRadius: 20,
         backgroundColor: '#E0E0E0',
         alignItems: 'center',
@@ -255,12 +253,6 @@ const styles= StyleSheet.create({
     },
     activeTab1: {
         backgroundColor: '#0B7784',
-    },
-    tabText1: {
-        color: '#000000',
-        fontWeight: 'bold',
-        fontSize: 14,
-        textAlign: 'center',
     },
     activeTabText1: {
         color: '#fff',
@@ -277,14 +269,13 @@ const styles= StyleSheet.create({
         backgroundColor: '#fff',
     },
     container: {
-        flex: 1,
-        padding: 16,
+        padding: 20,
     },
     card: {
         backgroundColor: 'rgba(11, 119, 132, 0.2)',
         borderRadius: 12,
         padding: 16,
-        marginBottom: 16,
+        marginBottom: 5,
         elevation: 3,
     },
     title: {
