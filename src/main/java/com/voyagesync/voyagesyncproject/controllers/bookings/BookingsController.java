@@ -85,8 +85,25 @@ public class BookingsController {
     }
 
     // Create Booking here
+    // newly added on 12/9/2024
+    // to decrement the amount of openSlots when service is booked
     @PostMapping("/create")
     public ResponseEntity<Map<String, Object>> createBooking(@RequestBody Bookings booking) {
+        // Fetch the associated service
+        Services service = servicesService.getServiceByServiceId(booking.getServiceId());
+
+        if (service == null) {
+            return new ResponseEntity<>(Map.of("error", "This service cannot found"), HttpStatus.NOT_FOUND);
+        }
+        // Check if openSlots are available
+        if (service.getOpenSlots() <= 0) {
+            return new ResponseEntity<>(Map.of("error", "Sorry, No available slots for this service"), HttpStatus.BAD_REQUEST);
+        }
+        // Decrement openSlots
+        service.setOpenSlots(service.getOpenSlots() - 1);
+        servicesService.createService(service); // Save the updated service
+
+        // Create the booking
         Bookings createdBooking = bookingService.createBooking(booking);
         Map<String, Object> response = mapBookingsToResponse(createdBooking);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -135,6 +152,37 @@ public class BookingsController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
+    //endpoint for fetching vendor bookings based on confirmation (12/8/2024)
+    @GetMapping("/vendor/{vendorId}/{confirmationStatus}")
+    public ResponseEntity<List<Map<String, Object>>> getByVendorIdAndStatus(
+            @PathVariable ObjectId vendorId,
+            @PathVariable String confirmationStatus) {
+        try {
+            ConfirmationStatus status = ConfirmationStatus.valueOf(confirmationStatus.toUpperCase());
+            List<Bookings> bookings = bookingService.getByVendorIdAndStatus(vendorId, status);
+
+            List<Map<String, Object>> response = bookings.stream().map(booking -> {
+                Map<String, Object> bookingResponse = mapBookingsToResponse(booking);
+
+                // Enrich the response with service details
+                Services service = servicesService.getServiceByServiceId(booking.getServiceId());
+                if (service != null) {
+                    bookingResponse.put("serviceName", service.getServiceName());
+                    bookingResponse.put("serviceDescription", service.getServiceDescription());
+                    bookingResponse.put("servicePrice", service.getPrice());
+                    bookingResponse.put("location", service.getLocation());
+                }
+
+                return bookingResponse;
+            }).collect(Collectors.toList());
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
 
     /* HELPER FUNCTIONS */
     private Map<String, Object> mapBookingsToResponse(Bookings bookings) {
