@@ -42,8 +42,4 @@ public class Services {
         return 0;
     }
 
-    public boolean isAvailable() {
-        return false;
-    }
-
 }
