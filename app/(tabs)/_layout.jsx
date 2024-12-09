@@ -81,15 +81,19 @@ const MainLayout = () => {
       case 'vendor':
         return (
           <>
-              <Tabs.Screen
-                  name="vendor-messages"
-                  options={{
-                      headerShown: false,
-                      tabBarIcon: ({ focused }) => (
-                          <TabIcon icon="chatbox" focused={focused} name="Messages" />
-                      ),
-                  }}
-              />
+          <Tabs.Screen
+              name="vendor-messages"
+              options={{
+                headerShown: false,
+                tabBarIcon: ({ focused }) => (
+                  <TabIcon 
+                    icon="chatbox"
+                    focused= {focused}
+                    name="Messages"
+                  />
+                ),
+              }}
+            />
             <Tabs.Screen
               name="vendor-services"
               options={{
