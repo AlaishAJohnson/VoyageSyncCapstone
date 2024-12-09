@@ -72,7 +72,7 @@ const VendorMessages = () => {
 
     const fetchMessages = async (bookingId) => {
         try {
-            const response = await axios.get(`${BACKEND_URL}/api/messages/booking/${bookingId}`, {
+            const response = await axios.get(`${BACKEND_URL}/api/threads/messages/`, {
                 headers: { Authorization: authHeader },
             });
             if (response.data) {
@@ -91,7 +91,7 @@ const VendorMessages = () => {
 
         try {
             await axios.post(
-                `${BACKEND_URL}/api/messages/send`,
+                `${BACKEND_URL}/api/threads/messages/create/${senderId}/${receiverId}`,
                 { bookingId: selectedBookingId, message: messageText },
                 {
                     headers: { Authorization: authHeader },
