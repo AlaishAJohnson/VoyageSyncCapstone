@@ -72,4 +72,10 @@ public class BookingService{
         booking.setConfirmationStatus(ConfirmationStatus.RESCHEDULED);
         return bookingsRepository.save(booking);
     }
+
+    //newly added for filtering on frontend (12/8/2024)
+    public List<Bookings> getByVendorIdAndStatus(ObjectId vendorId, ConfirmationStatus status) {
+        return bookingsRepository.findByVendorIdAndConfirmationStatus(vendorId, status);
+    }
+
 }
