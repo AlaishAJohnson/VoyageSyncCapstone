@@ -198,7 +198,7 @@ const VendorMessages = () => {
                 {/* Message Modal */}
                 <Modal visible={messageModalVisible} animationType="slide" transparent={true}>
                     <View style={styles.modalContainer}>
-                        <Text style={styles.modalTitle}>Send Message</Text>
+                        <Text style={styles.modalTitle}>Message Inbox</Text>
                         <FlatList
                             data={messages}
                             keyExtractor={(item) => item.messageId.toString()}
@@ -244,12 +244,12 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgb(213,210,210)',
     },
     modalTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 12,
+        marginTop: 45,
         color: '#fff',
         backgroundColor: '#0B7784',
         paddingHorizontal: 16,
