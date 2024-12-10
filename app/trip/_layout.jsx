@@ -13,9 +13,23 @@ const TripLayout = () => {
         }}
     >
         <Stack.Screen 
-            name='trip-details'
+            name='[tripId]'
             options={{
-                title: 'Trip Deatils',
+                title: 'Trip Details',
+                headerBackTitle: 'Home'
+            }}
+        />
+        <Stack.Screen 
+            name='create-trip'
+            options={{
+                title: 'Create Trip',
+                headerBackTitle: 'Home'
+            }}
+        />
+        <Stack.Screen 
+            name='itinerary'
+            options={{
+                title: 'Trip Details',
                 headerBackTitle: 'Home'
             }}
         />

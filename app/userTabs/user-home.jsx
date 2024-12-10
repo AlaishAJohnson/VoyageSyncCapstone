@@ -20,7 +20,6 @@ const UserHome = () => {
     const userData = await AsyncStorage.getItem('userData');
     if (userData) {
       const user = JSON.parse(userData);
-      console.log(user);
     }
   };
 
@@ -68,7 +67,7 @@ const UserHome = () => {
         },
       });
   
-      // console.log('Fetched Trips:', response.data); 
+    
   
       const tripsData = Array.isArray(response.data.trips) ? response.data.trips : [];
   
@@ -112,8 +111,7 @@ const UserHome = () => {
 
   const onTripPress = (trip) => {
     console.log('Trip ID pressed:', trip.tripId);
-    router.push(`/trip/trip-details?tripId=${trip.tripId}`);
-
+    router.push(`/trip/${trip.tripId}`);
   };
   
 

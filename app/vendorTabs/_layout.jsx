@@ -7,7 +7,7 @@ const TabIcon = ({ icon, focused, name}) => {
   const color = focused ? '#0B7784' : '#687076';
   return (
     <View style={styles.iconContainer}>
-      <Ionicons name={icon} size={24} color={color} />
+      <Ionicons name={icon} size={22} color={color} />
       <Text style={[styles.iconLabel, { color }]}>{name}</Text>
     </View>
 
@@ -23,11 +23,15 @@ const VendorLayout = () => {
           
         }}>
             <Tabs.Screen
-              name="vendor-bookings"
+              name="vendor-messages"
               options={{
                 headerShown: false,
                 tabBarIcon: ({ focused }) => (
-                  <TabIcon icon="file-tray-full-outline" focused={focused} name="Bookings" />
+                  <TabIcon 
+                    icon="chatbox"
+                    focused= {focused}
+                    name="Messages"
+                  />
                 ),
               }}
             />

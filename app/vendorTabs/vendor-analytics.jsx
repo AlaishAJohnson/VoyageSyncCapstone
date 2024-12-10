@@ -71,7 +71,7 @@ const VendorAnalytics = () => {
         setLoading(true);
         try {
             console.log('Fetching metrics for vendorId:', vendorId); // Debugging log
-            const response = await axios.get(`${BACKEND_URL}/api/metrics?vendorId=${vendorId}`, {
+            const response = await axios.get(`${BACKEND_URL}/api/vendor-reports/metrics?vendorId=${vendorId}`, {
                 headers: {
                     'Authorization': authHeader,
                 },
@@ -100,7 +100,7 @@ const VendorAnalytics = () => {
         setLoading(true);
         try {
             console.log('Generating report for vendorId:', vendorId); // Debugging log
-            const response = await axios.post(`${BACKEND_URL}/api/generate/${vendorId}`, {}, {
+            const response = await axios.post(`${BACKEND_URL}/api/vendor-reports/generate/${vendorId}`, {}, {
                 headers: {
                     'Authorization': authHeader,
                 },
@@ -295,5 +295,4 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
 });
-
 export default VendorAnalytics;
