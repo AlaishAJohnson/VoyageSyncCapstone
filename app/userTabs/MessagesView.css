@@ -1,0 +1,109 @@
+/* General container for the messaging view */
+.messages-view {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Navigation bar styling */
+  .navigation-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .navigation-bar h1 {
+    margin: 0;
+    font-size: 20px;
+  }
+  
+  .edit-button {
+    background: none;
+    border: none;
+    color: #007BFF;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .search-bar input {
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+  }
+  
+  /* Messages list container */
+  .messages-list {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background-color: #f0f0f0;
+  }
+  
+  /* Styling for message bubbles */
+  .message-bubble {
+    max-width: 20%;
+    padding: 10px 15px;
+    
+    border-radius: 15px;
+    font-size: 14px;
+    line-height: 1.4;
+    word-wrap: break-word;
+  }
+  
+  /* Outgoing messages (blue) */
+  .message-bubble.outgoing {
+    background-color: #0294FF;
+    color: #ffffff;
+    align-self: flex-end;
+    border-bottom-right-radius: 0;
+    margin-left: auto; /* Push the bubble to the right */
+    margin-top: 10px;
+  }
+  
+  /* Incoming messages (gray) */
+  .message-bubble.incoming {
+    background-color: #c4c4c4 !important;
+    color: #000000;
+    align-self: flex-start;
+    border-bottom-left-radius: 0;
+    margin: 5px 0;
+  }
+
+  /* Footer for message input */
+.message-input {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-top: 1px solid #ccc;
+    background-color: #f5f5f5;
+  }
+  
+  .message-input input {
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 10px;
+  }
+  
+  .message-input button {
+    padding: 10px 15px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #0294FF;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .message-input button:hover {
+    background-color: #0278D4;
+  }
+  
+  

@@ -1,117 +1,69 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import './MessagesView.css'; // Assuming CSS is handled separately
 
-const Messages = () => {
+const MessagesView = () => {
   const [messages, setMessages] = useState([
-    { id: '1', senderId: 'User1', content: 'Hello, are you ready for the trip?' },
-    { id: '2', senderId: 'User2', content: 'Yes, I am all set! Can’t wait to go.' },
-    { id: '3', senderId: 'User1', content: 'Great! Let’s meet at the pickup point at 6 PM.' },
+    { id: 1, content: 'Hello!', isOutgoing: true },
+    { id: 2, content: 'Hi, when are we meeting?', isOutgoing: false },
+    { id: 3, content: 'I am heading out now!', isOutgoing: true },
   ]);
   const [newMessage, setNewMessage] = useState('');
 
-  // Function to send a new message (for testing purposes)
-  const sendMessage = () => {
-    if (newMessage.trim() === '') return;
+  const outgoingMessageBubble = '#0294FF'; // Outgoing message bubble color
+  const incomingMessageBubble = '#262629'; // Incoming message bubble color
 
-    const newMsg = {
-      id: (messages.length + 1).toString(), // Simple incrementing ID
-      senderId: 'User1', // Replace with current user's ID when dynamic
-      content: newMessage,
-    };
-
-    setMessages([...messages, newMsg]);
-    setNewMessage('');
+  const handleEdit = () => {
+    console.log('Pressed Edit');
   };
 
-  // Render individual messages
-  const renderMessage = ({ item }) => (
-    <View style={styles.messageItem}>
-      <Text style={styles.messageSender}>{item.senderId}</Text>
-      <Text style={styles.messageContent}>{item.content}</Text>
-    </View>
-  );
+  const handleSend = () => {
+    if (newMessage.trim() === '') return; // Prevent sending empty messages
+
+    // Add the new message to the list
+    const newMessageObject = {
+      id: messages.length + 1, // Generate a unique ID
+      content: newMessage,
+      isOutgoing: true, // Outgoing messages are user-sent
+    };
+    setMessages([...messages, newMessageObject]);
+    setNewMessage(''); // Clear the input field
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Messages</Text>
-
-      <FlatList
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={renderMessage}
-        contentContainerStyle={styles.messageList}
-      />
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Type a message..."
+    <div className="messages-view">
+      <header className="navigation-bar">
+        
+        <h1>Messages</h1>
+        <div className="search-bar">
+          <input type="text" placeholder="Search..." />
+        </div>
+      </header>
+      <main className="messages-list">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`message-bubble ${message.isOutgoing ? 'outgoing' : 'incoming'}`}
+            style={{
+              backgroundColor: message.isOutgoing
+                ? outgoingMessageBubble
+                : incomingMessageBubble,
+            }}
+          >
+            {message.content}
+          </div>
+        ))}
+      </main>
+      <footer className="message-input">
+        <input
+          type="text"
           value={newMessage}
-          onChangeText={setNewMessage}
+          placeholder="Type your message..."
+          onChange={(e) => setNewMessage(e.target.value)}
         />
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-          <Text style={styles.sendButtonText}>Send</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+        <button onClick={handleSend}>Send</button>
+      </footer>
+    </div>
   );
 };
 
-export default Messages;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    margin: 10,
-  },
-  messageList: {
-    flexGrow: 1,
-    padding: 10,
-  },
-  messageItem: {
-    backgroundColor: '#e0e0e0',
-    padding: 10,
-    marginVertical: 5,
-    borderRadius: 8,
-  },
-  messageSender: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#555',
-  },
-  messageContent: {
-    fontSize: 16,
-    color: '#333',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#fff',
-  },
-  input: {
-    flex: 1,
-    height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    marginRight: 10,
-  },
-  sendButton: {
-    backgroundColor: '#007bff',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-  },
-  sendButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-});
+export default MessagesView;
