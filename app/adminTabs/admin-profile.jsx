@@ -1,21 +1,16 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  ScrollView
-} from "react-native";
+import {StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView} from "react-native";
 import React, { useState, useEffect } from "react";
-import {router, useRouter} from 'expo-router';
+import { useRouter} from 'expo-router';
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {useAuth} from "../../hook/auth";
 
 const BACKEND_URL = "http://localhost:8080";
 
 const AdminProfile = () => {
+  const router = useRouter();
+  const { logout } = useAuth();
+
   const [adminData, setAdminData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -81,11 +76,14 @@ const AdminProfile = () => {
         setSaving(false);
         return;
       }
-      // Check if username exists
-      if (await checkUsernameExists()) {
-        setSaving(false);
-        return;
+      // Check if username exists, besides being the current one
+      if (username !== adminData.username) {
+        if (await checkUsernameExists(username)) {
+          setSaving(false);
+          return;
+        }
       }
+
       const updates = {
         username,
         firstName,
