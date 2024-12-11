@@ -131,7 +131,7 @@ const Analytics = () => {
     );
   }
 
-  // Render mobile-specific chart
+  // Render mobile-specific chart and table
   return (
       <SafeAreaView style={styles.container}>
         <Text style={styles.chartTitle}>Platform Usage Metrics</Text>
@@ -152,6 +152,30 @@ const Analytics = () => {
               verticalLabelRotation={30}
           />
         </View>
+        {/* Metrics Table */}
+        <View style={styles.tableContainer}>
+          <Text style={styles.tableHeader}>Metrics Table</Text>
+          <View style={styles.tableRow}>
+            <Text style={styles.tableCellHeader}>Metric</Text>
+            <Text style={styles.tableCellHeader}>Total</Text>
+          </View>
+          <View style={styles.tableRow}>
+            <Text style={styles.tableCell}>Users</Text>
+            <Text style={styles.tableCell}>{metrics.userCount}</Text>
+          </View>
+          <View style={styles.tableRow}>
+            <Text style={styles.tableCell}>Trips</Text>
+            <Text style={styles.tableCell}>{metrics.tripCount}</Text>
+          </View>
+          <View style={styles.tableRow}>
+            <Text style={styles.tableCell}>Bookings</Text>
+            <Text style={styles.tableCell}>{metrics.bookingCount}</Text>
+          </View>
+          <View style={styles.tableRow}>
+            <Text style={styles.tableCell}>Feedback</Text>
+            <Text style={styles.tableCell}>{metrics.feedbackCount}</Text>
+          </View>
+        </View>
         {/* Generate Report Button */}
         <TouchableOpacity style={styles.card} onPress={generateReport} disabled={loading}>
           <Text style={styles.cardText}>{loading ? 'Generating...' : 'Generate Report'}</Text>
@@ -159,7 +183,6 @@ const Analytics = () => {
       </SafeAreaView>
   );
 };
-
 export default Analytics;
 
 const styles = StyleSheet.create({
@@ -197,6 +220,33 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     color: '#333',
+    textAlign: 'center',
+  },
+  tableHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  tableCellHeader: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#0B7784',
+    flex: 1,
+    textAlign: 'center',
+  },
+  tableCell: {
+    fontSize: 14,
+    color: '#555',
+    flex: 1,
     textAlign: 'center',
   },
   card: {
