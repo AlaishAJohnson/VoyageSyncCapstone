@@ -6,9 +6,9 @@ import { MaterialIcons } from "@expo/vector-icons";
 import CustomButton from "../../constants/CustomButton";
 import axios from "axios";
 import image from "../../assets/DecoImage.png";
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const BACKEND_URL = "http://localhost:8080";
-
+const authHeader = 'Basic ' + btoa('admin:admin');
 const VendorAuth = () => {
     const navigation = useNavigation();
     const router = useRouter();
@@ -16,10 +16,8 @@ const VendorAuth = () => {
     useLayoutEffect(() => {
         navigation.setOptions({ headerShown: false });
     }, []);
-
     // States for all sections
     const [businessName, setBusinessName] = useState("");
-    const [businessEmail, setBusinessEmail] = useState("");
     const [businessType, setBusinessType] = useState("");
     const [industry, setIndustry] = useState("");
     const [businessAddress, setBusinessAddress] = useState("");
@@ -73,13 +71,27 @@ const VendorAuth = () => {
             return false;
         }
     };
-
     // Form submission handler
     const handleSubmit = async () => {
-        // Validate required fields
+        console.log("Form data before validation:", {
+            businessName,
+            businessType,
+            industry,
+            businessAddress,
+            countryOfOrigin,
+            registrationNumber,
+            businessPhoneNumber,
+            phoneNumber,
+            password,
+            confirmPassword,
+            firstName,
+            lastName,
+            username,
+            representativeEmail
+        });
+
         if (
             !businessName ||
-            !businessEmail ||
             !businessType ||
             !industry ||
             !businessAddress ||
@@ -90,16 +102,15 @@ const VendorAuth = () => {
             !password ||
             !confirmPassword ||
             !firstName ||
-            !lastName ||
+            !lastName  ||
             !username ||
             !representativeEmail
         ) {
             Alert.alert("Error", "Please fill out all fields.");
             return;
         }
-
         // Check for duplicates
-        if (await checkIfEmailExists(businessEmail) || await checkIfEmailExists(representativeEmail)) {
+        if ( await checkIfEmailExists(representativeEmail)) {
             Alert.alert("Error", "This email is already registered. Use another email.");
             return;
         }
@@ -115,7 +126,6 @@ const VendorAuth = () => {
             Alert.alert("Error", "This Business Name is already registered.");
             return;
         }
-
         if (password !== confirmPassword) {
             Alert.alert("Error", "Passwords do not match.");
             return;
@@ -126,7 +136,7 @@ const VendorAuth = () => {
             firstName,
             lastName,
             username,
-            email: representativeEmail,
+            email: representativeEmail, // Representative's email
             password,
             phoneNumber, // Personal phone number
             role: "vendor",
@@ -134,22 +144,57 @@ const VendorAuth = () => {
             businessRegistrationNumber: registrationNumber, // Aligned with backend
             countryOfRegistration: countryOfOrigin, // Aligned with backend
             businessAddress,
-            businessPhoneNumber, 
+            businessPhoneNumber, // Business phone number
             businessType,
             industry,
-            representativeRole: "Owner", 
+            representativeRole: "Owner", // Include representative role
         };
-        console.log("User data being sent:", vendorData);
+
         // Send data to backend
         try {
+            console.log("Data being sent to backend:", vendorData);
             const response = await axios.post(
                 `${BACKEND_URL}/api/users/create-user`,
                 vendorData,
-                { headers: { "Content-Type": "application/json" } } // Explicitly set content type
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                         Authorization: authHeader,
+                    },
+                }
             );
             if (response.status === 201 || response.data.success) {
-                // Assuming backend returns success and 201 status for successful creation
-                router.push("/vendorTabs");
+                const responseData = response.data;
+                console.log("Response Data:", responseData);
+                const vendorId = responseData.userId; // Get the userId from response
+                // Create Vendor data including representativeId
+                const vendorDetails = {
+                    businessName,
+                    businessRegistrationNumber: registrationNumber,
+                    countryOfRegistration: countryOfOrigin,
+                    businessAddress,
+                    businessPhoneNumber,
+                    businessType,
+                    industry,
+                    representativeRole: "Owner",
+                    representativeId: vendorId, // Use the userId as representativeId
+                };
+                // Send vendor details to the vendor creation endpoint
+                const vendorResponse = await axios.post(
+                    `${BACKEND_URL}/api/users/create-user`,
+                    vendorDetails,
+                    { headers: { 'Content-Type': 'application/json', Authorization: authHeader } }
+                );
+                if (vendorResponse.status === 201 || vendorResponse.data.success) {
+                    console.log("Vendor created successfully:", vendorResponse.data);
+
+                    await AsyncStorage.setItem('vendorId', vendorId);
+                    console.log("vendor ID stored in AsyncStorage:", vendorId);
+
+                    router.push('/vendorTab');
+                } else {
+                    Alert.alert("Error", "Vendor registration failed. Please try again.");
+                }
             } else {
                 Alert.alert("Error", "Registration failed. Please try again.");
             }
@@ -158,85 +203,11 @@ const VendorAuth = () => {
             Alert.alert("Error", "An error occurred during registration.");
         }
     };
-
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 <Text style={styles.header}>Register Vendor Account</Text>
-
                 {/* Account Details Section */}
-                <TextInput
-                    style={styles.input}
-                    placeholder="Business Name"
-                    value={businessName}
-                    onChangeText={setBusinessName}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Business Email"
-                    value={businessEmail}
-                    onChangeText={setBusinessEmail}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Confirm Password"
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry
-                />
-
-                {/* Business Information Section */}
-                <TextInput
-                    style={styles.input}
-                    placeholder="Business Type"
-                    value={businessType}
-                    onChangeText={setBusinessType}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Industry"
-                    value={industry}
-                    onChangeText={setIndustry}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Business Address"
-                    value={businessAddress}
-                    onChangeText={setBusinessAddress}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Country of Origin"
-                    value={countryOfOrigin}
-                    onChangeText={setCountryOfOrigin}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Registration Number"
-                    value={registrationNumber}
-                    onChangeText={setRegistrationNumber}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Business Phone Number"
-                    value={businessPhoneNumber}
-                    onChangeText={setBusinessPhoneNumber}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Representative Phone Number"
-                    value={phoneNumber}
-                    onChangeText={setPhoneNumber}
-                />
-
-                {/* Representative Information Section */}
                 <TextInput
                     style={styles.input}
                     placeholder="First Name"
@@ -257,9 +228,73 @@ const VendorAuth = () => {
                 />
                 <TextInput
                     style={styles.input}
-                    placeholder="Email"
+                    placeholder="Representative Email"
                     value={representativeEmail}
                     onChangeText={setRepresentativeEmail}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Confirm Password"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Phone Number"
+                    value={phoneNumber}
+                    onChangeText={setPhoneNumber}
+                />
+
+                {/* Business Information Section */}
+                <TextInput
+                    style={styles.input}
+                    placeholder="Business Name"
+                    value={businessName}
+                    onChangeText={setBusinessName}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Business Type"
+                    value={businessType}
+                    onChangeText={setBusinessType}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Industry"
+                    value={industry}
+                    onChangeText={setIndustry}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Business Address"
+                    value={businessAddress}
+                    onChangeText={setBusinessAddress}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Country of Registration"
+                    value={countryOfOrigin}
+                    onChangeText={setCountryOfOrigin}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Registration Number"
+                    value={registrationNumber}
+                    onChangeText={setRegistrationNumber}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Business Phone Number"
+                    value={businessPhoneNumber}
+                    onChangeText={setBusinessPhoneNumber}
                 />
                 {/* Submit Button */}
                 <CustomButton title="Submit" onPress={handleSubmit} />
@@ -271,26 +306,26 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: "#ffffff", 
+        backgroundColor: "#ffffff",
     },
     scrollContainer: {
         alignItems: "center",
-        paddingBottom: 30,
+        paddingBottom: 30, // Added padding to avoid content being cut off
     },
     topLeftImage: {
         position: "absolute",
         top: -10,
         left: -10,
         width: "100%", // Make responsive
-        height: 200, 
-        resizeMode: "contain", 
+        height: 200, // Adjust to fit the screen better
+        resizeMode: "contain", // Maintain aspect ratio
     },
     header: {
-        fontSize: 24, 
+        fontSize: 24, // Large and clear header text
         fontWeight: "bold",
         marginBottom: 20,
         textAlign: "center",
-        color: "#073B4C", 
+        color: "#073B4C", // Slightly darker shade for readability
     },
     sectionHeader: {
         fontSize: 20,
@@ -308,8 +343,8 @@ const styles = StyleSheet.create({
         marginBottom: 15,
         paddingLeft: 10,
         fontSize: 16,
-        color: "#2E3B4E", 
-        backgroundColor: "#F5F5F5", 
+        color: "#2E3B4E", // Text color matches the background contrast
+        backgroundColor: "#F5F5F5", // Light background for inputs
     },
     inputRow: {
         flexDirection: "row",
@@ -318,7 +353,7 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
     halfWidthInput: {
-        width: "48%", 
+        width: "48%", // Make both fields occupy equal space within the row
     },
     button: {
         backgroundColor: "#0B7784",
