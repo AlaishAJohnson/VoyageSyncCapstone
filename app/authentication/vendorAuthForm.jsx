@@ -2,14 +2,12 @@ import {StyleSheet, Text, View, Alert, TextInput, TouchableOpacity, Image, Scrol
 import React, { useState, useLayoutEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useNavigation } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
 import CustomButton from "../../constants/CustomButton";
 import axios from "axios";
-import image from "../../assets/DecoImage.png";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const BACKEND_URL = "http://localhost:8080";
 const authHeader = 'Basic ' + btoa('admin:admin');
-const VendorAuth = () => {
+const VendorAuthForm = () => {
     const navigation = useNavigation();
     const router = useRouter();
 
@@ -31,7 +29,6 @@ const VendorAuth = () => {
     const [lastName, setLastName] = useState("");
     const [username, setUsername] = useState("");
     const [representativeEmail, setRepresentativeEmail] = useState("");
-
     const checkIfUsernameExists = async (username) => {
         try {
             const response = await axios.get(`${BACKEND_URL}/api/users/username/${username}`);
@@ -41,7 +38,6 @@ const VendorAuth = () => {
             return false;
         }
     };
-
     const checkIfEmailExists = async (email) => {
         try {
             const response = await axios.get(`${BACKEND_URL}/api/users/email/${email}`);
@@ -51,7 +47,6 @@ const VendorAuth = () => {
             return false;
         }
     };
-
     const checkIfPhoneNumberExists = async (phoneNumber) => {
         try {
             const response = await axios.get(`${BACKEND_URL}/api/users/phoneNumber/${phoneNumber}`);
@@ -61,7 +56,6 @@ const VendorAuth = () => {
             return false;
         }
     };
-
     const checkIfBusinessNameExists = async (businessName) => {
         try {
             const response = await axios.get(`${BACKEND_URL}/api/vendors/filter/name/${businessName}`);
@@ -73,133 +67,55 @@ const VendorAuth = () => {
     };
     // Form submission handler
     const handleSubmit = async () => {
-        console.log("Form data before validation:", {
-            businessName,
-            businessType,
-            industry,
-            businessAddress,
-            countryOfOrigin,
-            registrationNumber,
-            businessPhoneNumber,
-            phoneNumber,
-            password,
-            confirmPassword,
-            firstName,
-            lastName,
-            username,
-            representativeEmail
-        });
-
-        if (
-            !businessName ||
-            !businessType ||
-            !industry ||
-            !businessAddress ||
-            !countryOfOrigin ||
-            !registrationNumber ||
-            !businessPhoneNumber ||
-            !phoneNumber ||
-            !password ||
-            !confirmPassword ||
-            !firstName ||
-            !lastName  ||
-            !username ||
-            !representativeEmail
-        ) {
-            Alert.alert("Error", "Please fill out all fields.");
-            return;
-        }
-        // Check for duplicates
-        if ( await checkIfEmailExists(representativeEmail)) {
-            Alert.alert("Error", "This email is already registered. Use another email.");
-            return;
-        }
-        if (await checkIfUsernameExists(username)) {
-            Alert.alert("Error", "Username is taken!");
-            return;
-        }
-        if (await checkIfPhoneNumberExists(phoneNumber)) {
-            Alert.alert("Error", "This phone number is already registered.");
-            return;
-        }
-        if (await checkIfBusinessNameExists(businessName)) {
-            Alert.alert("Error", "This Business Name is already registered.");
-            return;
-        }
-        if (password !== confirmPassword) {
-            Alert.alert("Error", "Passwords do not match.");
-            return;
-        }
-
-        // Create unified data object
-        const vendorData = {
-            firstName,
-            lastName,
-            username,
-            email: representativeEmail, // Representative's email
-            password,
-            phoneNumber, // Personal phone number
-            role: "vendor",
-            businessName,
-            businessRegistrationNumber: registrationNumber, // Aligned with backend
-            countryOfRegistration: countryOfOrigin, // Aligned with backend
-            businessAddress,
-            businessPhoneNumber, // Business phone number
-            businessType,
-            industry,
-            representativeRole: "Owner", // Include representative role
-        };
-
-        // Send data to backend
         try {
-            console.log("Data being sent to backend:", vendorData);
-            const response = await axios.post(
-                `${BACKEND_URL}/api/users/create-user`,
-                vendorData,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                         Authorization: authHeader,
-                    },
-                }
-            );
-            if (response.status === 201 || response.data.success) {
-                const responseData = response.data;
-                console.log("Response Data:", responseData);
-                const vendorId = responseData.userId; // Get the userId from response
-                // Create Vendor data including representativeId
-                const vendorDetails = {
-                    businessName,
-                    businessRegistrationNumber: registrationNumber,
-                    countryOfRegistration: countryOfOrigin,
-                    businessAddress,
-                    businessPhoneNumber,
-                    businessType,
-                    industry,
-                    representativeRole: "Owner",
-                    representativeId: vendorId, // Use the userId as representativeId
-                };
-                // Send vendor details to the vendor creation endpoint
-                const vendorResponse = await axios.post(
-                    `${BACKEND_URL}/api/users/create-user`,
-                    vendorDetails,
-                    { headers: { 'Content-Type': 'application/json', Authorization: authHeader } }
-                );
-                if (vendorResponse.status === 201 || vendorResponse.data.success) {
-                    console.log("Vendor created successfully:", vendorResponse.data);
-
-                    await AsyncStorage.setItem('vendorId', vendorId);
-                    console.log("vendor ID stored in AsyncStorage:", vendorId);
-
-                    router.push('/vendorTab');
-                } else {
-                    Alert.alert("Error", "Vendor registration failed. Please try again.");
-                }
-            } else {
-                Alert.alert("Error", "Registration failed. Please try again.");
+            if (
+                !businessName ||
+                !businessType ||
+                !industry ||
+                !businessAddress ||
+                !countryOfOrigin ||
+                !registrationNumber ||
+                !businessPhoneNumber ||
+                !phoneNumber ||
+                !password ||
+                !confirmPassword ||
+                !firstName ||
+                !lastName ||
+                !username ||
+                !representativeEmail
+            ) {
+                Alert.alert("Error", "Please fill out all fields.");
+                return;
             }
+            if (password !== confirmPassword) {
+                Alert.alert("Error", "Passwords do not match.");
+                return;
+            }
+            const combinedVendorData = {
+                firstName,
+                lastName,
+                username,
+                email: representativeEmail,
+                password,
+                phoneNumber,
+                role: "vendor",
+                businessName,
+                businessRegistrationNumber: registrationNumber,
+                countryOfRegistration: countryOfOrigin,
+                businessAddress,
+                businessPhoneNumber,
+                businessType,
+                industry,
+                representativeRole: "Owner",
+            };
+            const response = await axios.post(`${BACKEND_URL}/api/users/create-user`, combinedVendorData, {
+                headers: { 'Content-Type': 'application/json', Authorization: authHeader },
+            });
+            console.log("Vendor created successfully:", response.data);
+            await AsyncStorage.setItem('vendorId', response.data.vendorId);
+            router.push('/(auth)/sign-in');
         } catch (error) {
-            console.error("Error during registration:", error);
+            console.error("Error during registration:", error.response?.data || error.message);
             Alert.alert("Error", "An error occurred during registration.");
         }
     };
@@ -207,6 +123,7 @@ const VendorAuth = () => {
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 <Text style={styles.header}>Register Vendor Account</Text>
+                <Text style={styles.header}>If successful, you will be routed back to the Home Screen</Text>
                 {/* Account Details Section */}
                 <TextInput
                     style={styles.input}
@@ -376,4 +293,4 @@ const styles = StyleSheet.create({
         alignSelf: "flex-start",
     },
 });
-export default VendorAuth;
+export default VendorAuthForm;
