@@ -12,6 +12,7 @@ const UNSPLASH_ACCESS_KEY = "nGGbmYUCHw8EYoosDMwwCMm-HlKU5_4-j_kNOLQFWpc";
 
 const CreateTrip = () => {
   const [destination, setDestination] = useState('');
+  const [tripName, setTripName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
@@ -85,7 +86,6 @@ const CreateTrip = () => {
         return;
       }
   
-
       const authHeader = 'Basic ' + btoa('admin:admin'); 
       const isGroupTrip = invitedFriends.length > 0;
       const budgetValue = parseFloat(budget);
@@ -93,7 +93,7 @@ const CreateTrip = () => {
   
       const tripPayload = {
         organizerId,
-        tripName: destination, 
+        tripName, 
         imageUrl,
         destination,
         startDate: startDate.toISOString().split('T')[0],
@@ -105,7 +105,7 @@ const CreateTrip = () => {
         tripStatus: 'PROGRESS',
       };
       
-      console.log("Payload being sent to backend: ", tripPayload);
+      console.log("Payload being sent to backend:", tripPayload);
       
       const response = await fetch(`http://localhost:8080/api/trips/create-trip/${organizerId}`, {
         method: 'POST',
@@ -115,21 +115,29 @@ const CreateTrip = () => {
         },
         body: JSON.stringify(tripPayload), 
       });
-      
-      
   
-      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response Status:', response.status, 'Error:', errorText);
+        Alert.alert('Error', errorText || 'Failed to create trip');
+        return;
+      }
   
-      if (response.ok) {
-        const createdTrip = await response.json();
+      const createdTrip = await response.json();
+      console.log('Created trip data:', createdTrip);
+      
+      if (createdTrip.trips && createdTrip.trips.length > 0) {
+        const tripId = createdTrip.trips[0].tripId; 
+        console.log('Extracted tripId:', tripId);
+      
         Alert.alert('Success', 'Trip created successfully!');
-        router.push("/userTabs/user-home");
+        router.push(`/trip/${tripId}`);
       } else {
-        const error = await response.json();
-        Alert.alert('Error', error.message || 'Failed to create trip');
+        console.error('No trips found in the response:', createdTrip);
+        Alert.alert('Error', 'Failed to create trip.');
       }
     } catch (error) {
-      console.error('Error creating trip:', error);
+      console.error('Unexpected error:', error);
       Alert.alert('Error', 'An unexpected error occurred');
     }
   };
@@ -201,6 +209,14 @@ const CreateTrip = () => {
       ) : (
         <Text style={styles.imagePlaceholder}></Text>
       )}
+
+      <TextInput
+        style={styles.input}
+        placeholder="Name Your Ytip"
+        value={tripName}
+        onChangeText={setTripName}
+        placeholderTextColor="black"
+      />
 
       {/* Date Selection */}
       <View style={styles.dateContainer}>

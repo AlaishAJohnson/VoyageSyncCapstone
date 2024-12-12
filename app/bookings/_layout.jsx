@@ -20,7 +20,7 @@ const BookingLayout = () => {
         name="booking" 
         options={{
           title: 'Booking',
-          headerBackTitle: 'Service De...'
+          headerBackTitle: 'Service ...'
           
         }}
       />

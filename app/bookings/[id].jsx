@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
@@ -9,52 +9,60 @@ const ActivityDetail = () => {
   const { id } = useLocalSearchParams();
 
   const [activity, setActivity] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);  // New state for selected time
-  const [availableTimes, setAvailableTimes] = useState([]);
+  const [members, setMembers] = useState(1); // The number of members in the trip
+  const [openSlots, setOpenSlots] = useState(0);
 
   useEffect(() => {
     const fetchActivityDetails = async () => {
       console.log('Service ID:', id);
       try {
-        const response = await axios.get(`https://7514-68-234-200-22.ngrok-free.app/api/services/${id}`);
-        console.log(response.data); 
-        setActivity(response.data);
+        const authHeader = 'Basic ' + btoa('admin:admin');
+    
+        const response = await fetch(`http://localhost:8080/api/services/${id}`, {
+          headers: {
+            'Authorization': authHeader,
+          },
+        });
+        const data = await response.json();
+    
+        console.log(data); 
+        setActivity(data); 
+        setOpenSlots(data.openSlots);  // Set available slots from the response
       } catch (error) {
         console.error('Error fetching activity details:', error.response?.data || error.message);
       }
     };
-
+    
     fetchActivityDetails();
   }, [id]);
 
-  const formatDate = (date) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(date).toLocaleDateString(undefined, options);
-  };
-
-  const handleDateSelect = (date) => {
-    setSelectedDate(date);
-  
-    const availability = activity.serviceAvailability.find(
-      (avail) => avail.dateOfService === date
-    );
-    if (availability) {
-      setAvailableTimes([availability.timeOfService]); 
+  const handleBook = () => {
+    if (members > openSlots) {
+      Alert.alert(
+        'Not Enough Slots',
+        `There are only ${openSlots} slots available, but you have ${members} members. Do you want to proceed with booking for ${openSlots} members?`,
+        [
+          {
+            text: 'Cancel',
+            onPress: () => console.log('Booking cancelled'),
+            style: 'cancel',
+          },
+          {
+            text: 'Proceed',
+            onPress: () => router.push(`/bookings/booking?id=${id}&name=${activity.serviceName}&slots=${openSlots}`),
+          },
+        ]
+      );
     } else {
-      setAvailableTimes([]); 
+      router.push(`/bookings/booking?id=${id}&name=${activity.serviceName}&slots=${members}`);
     }
-  };
-
-  const handleTimeSelect = (time) => {
-    setSelectedTime(time);
   };
 
   if (!activity) {
     return <Text>Loading...</Text>;
   }
 
-  const { serviceName, serviceDescription, price, vendorBusinessName, averageRating, serviceAvailability } = activity;
+  const { serviceName, serviceDescription, price, vendorBusinessName, averageRating, timeFrame, duration, location } = activity;
 
   return (
     <View style={styles.container}>
@@ -75,55 +83,35 @@ const ActivityDetail = () => {
       </View>
 
       <Text style={styles.vendorText}>Vendor: {vendorBusinessName}</Text>
+      <Text style={styles.vendorText}>Location: {location}</Text>
+      <Text style={styles.timeFrameText}>Available Time: {timeFrame}</Text>
+      <Text style={styles.durationText}>Duration: {duration}</Text>
 
-      {serviceAvailability.length > 0 ? (
-        <View style={styles.datesSection}>
-          <Text style={styles.datesHeader}>Available Dates</Text>
-          <View style={styles.datesList}>
-            {serviceAvailability.map((date) => (
-              <TouchableOpacity 
-                key={date.dateOfService} 
-                style={[styles.dateButton, selectedDate === date.dateOfService && styles.activeDate]}
-                onPress={() => handleDateSelect(date.dateOfService)}
-              >
-                <Text style={[styles.dateText, selectedDate === date.dateOfService && styles.activeDateText]}>
-                  {formatDate(date.dateOfService)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          
-          {selectedDate && availableTimes.length > 0 && (
-            <View style={styles.timesSection}>
-              <Text style={styles.timesHeader}>Available Times</Text>
-              <View style={styles.timesList}>
-                {availableTimes.map((time, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={[styles.timeButton, selectedTime === time && styles.activeTime]} 
-                    onPress={() => handleTimeSelect(time)} 
-                  >
-                    <Text style={[styles.timeText, selectedTime === time && styles.activeTimeText]}>
-                      {new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          )}
+      <View style={styles.slotSection}>
+        <Text style={styles.slotHeader}>Available Slots</Text>
+        <Text style={styles.slotText}>Slots Available: {openSlots}</Text>
+        <View style={styles.membersSection}>
+          <Text style={styles.membersText}>Number of Members:</Text>
+          <TouchableOpacity
+            style={styles.adjustButton}
+            onPress={() => setMembers(Math.max(1, members - 1))}
+          >
+            <Ionicons name="remove" size={20} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.membersNumber}>{members}</Text>
+          <TouchableOpacity
+            style={styles.adjustButton}
+            onPress={() => setMembers(members + 1)}
+          >
+            <Ionicons name="add" size={20} color="#fff" />
+          </TouchableOpacity>
         </View>
-      ) : (
-        <Text>No available dates</Text>
-      )}
+      </View>
 
       <TouchableOpacity
         style={styles.loginButton}
-        onPress={() =>
-          router.push(`/bookings/booking?id=${id}&name=${serviceName}&date=${selectedDate}&time=${selectedTime}`)
-                
-        }
-        disabled={!selectedDate || !selectedTime}  // Disable if date or time is not selected
+        onPress={handleBook}
+        disabled={members <= 0}
       >
         <Text style={styles.loginButtonText}>Book</Text>
       </TouchableOpacity>
@@ -160,10 +148,6 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontSize: 16,
   },
-  ratingText: {
-    fontSize: 16,
-    marginVertical: 4,
-  },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -173,84 +157,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginVertical: 4,
   },
-  datesSection: {
+  timeFrameText: {
+    fontSize: 16,
+    marginVertical: 4,
+  },
+  durationText: {
+    fontSize: 16,
+    marginVertical: 4,
+  },
+  slotSection: {
     marginBottom: 20,
   },
-  availableContainer: {
+  slotHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  slotText: {
+    fontSize: 16,
+  },
+  membersSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
-  }, 
-  line: {
-    height: 2,
-    width: 100,
-    backgroundColor: 'black',
+    marginTop: 10,
   },
-  datesHeader: {
-    textAlign: 'center',
-    fontSize: 20,
-    marginVertical: 10,
-    borderBottomWidth: 1,
-    borderTopWidth: 1,
-    borderColor: '#ccc',
-    paddingVertical: 5,
-    fontWeight: 'bold'
-  },
-  datesList: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  dateButton: {
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#0B7784',
-    borderRadius: 10,
-    margin: 5,
-  },
-  activeDate: {
-    backgroundColor: '#0B7784',
-  },
-  dateText: {
+  membersText: {
     fontSize: 16,
-    color: '#000',
+    marginRight: 10,
   },
-  activeDateText: {
-    color: '#fff',
-  },
-  timesSection: {
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  timesHeader: {
-    textAlign: 'center',
-    fontSize: 20,
-    marginVertical: 10,
-    borderBottomWidth: 1,
-    borderTopWidth: 1,
-    borderColor: '#ccc',
-    paddingVertical: 5,
-  },
-  timesList: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    flexWrap: 'wrap',
-  },
-  timeButton: {
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#0B7784',
-    borderRadius: 10,
-    margin: 5,
-  },
-  activeTime: {
+  adjustButton: {
     backgroundColor: '#0B7784',
+    padding: 10,
+    borderRadius: 10,
+    marginHorizontal: 10,
   },
-  timeText: {
+  membersNumber: {
     fontSize: 16,
-    color: '#000',
-  },
-  activeTimeText: {
-    color: '#fff',
+    marginHorizontal: 10,
   },
   loginButton: {
     width: '100%',

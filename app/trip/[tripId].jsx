@@ -95,7 +95,7 @@ const TripDetails = () => {
   
 
   const onExitPress = () => {
-    router.back();
+    router.back('/userTabs');
   };
   
   const hours = Array.from({ length: 24 }, (_, i) => {
@@ -206,14 +206,14 @@ const styles = StyleSheet.create({
   },
   topImage: {
     width: "100%",
-    height: 600,
+    height: 385,
     resizeMode: 'cover',
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     padding: 16,
-    marginTop: 60,
+    marginTop: 10,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     marginTop: -100,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   },
   destination: {
     marginLeft: 4,
-    fontSize: 16,
+    fontSize: 18,
   },
   calendarContainer: {
     flexDirection: 'row',
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
   tripDate: {
     marginLeft: 4,
-    fontSize: 16,
+    fontSize: 18,
   },
   statusContainer: {
     flexDirection: 'row',
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     marginLeft: 4,
-    fontSize: 16,
+    fontSize: 18,
   },
   membersHeader: {
     fontSize: 18,

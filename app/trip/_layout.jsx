@@ -1,8 +1,10 @@
-import { View, Text } from 'react-native'
+import { View, Text, TouchableOpacity } from 'react-native'
 import React from 'react'
-import { Stack } from 'expo-router'
+import { Stack, useRouter } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons';
 
 const TripLayout = () => {
+    const router = useRouter();
   return (
     <Stack
         screenOptions={{
@@ -14,10 +16,19 @@ const TripLayout = () => {
     >
         <Stack.Screen 
             name='[tripId]'
-            options={{
+            options={({ navigation }) => ({
                 title: 'Trip Details',
-                headerBackTitle: 'Home'
-            }}
+                headerBackTitleVisible: false, 
+                headerLeft: () => (
+                <TouchableOpacity 
+                    onPress={() => router.push('/userTabs/user-home')}
+                    style={{ flexDirection: 'row', alignItems: 'center' }} 
+                >
+                    <Ionicons name="arrow-back" size={24} color="#F9C2A6" />
+                    <Text style={{ marginLeft: 8, color: '#F9C2A6', fontSize: 18 }}>Home</Text>
+                </TouchableOpacity>
+                ),
+            })}
         />
         <Stack.Screen 
             name='create-trip'
@@ -29,8 +40,8 @@ const TripLayout = () => {
         <Stack.Screen 
             name='itinerary'
             options={{
-                title: 'Trip Details',
-                headerBackTitle: 'Home'
+                title: 'Itinerary',
+                headerBackTitle: 'Details'
             }}
         />
     </Stack>
