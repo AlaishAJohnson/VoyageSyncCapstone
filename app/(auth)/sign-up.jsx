@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Image } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -18,7 +18,9 @@ const SignUp = () => {
       />
       <View style={styles.orContainer}>
         <View style={styles.line} />
-        <Text style={styles.orText}>or</Text>
+        <TouchableOpacity onPress={() => router.push('/authentication/adminAuthForm')}>
+          <Text style={styles.orText}>or</Text>
+        </TouchableOpacity>
         <View style={styles.line} />
       </View>
       <CustomButton 
@@ -68,7 +70,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     fontSize: 18,
     fontWeight: 'bold',
-    color: 'black',
+    color: '#0B7784', // Updated for better visibility
   },
   imageContainer: {
     alignItems: 'center',
