@@ -13,12 +13,12 @@ const VendorMessages = () => {
     const [messages, setMessages] = useState([]);
     const [receiverId, setReceiverId] = useState(null);
     const [messageText, setMessageText] = useState('');
-    const [messageType, setMessageType] = useState('TEXT'); // New state for message type
+    const [messageType, setMessageType] = useState('TEXT');
     const [messageModalVisible, setMessageModalVisible] = useState(false);
-    const [threadId, setThreadId] = useState(null); // State for threadId
 
     const authHeader = 'Basic ' + btoa('admin:admin');
 
+    // Get vendor ID based on the logged-in user
     const getVendorId = async () => {
         try {
             const storedUserId = await AsyncStorage.getItem('userId');
@@ -35,11 +35,11 @@ const VendorMessages = () => {
                 throw new Error('User ID not found');
             }
         } catch (error) {
-            console.error('Error retrieving vendor ID:', error);
-            setError('Failed to retrieve vendor ID. Please try again.');
+            setError('Failed to retrieve vendor ID.');
         }
     };
 
+    // Fetch users by role (users with the role 'user')
     const fetchUsersByRole = async () => {
         setLoading(true);
         setError(null);
@@ -47,99 +47,70 @@ const VendorMessages = () => {
             const response = await axios.get(`${BACKEND_URL}/api/users/role/user`, {
                 headers: { Authorization: authHeader },
             });
-            if (response.data && Array.isArray(response.data)) {
+            if (response.data) {
                 setUsers(response.data);
             } else {
-                throw new Error('No users found');
+                setError('No users found');
             }
         } catch (err) {
-            console.error('Error fetching users:', err);
-            setError('Failed to fetch users. Please try again.');
+            setError('Failed to fetch users.');
         } finally {
             setLoading(false);
         }
     };
 
+    // Fetch messages for a specific user (receiver)
     const fetchMessages = async () => {
+        setLoading(true);
         try {
-            const response = await axios.get(`${BACKEND_URL}/api/threads/messages/`, {
-                headers: { Authorization: authHeader },
-            });
+            const response = await axios.post(
+                `${BACKEND_URL}/api/threads/messages/create/${vendorId}/${receiverId}`,
+                { content: '', messageType: 'TEXT' },
+                { headers: { Authorization: authHeader } }
+            );
             if (response.data) {
-                setMessages(response.data);
-            }
-        } catch (error) {
-            console.error('Error fetching messages:', error);
-        }
-    };
-    // Function to check and create a new thread if none exists
-    const checkOrCreateThread = async () => {
-        try {
-            // First, check if a thread already exists between the vendor and the receiver
-            const response = await axios.get(`${BACKEND_URL}/api/threads/${threadId}`, {
-                headers: { Authorization: authHeader },
-            })
-            // If a thread exists, use the existing threadId
-            if (response.data && response.data.threadId) {
-                setThreadId(response.data.threadId);
+                setMessages(response.data.messages);
             } else {
-                // If no thread exists, create a new one
-                const newThreadResponse = await axios.post(
-                    `${BACKEND_URL}/api/threads/create`,
-                    { vendorId, receiverId }, // Send vendor and receiver ID to create a new thread
-                    { headers: { Authorization: authHeader } }
-                );
-                if (newThreadResponse.data && newThreadResponse.data.threadId) {
-                    setThreadId(newThreadResponse.data.threadId);
-                }
+                setError('No messages found.');
             }
-        } catch (error) {
-            console.error('Error checking or creating thread:', error);
+        } catch (err) {
+            setError('Failed to fetch messages.');
+        } finally {
+            setLoading(false);
         }
     };
+    // Send a new message
     const sendMessage = async () => {
         if (!messageText.trim()) {
             Alert.alert('Error', 'Message cannot be empty.');
             return;
         }
-        // Check or create a thread before sending the message
-        if (!threadId) {
-            await checkOrCreateThread();
-        }
-        // Log the vendorId, receiverId, and threadId
-        console.log('Sending message from Vendor ID:', vendorId);
-        console.log('To Receiver ID:', receiverId);
-        console.log('Thread ID:', threadId);
-        // Create the message request with threadId
         const messageRequest = {
             content: messageText,
-            messageType: messageType,
-            threadId: threadId,  // Include threadId here
+            messageType: "TEXT",
+            // No threadId needed, backend will generate it
         };
-        // Log the messageRequest to see the data being sent
-        console.log('Message Data:', messageRequest);
+
+        console.log("Sending message:", messageRequest);  // Debugging line
+
         try {
-            await axios.post(
+            const response = await axios.post(
                 `${BACKEND_URL}/api/threads/messages/create/${vendorId}/${receiverId}`,
                 messageRequest,
-                {
-                    headers: { Authorization: authHeader },
-                }
+                { headers: { Authorization: authHeader } }
             );
-            Alert.alert('Success', 'Message sent successfully');
-            fetchMessages(); // Refresh messages
-            setMessageModalVisible(false); // Close modal
-            setMessageText(''); // Clear message input
-        } catch (error) {
-            console.error('Error sending message:', error);
-            Alert.alert('Error', 'Failed to send message. Please try again.');
+            if (response.data) {
+                Alert.alert('Success', 'Message sent successfully');
+                setMessages((prevMessages) => [...prevMessages, response.data]);
+                setMessageText('');
+            }
+        } catch (err) {
+            setError('Failed to send message.');
         }
     };
+
     useEffect(() => {
-        const initialize = async () => {
-            await getVendorId();
-        };
-        initialize();
+        getVendorId();
     }, []);
 
     useEffect(() => {
@@ -149,15 +120,12 @@ const VendorMessages = () => {
     }, [vendorId]);
     const renderUserCard = ({ item }) => (
         <View style={styles.card}>
-            <Text style={styles.title}>User Information</Text>
-            <Text style={styles.firstName}>First Name: {item.firstName}</Text>
-            <Text style={styles.lastName}>Last Name: {item.lastName}</Text>
-            <Text style={styles.email}>Email: {item.email}</Text>
+            <Text style={styles.title}>User: {item.firstName} {item.lastName}</Text>
             <TouchableOpacity
                 style={styles.messageButton}
                 onPress={() => {
-                    setReceiverId(item.userId); // Set user as receiver
-                    fetchMessages(); // Messages may not need booking context
+                    setReceiverId(item.userId);
+                    fetchMessages(); // Fetch messages for this user
                     setMessageModalVisible(true);
                 }}
             >
@@ -182,12 +150,11 @@ const VendorMessages = () => {
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
-                <Text style={styles.titleText}>Start A Conversation </Text>
+                <Text style={styles.titleText}>Start A Conversation</Text>
                 <FlatList
                     data={users}
-                    keyExtractor={(item) => item.userId.toString()}
+                    keyExtractor={(item) => item.userId}
                     renderItem={renderUserCard}
-                    contentContainerStyle={{ paddingBottom: 88 }}
                     ListEmptyComponent={<Text style={styles.emptyText}>No users found.</Text>}
                 />
                 {/* Message Modal */}
@@ -196,14 +163,14 @@ const VendorMessages = () => {
                         <Text style={styles.modalTitle}>Message Inbox</Text>
                         <FlatList
                             data={messages}
-                            keyExtractor={(item) => item.messageId.toString()}
+                            keyExtractor={(item) => item.messageId}
                             renderItem={({ item }) => (
-                                <Text style={styles.messageText}>{item.content}</Text> // Display message content
+                                <Text style={styles.messageText}>{item.content}</Text>
                             )}
                         />
-                        {/* Message Type Selection */}
+                        {/* Message Type Selector */}
                         <View style={styles.messageTypeSelector}>
-                            {['TEXT', 'IMAGE', 'VIDEO', 'COMBINED'].map((type) => (
+                            {["TEXT", "IMAGE", "VIDEO", "COMBINED"].map((type) => (
                                 <TouchableOpacity
                                     key={type}
                                     style={[styles.tab, messageType === type && styles.activeTab]}
@@ -232,97 +199,23 @@ const VendorMessages = () => {
     );
 };
 const styles = StyleSheet.create({
-    messageButton: {
-        backgroundColor: '#0B7784',
-        padding: 10,
-        borderRadius: 8,
-        marginTop: 12,
-    },
-    messageButtonText: {
-        color: '#fff',
-        textAlign: 'center',
-        fontWeight: 'bold',
-    },
-    messageText: {
-        fontSize: 14,
-        color: '#333',
-        marginBottom: 4,
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgb(213,210,210)',
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginTop: 50,
-        color: '#fff',
-        backgroundColor: '#0B7784',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 8,
-    },
-    input: {
-        width: '80%',
-        backgroundColor: '#fff',
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: '#ccc',
-    },
-    modalButtons: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '80%',
-    },
-    tabsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 16,
-        paddingHorizontal: 16,
-        paddingTop: 10,
-    },
-    tab: {
-        paddingVertical: 6,
-        paddingHorizontal: 16,
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: '#0B7784',
-        marginRight: 10,
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    activeTab: {
-        backgroundColor: '#0B7784',
-    },
-    activeTabText: {
-        color: '#fff',
-    },
-    tabText: {
-        fontSize: 15,
-        color: '#0B7784',
-    },
-    card: {
-        backgroundColor: '#d9d7d7',
-        padding: 16,
-        marginBottom: 8,
-        borderRadius: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-        elevation: 5,
-    },
-    titleText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#0B7784',
-        textAlign: 'center',
-        marginVertical: 20,
-    },
+    safeArea: { flex: 1, paddingTop: 20 },
+    container: { padding: 16 },
+    titleText: { fontSize: 24, fontWeight: 'bold', color: '#0B7784', textAlign: 'center' },
+    card: { backgroundColor: '#d9d7d7', padding: 16, marginBottom: 8, borderRadius: 12 },
+    messageButton: { backgroundColor: '#0B7784', padding: 10, borderRadius: 8, marginTop: 12 },
+    messageButtonText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
+    modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
+    modalTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 50, color: '#fff', backgroundColor: '#0B7784', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+    messageText: { fontSize: 14, color: '#333', marginBottom: 4 },
+    messageTypeSelector: { flexDirection: 'row', justifyContent: 'center', marginBottom: 10 },
+    tab: { paddingVertical: 6, paddingHorizontal: 16, borderRadius: 16, borderWidth: 1, borderColor: '#0B7784', marginRight: 10, backgroundColor: '#fff' },
+    activeTab: { backgroundColor: '#0B7784' },
+    activeTabText: { color: '#fff' },
+    tabText: { fontSize: 15, color: '#0B7784' },
+    input: { width: '80%', backgroundColor: '#fff', padding: 12, borderRadius: 8, marginBottom: 16, borderWidth: 1, borderColor: '#ccc' },
+    modalButtons: { flexDirection: 'row', justifyContent: 'space-between', width: '80%' },
+    emptyText: { textAlign: 'center', color: '#ccc' },
+    errorText: { color: 'red', textAlign: 'center' },
 });
 export default VendorMessages;
