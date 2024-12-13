@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BACKEND_URL = 'http://localhost:8080';
 
-const UserMessages = () => {
+const Messages = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -226,4 +226,4 @@ const styles = StyleSheet.create({
   emptyText: { textAlign: 'center', color: '#ccc' },
   errorText: { color: 'red', textAlign: 'center' },
 });
-export default UserMessages;
+export default Messages;
