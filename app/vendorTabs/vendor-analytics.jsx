@@ -2,9 +2,7 @@ import { StyleSheet, Text, TouchableOpacity, Alert, View, Platform, Dimensions }
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PieChart as RNChart } from 'react-native-chart-kit'; // For mobile
-import { PieChart as WebPieChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar, Cell } from "recharts"; // For web
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
-import RenderHTML from 'react-native-render-html'; // For rendering HTML in mobile
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material"; // For web
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -24,14 +22,11 @@ const VendorAnalytics = () => {
     const [businessName, setBusinessName] = useState(''); // State for business name
     const [reportGenerated, setReportGenerated] = useState(false);
 
-    // Fetch user ID from AsyncStorage and then get the corresponding vendorId
     const getUserData = async () => {
         try {
-            const storedUserId = await AsyncStorage.getItem('userId'); // Retrieve userId from AsyncStorage
-            console.log('Stored userId from AsyncStorage:', storedUserId);
-
+            const storedUserId = await AsyncStorage.getItem('userId');
             if (storedUserId) {
-                await fetchVendorData(storedUserId); // Fetch vendor data once userId is retrieved
+                await fetchVendorData(storedUserId);
             } else {
                 console.error('User ID not found');
                 setError('User ID not found');
@@ -42,20 +37,17 @@ const VendorAnalytics = () => {
         }
     };
 
-    // Fetch vendor details using userId
     const fetchVendorData = async (userId) => {
         try {
             const response = await axios.get(`${BACKEND_URL}/api/vendors`, {
-                headers: {
-                    'Authorization': authHeader,
-                },
+                headers: { 'Authorization': authHeader },
             });
 
             const vendor = response.data.find((vendor) => vendor.representativeId === userId);
             if (vendor) {
-                setVendorId(vendor.vendorId); // Set the vendorId if found
-                setBusinessName(vendor.businessName || vendor.vendorId); // Set the business name or use vendorId as fallback
-                await fetchMetrics(vendor.vendorId); // Fetch metrics once vendorId is retrieved
+                setVendorId(vendor.vendorId);
+                setBusinessName(vendor.businessName || vendor.vendorId);
+                await fetchMetrics(vendor.vendorId);
             } else {
                 console.error('Vendor not found for this user');
                 setError('Vendor not found for this user');
@@ -66,18 +58,13 @@ const VendorAnalytics = () => {
         }
     };
 
-    // Fetch metrics from backend using vendorId
     const fetchMetrics = async (vendorId) => {
         setLoading(true);
         try {
-            console.log('Fetching metrics for vendorId:', vendorId); // Debugging log
             const response = await axios.get(`${BACKEND_URL}/api/vendor-reports/metrics?vendorId=${vendorId}`, {
-                headers: {
-                    'Authorization': authHeader,
-                },
+                headers: { 'Authorization': authHeader },
             });
-            console.log('Metrics fetched successfully:', response.data); // Debugging log
-            setMetrics(response.data); // Set metrics data
+            setMetrics(response.data);
         } catch (err) {
             console.error('Error fetching metrics:', err);
             setError('Failed to load metrics');
@@ -86,7 +73,6 @@ const VendorAnalytics = () => {
         }
     };
 
-    // Initialize on component mount
     useEffect(() => {
         getUserData();
     }, []);
@@ -99,18 +85,12 @@ const VendorAnalytics = () => {
 
         setLoading(true);
         try {
-            console.log('Generating report for vendorId:', vendorId); // Debugging log
-            const response = await axios.post(`${BACKEND_URL}/api/vendor-reports/generate/${vendorId}`, {}, {
-                headers: {
-                    'Authorization': authHeader,
-                },
+            await axios.post(`${BACKEND_URL}/api/vendor-reports/generate/${vendorId}`, {}, {
+                headers: { 'Authorization': authHeader },
             });
-
-            console.log('Report generated successfully:', response.data); // Debugging log
-            setReportGenerated(true); // Set state to show the report tab
-
+            setReportGenerated(true);
         } catch (err) {
-            console.error('Error generating report:', err.response || err); // Detailed error log
+            console.error('Error generating report:', err.response || err);
             Alert.alert('Error', 'Failed to generate report.');
         } finally {
             setLoading(false);
@@ -123,88 +103,16 @@ const VendorAnalytics = () => {
         { name: "Feedback", count: metrics.feedbackCount || 0 },
     ];
 
-    // Ensure all counts are valid numbers
-    const validChartData = chartData.map((item) => ({
-        name: item.name,
-        count: isNaN(Number(item.count)) ? 0 : Number(item.count),
-    }));
-
-    // Pie chart colors (for mobile and web)
     const pieChartColors = ['#07a253', '#f3bd08', '#21a1fa'];
-
-    if (Platform.OS === 'web') {
-        // Render web-specific chart and table
-        return (
-            <div style={styles.container}>
-                <h1 style={styles.chartTitle}>Vendor Metrics</h1>
-                {/* Pie Chart */}
-                <div style={styles.chartContainer}>
-                    <WebPieChart
-                        width={500}
-                        height={300}
-                        data={validChartData}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    >
-                        <Tooltip />
-                        <Legend />
-                        {validChartData.map((entry, index) => (
-                            <Cell key={index} fill={pieChartColors[index]} />
-                        ))}
-                    </WebPieChart>
-                </div>
-
-                {/* Metrics Table */}
-                <TableContainer component={Paper} style={styles.tableContainer}>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell><strong>Metric</strong></TableCell>
-                                <TableCell align="right"><strong>Count</strong></TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            <TableRow>
-                                <TableCell>Bookings</TableCell>
-                                <TableCell align="right">{metrics.bookingsCount}</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>Services</TableCell>
-                                <TableCell align="right">{metrics.servicesCount}</TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>Feedback</TableCell>
-                                <TableCell align="right">{metrics.feedbackCount}</TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-
-                {/* Generate Report Button */}
-                <TouchableOpacity style={styles.card} onPress={generateReport} disabled={loading}>
-                    <Text style={styles.cardText}>{loading ? 'Generating...' : 'Generate Report'}</Text>
-                </TouchableOpacity>
-
-                {/* Show the Report Section After Generating */}
-                {reportGenerated && (
-                    <div style={styles.reportContainer}>
-                        <h3>Report Summary for {businessName}</h3>
-                        <p><strong>Bookings Count:</strong> {metrics.bookingsCount}</p>
-                        <p><strong>Services Count:</strong> {metrics.servicesCount}</p>
-                        <p><strong>Feedback Count:</strong> {metrics.feedbackCount}</p>
-                    </div>
-                )}
-            </div>
-        );
-    }
 
     // Render mobile-specific chart
     return (
         <SafeAreaView style={styles.container}>
             <Text style={styles.chartTitle}>Vendor Metrics</Text>
             <View style={styles.chartContainer}>
-                {/* Pie Chart for mobile */}
+                {/* Pie Chart */}
                 <RNChart
-                    data={validChartData.map((item, index) => ({
+                    data={chartData.map((item, index) => ({
                         name: item.name,
                         population: item.count,
                         color: pieChartColors[index],
@@ -223,16 +131,38 @@ const VendorAnalytics = () => {
                     backgroundColor="transparent"
                 />
             </View>
-            {/* Generate Report Button */}
-            <TouchableOpacity style={styles.card} onPress={generateReport} disabled={loading}>
-                <Text style={styles.cardText}>{loading ? 'Generating...' : 'Generate Report'}</Text>
-            </TouchableOpacity>
 
-            {/* Show the Report Section After Generating */}
+            {/* Metrics Table */}
+            <View style={styles.tableContainer}>
+                <Text style={styles.tableTitle}> {businessName} Metrics</Text>
+                <View style={styles.table}>
+                    <View style={styles.tableRow}>
+                        <Text style={styles.tableHeader}>Metric</Text>
+                        <Text style={styles.tableHeader}>Count</Text>
+                    </View>
+                    <View style={styles.tableRow}>
+                        <Text style={styles.tableCell}>Bookings</Text>
+                        <Text style={styles.tableCell}>{metrics.bookingsCount}</Text>
+                    </View>
+                    <View style={styles.tableRow}>
+                        <Text style={styles.tableCell}>Services</Text>
+                        <Text style={styles.tableCell}>{metrics.servicesCount}</Text>
+                    </View>
+                    <View style={styles.tableRow}>
+                        <Text style={styles.tableCell}>Feedback</Text>
+                        <Text style={styles.tableCell}>{metrics.feedbackCount}</Text>
+                    </View>
+                </View>
+            </View>
+
+            {/*/!* Generate Report Button *!/*/}
+            {/*<TouchableOpacity style={styles.card} onPress={generateReport} disabled={loading}>*/}
+            {/*    <Text style={styles.cardText}>{loading ? 'Generating...' : 'Generate Report'}</Text>*/}
+            {/*</TouchableOpacity>*/}
+
             {reportGenerated && (
                 <View style={styles.reportContainer}>
-                    <Text style={styles.reportTitle}>Report Summary for</Text>
-                    <Text style={styles.reportTitle}> {businessName}:</Text>
+                    <Text style={styles.reportTitle}>Report Summary for {businessName}</Text>
                     <Text style={styles.reportText}>Bookings Count: {metrics.bookingsCount}</Text>
                     <Text style={styles.reportText}>Services Count: {metrics.servicesCount}</Text>
                     <Text style={styles.reportText}>Feedback Count: {metrics.feedbackCount}</Text>
@@ -258,6 +188,38 @@ const styles = StyleSheet.create({
     chartContainer: {
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    tableContainer: {
+        marginTop: 20,
+        width: '100%',
+    },
+    tableTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    table: {
+        width: '100%',
+        borderWidth: 1,
+        borderColor: '#ccc',
+    },
+    tableRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderColor: '#ccc',
+    },
+    tableHeader: {
+        fontWeight: 'bold',
+        fontSize: 16,
+        flex: 1,
+        textAlign: 'center',
+    },
+    tableCell: {
+        fontSize: 16,
+        flex: 1,
+        textAlign: 'center',
     },
     card: {
         marginTop: 20,
@@ -289,10 +251,6 @@ const styles = StyleSheet.create({
     },
     reportText: {
         fontSize: 16,
-    },
-    tableContainer: {
-        marginTop: 20,
-        marginBottom: 20,
     },
 });
 export default VendorAnalytics;
