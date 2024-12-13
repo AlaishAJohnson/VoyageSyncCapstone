@@ -58,27 +58,27 @@ const VendorMessages = () => {
             setLoading(false);
         }
     };
-
     // Fetch messages for a specific user (receiver)
-    const fetchMessages = async () => {
-        setLoading(true);
-        try {
-            const response = await axios.post(
-                `${BACKEND_URL}/api/threads/messages/create/${vendorId}/${receiverId}`,
-                { content: '', messageType: 'TEXT' },
-                { headers: { Authorization: authHeader } }
-            );
-            if (response.data) {
-                setMessages(response.data.messages);
-            } else {
-                setError('No messages found.');
-            }
-        } catch (err) {
-            setError('Failed to fetch messages.');
-        } finally {
-            setLoading(false);
-        }
-    };
+    // const fetchMessages = async () => {
+    //     setLoading(true);
+    //     try {
+    //         const response = await axios.post(
+    //             `${BACKEND_URL}/api/threads/messages/create/${vendorId}/${receiverId}`,
+    //             { content: '', messageType: 'TEXT' },
+    //             { headers: { Authorization: authHeader } }
+    //         );
+    //         if (response.data) {
+    //             setMessages(response.data.messages);
+    //         } else {
+    //             setError('No messages found.');
+    //         }
+    //     } catch (err) {
+    //         setError('Failed to fetch messages.');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
     // Send a new message
     const sendMessage = async () => {
         if (!messageText.trim()) {
@@ -125,7 +125,7 @@ const VendorMessages = () => {
                 style={styles.messageButton}
                 onPress={() => {
                     setReceiverId(item.userId);
-                    fetchMessages(); // Fetch messages for this user
+                    // fetchMessages(); // Fetch messages for this user
                     setMessageModalVisible(true);
                 }}
             >
