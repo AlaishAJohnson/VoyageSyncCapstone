@@ -9,9 +9,30 @@ const TripItinerary = () => {
   const [organizerId, setOrganizerId] = useState(null);
   const [votingStarted, setVotingStarted] = useState(false);
   const [votingEnded, setVotingEnded] = useState(false);
+  const [storedUserId, setStoredUserId] = useState(null);
 
   const { tripId, userId } = useLocalSearchParams();
+  const getUserData = async () => {
+    const userData = await AsyncStorage.getItem('userData');
+    console.log('User data retrieved:', userData);
 
+    if (userData) {
+      const user = JSON.parse(userData);
+      
+    }
+  };
+
+  const getUserId = async () => {
+    const storedUserId = await AsyncStorage.getItem('userId');
+    if (storedUserId) {
+      setStoredUserId(storedUserId);
+      console.log('User ID:', storedUserId);
+    }
+  };
+  useEffect(() => {
+      getUserData();
+      getUserId();
+    }, []);
   const fetchOrganizerId = async (tripId) => {
     if (!tripId) return null;
     try {
@@ -29,6 +50,7 @@ const TripItinerary = () => {
 
   const fetchItineraryItems = async (tripId, userId, organizerId) => {
     setLoading(true);
+    console.log("Fetching itinerary items");
     try {
       const response = await fetch(`http://localhost:8080/api/itinerary/trip-itinerary/${tripId}`, {
         method: 'GET',
@@ -42,6 +64,7 @@ const TripItinerary = () => {
         else categorizedItems.Suggested.push(item);
       });
       setItineraryDetails(categorizedItems);
+      console.log("Finalized Categories: ", categorizedItems);
       if (!categorizedItems.Vote.length) setVotingEnded(true);
     } catch {
       Alert.alert('Error', 'Failed to fetch itinerary items');
@@ -60,28 +83,86 @@ const TripItinerary = () => {
   }, [tripId, userId]);
 
   const handleVote = async (itineraryId, vote) => {
-    console.log("HandleVote triggered.");
     try {
       const authHeader = 'Basic ' + btoa('admin:admin'); 
       const response = await fetch(
         `http://localhost:8080/api/itinerary/${itineraryId}/vote?userId=${userId}&vote=${vote}`,
-        { method: 'POST', headers: { 
-          'Authorization': authHeader,
-          'Content-Type': 'application/json' 
-        } }
+        { 
+          method: 'POST', 
+          headers: { 
+            'Authorization': authHeader,
+            'Content-Type': 'application/json' 
+          } 
+        }
       );
-      const result = await response.json();
-      console.log("Result: ", result);
+      
       if (response.ok) {
-        Alert.alert('Vote Recorded', result.message);
-        fetchItineraryItems(tripId, userId, organizerId);
+        const majorityResponse = await fetch(
+          `http://localhost:8080/api/itinerary/${itineraryId}/majority`,
+          { method: 'GET', headers: { 'Authorization': authHeader } }
+        );
+        
+        if (majorityResponse.ok) {
+          const majority = await majorityResponse.json();
+          if (majority) {
+            const bookingResponse = await fetch(
+              `http://localhost:8080/api/itinerary/${itineraryId}/checkAndBook?tripId=${tripId}`,
+              { 
+                method: 'POST',
+                headers: { 'Authorization': authHeader }
+              }
+            );
+            if (bookingResponse.ok) {
+              Alert.alert('Itinerary booked successfully!');
+              fetchItineraryItems(tripId, userId, organizerId); 
+            } else {
+              Alert.alert('Error', 'Failed to book the itinerary.');
+            }
+          }
+        }
       } else {
-        Alert.alert('Error', result.message || 'Failed to record vote.');
+        Alert.alert('Error', 'Failed to record vote.');
       }
-    } catch {
+    } catch (error) {
+      console.error("Error during handleVote:", error);
       Alert.alert('Error', 'An unexpected error occurred while voting.');
     }
   };
+
+  const handleAddToVoting = async (itineraryId, storedUserId, vote) => {
+    try {
+      const voteParam = vote ? 'true' : 'false';
+      console.log("UserId: ", storedUserId);
+      console.log("ItineraryId: ", itineraryId);
+      console.log("Vote: ", voteParam);
+  
+      const url = new URL('http://localhost:8080/api/itinerary/add-to-vote');
+      url.searchParams.append('itineraryId', itineraryId);
+      url.searchParams.append('userId', storedUserId);
+      url.searchParams.append('vote', voteParam); 
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + btoa('admin:admin'), 
+        }
+      });
+  
+      const responseData = await response.json();
+      console.log('API response:', responseData);
+  
+      if (response.ok) {
+        Alert.alert('Vote added successfully!');
+        fetchItineraryItems(tripId, userId, organizerId); 
+      } else {
+        Alert.alert('Error', responseData.message || 'Failed to add item to voting.');
+      }
+    } catch (error) {
+      console.error('Error adding to voting:', error);
+      Alert.alert('Error', 'An unexpected error occurred while adding to voting.');
+    }
+  };
+  
+  
 
   const renderTabContent = () => {
     if (loading) return <ActivityIndicator size="large" color="#0b7784" />;
@@ -106,6 +187,14 @@ const TripItinerary = () => {
                 <Text style={styles.voteButtonText}>No</Text>
               </TouchableOpacity>
             </View>
+          )}
+          {(selectedTab === 'Proposed' || selectedTab === 'Suggested') && organizerId === userId && (
+            <TouchableOpacity 
+              style={styles.addToVotingButton} 
+              onPress={() => handleAddToVoting(activity.itineraryId)}
+            >
+              <Text style={styles.addToVotingButtonText}>Add to Voting</Text>
+            </TouchableOpacity>
           )}
         </View>
       ))
@@ -150,6 +239,8 @@ const styles = StyleSheet.create({
   voteButtonYes: { backgroundColor: '#0b7784', padding: 10, borderRadius: 5 },
   voteButtonNo: { backgroundColor: '#f00', padding: 10, borderRadius: 5 },
   voteButtonText: { color: '#fff', fontWeight: 'bold' },
+  addToVotingButton: { marginTop: 10, backgroundColor: '#0b7784', padding: 10, borderRadius: 5 },
+  addToVotingButtonText: { color: '#fff', fontWeight: 'bold' },
   noItineraryText: { textAlign: 'center', marginTop: 20, fontSize: 16, color: '#666' },
 });
 

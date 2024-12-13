@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, TouchableOpacity, Modal, TextInput, Button } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router'; 
 
@@ -8,6 +8,9 @@ const TripDetails = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState(1);
   const [membersData, setMembersData] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [feedback, setFeedback] = useState('');
 
 
   const router = useRouter();
@@ -102,7 +105,46 @@ const TripDetails = () => {
     const hour = (i + 9) % 24; 
     return `${hour === 0 ? 12 : hour} ${hour < 12 ? 'AM' : 'PM'}`;
   });
-  
+  const handleFeedbackChange = (text) => {
+    setFeedback(text);
+  };
+
+  const submitFeedback = async () => {
+    if (!feedback) {
+      alert('Please enter feedback before submitting.');
+      return;
+    }
+
+    try {
+      const authHeader = 'Basic ' + btoa('admin:admin');
+      const url = 'http://localhost:8080/api/feedback';
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': authHeader,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          // bookingId: selectedBooking.bookingId,
+          userId: userId, 
+          // vendorId: , 
+          feedback: feedback,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to submit feedback`);
+      }
+
+      alert('Feedback submitted successfully!');
+      setIsModalVisible(false);
+      setFeedback('');
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      alert('Failed to submit feedback. Please try again.');
+    }
+  };
   return (
     <ScrollView>
       <View style={styles.container}>
@@ -177,7 +219,7 @@ const TripDetails = () => {
               {tripDetails.itinerary?.length > 0 ? (
                 tripDetails.itinerary.map((activity, index) => (
                   <View key={index} style={styles.itineraryCard}>
-                    <Text style={styles.itineraryTitle}>{activity.title}</Text>
+                    <Text style={styles.itineraryTitle}>{activity.nameOfService}</Text>
                     <Text style={styles.itineraryLocation}>{activity.location}</Text>
                     <Text style={styles.itineraryTime}>
                       {hours[selectedDay - 1]} - {hours[selectedDay]}
@@ -195,6 +237,23 @@ const TripDetails = () => {
           </View>
         </View>
       </View>
+      {/* Feedback Modal */}
+      <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Leave Feedback</Text>
+              <TextInput
+                  style={styles.modalInput}
+                  placeholder="Write your feedback here..."
+                  value={feedback}
+                  onChangeText={handleFeedbackChange}
+                  multiline
+              />
+              <Button title="Submit Feedback" onPress={submitFeedback} />
+              <Button title="Cancel" onPress={() => setIsModalVisible(false)} />
+            </View>
+          </View>
+        </Modal>
     </ScrollView>
   );
   
