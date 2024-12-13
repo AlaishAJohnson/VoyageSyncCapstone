@@ -111,7 +111,7 @@ const UserHome = () => {
 
   const onTripPress = (trip) => {
     console.log('Trip ID pressed:', trip.tripId);
-    router.push(`/trip/${trip.tripId}`);
+    router.push(`/trip/${trip.tripId}?userId=${userId}`);
   };
   
 

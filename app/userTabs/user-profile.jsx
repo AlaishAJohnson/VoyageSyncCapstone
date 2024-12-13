@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../../hook/auth';
 
 const formatPhoneNumber = (phoneNumber) => {
   if (!phoneNumber) return '';
@@ -36,6 +37,7 @@ const Profile = () => {
     lastName: '',
     password: '',
   });
+  const { logout } = useAuth();
 
   const authHeader = 'Basic ' + btoa('admin:admin'); 
   useEffect(() => {
@@ -163,6 +165,11 @@ const Profile = () => {
     return <Text>Loading user data...</Text>;
   }
 
+  const handleSignOut = () => {
+    logout();
+    console.log('User signed out');
+    router.push('/');
+  };
   return (
     <SafeAreaView style={styles.container}>
      <ScrollView>
@@ -241,7 +248,7 @@ const Profile = () => {
 
           </View>
           {/* Sign Out Button */}
-          <TouchableOpacity style={styles.signOutBtn} onPress={() => Alert.alert('Sign Out')}>
+          <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
             <Text style={styles.signOutText}>Sign Out</Text>
           </TouchableOpacity>
 

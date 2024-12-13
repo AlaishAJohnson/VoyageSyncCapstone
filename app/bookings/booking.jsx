@@ -80,49 +80,11 @@ const Booking = () => {
     return dateArray;
   };
 
-  const generateAvailableTimes = (timeFrame, duration) => {
-    console.log("Generating available times with timeFrame:", timeFrame, "and duration:", duration);
-  
-    const [start, end] = timeFrame.replace('From ', '').split(' to ').map(time => {
-      const match = time.match(/(\d{1,2})(AM|PM)/i);  
-      if (!match) {
-        console.error("Invalid time format:", time);
-        return null;
-      }
-      const [hour, period] = match.slice(1, 3);
-      const date = new Date();
-      date.setHours(parseInt(hour) + (period === 'PM' && parseInt(hour) !== 12 ? 12 : 0), 0); 
-      return date;
-    });
-  
-    if (!start || !end) {
-      console.error("Invalid start or end time:", start, end);
-      return [];
-    }
-  
-    const durationMatch = duration.match(/(\d+)hr/i);
-    if (!durationMatch) {
-      console.error("Invalid duration format:", duration);
-      return [];
-    }
-    const durationInHours = parseInt(durationMatch[1]);
-    const durationInMs = durationInHours * 60 * 60 * 1000;
-  
-    const availableTimes = [];
-  
-    let currentTime = new Date(start);
-    while (currentTime.getTime() + durationInMs <= end.getTime()) {  
-      availableTimes.push(new Date(currentTime));
-      currentTime = new Date(currentTime.getTime() + durationInMs);
-    }
-  
-    console.log("Generated Available Times:", availableTimes);
-    return availableTimes;
-  };
 
   useEffect(() => {
     if (selectedTrip) {
       if (selectedTrip.length === 24 && /^[a-fA-F0-9]{24}$/.test(selectedTrip)) {
+        
         const fetchServiceDetails = async () => {
           setLoading(true);
           try {
@@ -134,15 +96,13 @@ const Booking = () => {
             });
             const data = await response.json();
             setServiceDetails(data);
-            setAvailableTimes(generateAvailableTimes(data.timeFrame, data.duration));
-  
           } catch (error) {
             console.error("Error fetching service details:", error);
           } finally {
             setLoading(false);
           }
         };
-        
+  
         const fetchSelectedTrip = async () => {
           setLoading(true);
           try {
@@ -153,18 +113,18 @@ const Booking = () => {
               },
             });
             const data = await response.json();
-        
+    
             console.log("Fetched Trip Data:", data);
-        
+    
             if (data && data.trips && data.trips.length > 0) {
               const trip = data.trips[0]; 
               setUserTrips(data.trips);
-              
+    
               const startDate = new Date(trip.startDate); 
               const endDate = new Date(trip.endDate); 
-        
+    
               console.log("Trip Start Date:", startDate, "Trip End Date:", endDate);
-              
+    
               setAvailableDates(generateAvailableDates(startDate, endDate));
             } else {
               console.error('No trip data found');
@@ -184,43 +144,63 @@ const Booking = () => {
         setServiceDetails(null);
       }
     }
-  }, [selectedTrip]); 
-
- 
-
+  }, [selectedTrip, id]);
+  
   const handleBookingSubmit = async () => {
-    const bookingData = {
-      serviceId: id,
-      vendorId: serviceDetails.vendorId,  
-      itineraryId: itineraryId,     
-      bookingDate: selectedDate,
-      bookingTime: selectedTime,
-      confirmationStatus: 'PENDING',
-      numberOfParticipants: openSlots,
-    };
+    console.log('handleBookingSubmit function called');
+    
+    console.log("selectedTrip before submit:", selectedTrip);
   
     try {
-      const response = await fetch('http://localhost:8080/api/bookings/create', {
+      if (!selectedTrip) {
+        throw new Error('selectedTrip is undefined');
+      }
+      
+      const itineraryData = {
+        serviceId: id, 
+        vendorId: serviceDetails?.vendorId, 
+        creatorId: userId, 
+        dateOfService: selectedDate,
+        timeOfService: null,
+      };
+  
+      console.log("serviceId: ", id);
+      console.log("vendorId: ", serviceDetails?.vendorId);
+      console.log("userId: ", userId);
+      console.log("selectedDate: ", selectedDate);
+      console.log("selectedTrip: ", selectedTrip); 
+      console.log("tripId: ", selectedTrip?.tripId);
+      console.log('Itinerary Data:', itineraryData);
+  
+      const response = await fetch(`http://localhost:8080/api/itinerary/create/${selectedTrip}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Basic ${btoa('admin:admin')}`,
         },
-        body: JSON.stringify(bookingData),
+        body: JSON.stringify(itineraryData),
       });
   
       const result = await response.json();
+      console.log('API Response:', result);
+  
       if (response.ok) {
-        console.log('Booking created:', result);
-        router.push(`/bookings/confirmation?id=${result.bookingId}`);
+        console.log('Itinerary successful:', result);
+        router.push(`/bookings/booking-confirmation?id=${id}&name=${name}&trip=${selectedTrip}&date=${selectedDate}`);
       } else {
-        console.error('Failed to create booking:', result.message);
+        console.error('Booking failed:', result);
       }
     } catch (error) {
-      console.error('Error creating booking:', error);
+      console.error('Error during itinerary submission:', error);
     }
   };
-
+  
+  
+  const isValidObjectId = (id) => /^[a-fA-F0-9]{24}$/.test(id);
+  
+  
+  
+  
   useEffect(() => {
     if (serviceDetails && selectedDate) {
       const { timeFrame, duration } = serviceDetails; 
@@ -243,27 +223,9 @@ const Booking = () => {
         setAvailableTimes(availableTimeSlots);
       }
     }
-  }, [selectedDate, serviceDetails]); // Remove availableTimes from dependencies
+  }, [selectedDate, serviceDetails]); 
 
-const handleTimeSelect = (time) => {
-  setSelectedTime(time);
-};
-
-
-const renderTimeButton = (time) => {
-  const isActive = selectedTime === time.toISOString(); 
-  return (
-    <TouchableOpacity
-      key={time.toISOString()} 
-      style={[styles.timeButton, isActive && styles.activeTime]}
-      onPress={() => handleTimeSelect(time)}
-    >
-      <Text style={[styles.timeText, isActive && styles.activeTimeText]}>
-        {format(time, 'h:mm a')}  // Use date-fns format
-      </Text>
-    </TouchableOpacity>
-  );
-};
+ 
 
 
   return (
@@ -278,7 +240,7 @@ const renderTimeButton = (time) => {
           <Picker
           selectedValue={selectedTrip}
           onValueChange={(itemValue) => {
-            console.log('Selected Trip ID:', itemValue);  // Debugging
+            console.log('Selected Trip ID:', itemValue); 
             setSelectedTrip(itemValue);
           }}
           style={styles.picker}
@@ -325,19 +287,11 @@ const renderTimeButton = (time) => {
         </View>
       )}
 
-      {/* Available Times */}
-      <View style={styles.timesSection}>
-        <Text style={styles.timesHeader}>Available Times</Text>
-        <View style={styles.timesList}>
-          {availableTimes.map((time) => renderTimeButton(time))}
-        </View>
-      </View>
-
       {/* Booking Button */}
       <TouchableOpacity
-        style={[styles.bookButton, selectedTrip && selectedDate && selectedTime ? styles.tripSelected : styles.tripNotSelected]}
+        style={[styles.bookButton, selectedTrip && selectedDate ? styles.tripSelected : styles.tripNotSelected]}
         onPress={handleBookingSubmit}
-        disabled={!selectedTrip || !selectedDate || !selectedTime}
+        disabled={!selectedTrip || !selectedDate}
       >
         <Text style={styles.bookButtonText}>Confirm Booking</Text>
       </TouchableOpacity>
@@ -465,6 +419,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
     marginBottom: 15,
+    marginTop: 100,
   },
   bookButtonText: {
     fontSize: 20,

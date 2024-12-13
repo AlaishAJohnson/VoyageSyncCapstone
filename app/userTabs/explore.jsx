@@ -255,8 +255,9 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
   },
   activeButton: {
-    backgroundColor: '#007bff',
-    borderColor: '#007bff',
+    backgroundColor: '#0b7784',
+    borderColor: '#0b7784',
+    color: 'white'
   },
   buttonText: {
     color: '#333',
