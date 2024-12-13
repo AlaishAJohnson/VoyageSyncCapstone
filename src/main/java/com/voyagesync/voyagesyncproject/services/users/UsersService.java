@@ -9,8 +9,10 @@ import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UsersService {
@@ -72,6 +74,15 @@ public class UsersService {
     public Users getUsernameByUserId(String userId) {
         ObjectId userIdObj = new ObjectId(userId);
         return usersRepository.findById(userIdObj).orElse(null);
+    }
+
+    public List<Map<String, String>> getUsernamesByUserIds(List<String> userIds) {
+        List<Users> users = usersRepository.findByIdIn(userIds);
+        return users.stream().map(user -> Map.of(
+                "userId", user.getId().toHexString(),
+                "firstName", user.getFirstName(),
+                "username", user.getUsername()
+        )).collect(Collectors.toList());
     }
 
 

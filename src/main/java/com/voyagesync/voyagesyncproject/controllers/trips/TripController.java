@@ -1,8 +1,13 @@
 package com.voyagesync.voyagesyncproject.controllers.trips;
 
 
+import com.voyagesync.voyagesyncproject.enums.ConfirmationStatus;
 import com.voyagesync.voyagesyncproject.models.trips.Trips;
+import com.voyagesync.voyagesyncproject.models.users.Users;
+import com.voyagesync.voyagesyncproject.repositories.trips.ItineraryRepository;
+import com.voyagesync.voyagesyncproject.repositories.trips.TripRepository;
 import com.voyagesync.voyagesyncproject.services.trips.TripService;
+import com.voyagesync.voyagesyncproject.models.trips.Itinerary;
 import org.bson.types.ObjectId;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,11 +22,14 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "http://localhost:8081")
 public class TripController {
     private final TripService tripService;
+    private final ItineraryRepository itineraryRepository;
+    private final TripRepository tripRepository;
 
 
-
-    public TripController(final TripService tripService) {
+    public TripController(final TripService tripService, ItineraryRepository itineraryRepository, TripRepository tripRepository) {
         this.tripService = tripService;
+        this.itineraryRepository = itineraryRepository;
+        this.tripRepository = tripRepository;
 
     }
 
@@ -70,6 +78,35 @@ public class TripController {
                 .collect(Collectors.toList());
         Map<String, Object> response = mapTripToResponse(filteredTrips);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{tripId}/itinerary")
+    public ResponseEntity<?> addItineraryItem(@PathVariable ObjectId tripId,
+                                              @RequestBody Itinerary itinerary,
+                                              @RequestParam ObjectId userId) {
+        Optional<Trips> tripOpt = tripRepository.findById(tripId);
+
+        if (tripOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trip not found");
+        }
+
+        Trips trip = tripOpt.get();
+        if (trip.getOrganizerId().equals(userId)) {
+            itinerary.setConfirmationStatus(ConfirmationStatus.PENDING);
+            itinerary.setCreatorId(userId);
+            trip.getItinerary().add(itinerary.getItineraryId());
+        } else if (trip.getMemberIds() != null && trip.getMemberIds().contains(userId)) {
+            itinerary.setConfirmationStatus(ConfirmationStatus.PENDING);
+            itinerary.setCreatorId(userId);
+            trip.getItinerary().add(itinerary.getItineraryId());
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to add itinerary items.");
+        }
+
+        itineraryRepository.save(itinerary);
+        tripRepository.save(trip);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body("Itinerary item added successfully.");
     }
 
 
@@ -147,11 +184,8 @@ public class TripController {
             newTrip.setMemberIds(Collections.singletonList(organizerObjectId));
         }
 
-        if (newTrip.getMemberIds().size() > 1) {
-            newTrip.setGroupTrip(true);
-        } else {
-            newTrip.setGroupTrip(false);
-        }
+        assert newTrip.getMemberIds() != null;
+        newTrip.setGroupTrip(newTrip.getMemberIds().size() > 1);
 
         newTrip.setItinerary(new ArrayList<>());
 
@@ -162,8 +196,42 @@ public class TripController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @PutMapping("/update-trip/{tripId}")
+    public ResponseEntity<?> updateTrip(@PathVariable String tripId, @RequestBody Map<String, Object> tripDetails) {
+        try {
+            Trips tripToUpdate = new Trips();
+            ObjectId tripObjectId = new ObjectId(tripId);
+            tripToUpdate.setTripId(tripObjectId);
 
+            if (tripDetails.containsKey("startDate")) {
+                tripToUpdate.setStartDate(LocalDate.parse(tripDetails.get("startDate").toString()));
+            }
+            if (tripDetails.containsKey("tripName")) {
+                tripToUpdate.setTripName(tripDetails.get("tripName").toString());
+            }
+            if (tripDetails.containsKey("destination")) {
+                tripToUpdate.setDestination(tripDetails.get("destination").toString());
+            }
+            if (tripDetails.containsKey("imageUrl")) {
+                tripToUpdate.setImageUrl(tripDetails.get("imageUrl").toString());
+            }
+            if (tripDetails.containsKey("endDate")) {
+                tripToUpdate.setEndDate(LocalDate.parse(tripDetails.get("endDate").toString()));
+            }
+            if (tripDetails.containsKey("budget")) {
+                tripToUpdate.setBudget(Double.parseDouble(tripDetails.get("budget").toString()));
+            }
 
+            Trips updatedTrip = tripService.getTripById(tripId);
+            Map<String, Object> response = mapTripToResponse((List<Trips>) updatedTrip);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 
     private Map<String, Object> mapTripToResponse(List<Trips> trips) {

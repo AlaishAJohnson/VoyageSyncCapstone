@@ -193,7 +193,7 @@ public class BookingsController {
         bookingMap.put("bookingDate", bookings.getBookingDate());
         bookingMap.put("bookingTime", bookings.getBookingTime());
         bookingMap.put("confirmationStatus", bookings.getConfirmationStatus());
-        bookingMap.put("itineraryId", bookings.getItineraryId());
+        bookingMap.put("itineraryId", bookings.getItineraryId().toHexString());
         return bookingMap;
     }
 }

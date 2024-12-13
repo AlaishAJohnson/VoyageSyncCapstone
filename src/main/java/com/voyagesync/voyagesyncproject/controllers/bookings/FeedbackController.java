@@ -59,19 +59,14 @@ public class FeedbackController {
     // Submit feedback
     @PostMapping("/new")
     public ResponseEntity<Map<String, Object>> submitFeedback(@RequestBody Feedback feedback) {
-        // Check if the user is a participant
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (!usersService.isUserParticipant(username)) {
-            return new ResponseEntity<>(Map.of("error", "Only participants can leave feedback"), HttpStatus.FORBIDDEN);
-        }
 
-        // Validate vendorId
+
         if (vendorService.getVendorById(feedback.getVendorId()) == null) {
             return new ResponseEntity<>(Map.of("error", "Invalid vendor ID"), HttpStatus.BAD_REQUEST);
         }
 
         // Set userId and feedback time before saving
-        feedback.setUserId(usersService.getByUsername(username).getId());
+        feedback.setUserId(feedback.getUserId());
         feedback.setFeedbackTime(LocalDateTime.now());
 
         // Save the feedback

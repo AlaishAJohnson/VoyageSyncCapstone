@@ -25,7 +25,7 @@ public class Bookings {
     private LocalDate bookingDate;
     private LocalTime bookingTime;
     private ConfirmationStatus confirmationStatus = ConfirmationStatus.PENDING;
-    private String itineraryId;
+    private ObjectId itineraryId;
 
     private int numberOfParticipants;
 

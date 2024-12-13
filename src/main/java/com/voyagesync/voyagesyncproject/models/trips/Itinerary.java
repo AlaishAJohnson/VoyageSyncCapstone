@@ -10,6 +10,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Document(collection = "Itinerary")
 @Data
@@ -18,11 +20,15 @@ import java.time.LocalTime;
 public class Itinerary{
     @Id
     private ObjectId itineraryId;
-    private String nameOfService;
+    private ObjectId serviceId;
     private LocalDate dateOfService;
     private LocalTime timeOfService;
     private ConfirmationStatus confirmationStatus = ConfirmationStatus.PENDING;
     private double voteCount;
+    private ObjectId creatorId;
+    private ObjectId tripId;
 
+    private List<ObjectId> votes = new ArrayList<>();
     private ObjectId bookingId;
+
 }

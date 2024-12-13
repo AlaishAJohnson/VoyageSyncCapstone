@@ -168,6 +168,17 @@ public class UsersController {
         }
     }
 
+    @GetMapping("/usernames")
+    public ResponseEntity<List<Map<String, String>>> getUsernamesByUserIds(@RequestParam List<String> userIds) {
+        try {
+            List<Map<String, String>> userDetails = usersService.getUsernamesByUserIds(userIds);
+            return ResponseEntity.ok(userDetails);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonList(Map.of("error", "An error occurred: " + e.getMessage())));
+        }
+    }
+
 
 
 

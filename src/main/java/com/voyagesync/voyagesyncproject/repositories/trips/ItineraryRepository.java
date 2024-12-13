@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface ItineraryRepository extends MongoRepository<Itinerary, ObjectId> {
     Itinerary findByItineraryId(ObjectId itineraryId);
+    List<Itinerary> findByTripIdAndCreatorId(ObjectId tripId, ObjectId creatorId);
+    List<Itinerary> findByTripId(ObjectId tripId);
 }

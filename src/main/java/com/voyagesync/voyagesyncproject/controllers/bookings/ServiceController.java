@@ -32,8 +32,9 @@ public class ServiceController {
 
     // Fetch a single service with vendor info
     @GetMapping("/{id}")
-    public ResponseEntity<ServiceWithVendorDTO> getServiceById(@PathVariable ObjectId id) {
-        ServiceWithVendorDTO serviceResponse = servicesService.getServiceById(id); // Fetch service with vendor details
+    public ResponseEntity<ServiceWithVendorDTO> getServiceById(@PathVariable String id) {
+        ObjectId serviceId = new ObjectId(id);
+        ServiceWithVendorDTO serviceResponse = servicesService.getServiceById(serviceId); // Fetch service with vendor details
         return ResponseEntity.ok(serviceResponse);
     }
 

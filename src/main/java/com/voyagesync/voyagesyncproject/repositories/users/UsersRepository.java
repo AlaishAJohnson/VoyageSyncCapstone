@@ -15,6 +15,7 @@ public interface UsersRepository extends MongoRepository<Users, ObjectId> {
     Users findByUsername(String username);
     Users findByEmail(String email);
     Users findByPhoneNumber(String phoneNumber);
+    List<Users> findByIdIn(List<String> ids);
 
     List<Users> findByRole(String role);
     List<Users> findByFirstNameAndLastName(String firstName, String lastName);
@@ -25,6 +26,4 @@ public interface UsersRepository extends MongoRepository<Users, ObjectId> {
     boolean existsByEmail(String email);
     boolean existsByPhoneNumber(String phoneNumber);
 
-//    @Query("{'_id': ?0}")
-//    String findUsernameByUserId(ObjectId userId);
 }
