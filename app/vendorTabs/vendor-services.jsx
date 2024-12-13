@@ -3,9 +3,7 @@ import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 const BACKEND_URL = 'http://localhost:8080';
-
 const VendorServices = () => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -25,7 +23,6 @@ const VendorServices = () => {
     const [serviceToUpdate, setServiceToUpdate] = useState(null);
 
     const authHeader = 'Basic ' + btoa('admin:admin');
-
     // Fetch Vendor ID
     const getVendorId = async () => {
         try {
@@ -35,7 +32,7 @@ const VendorServices = () => {
                     headers: { Authorization: authHeader },
                 });
                 if (response.data && response.data.vendorId) {
-                    setVendorId(response.data.vendorId.toString()); // Ensure it's treated as a string
+                    setVendorId(response.data.vendorId.toString());
                 } else {
                     throw new Error('No vendor found for this user.');
                 }
@@ -85,20 +82,20 @@ const VendorServices = () => {
                 openSlots: openSlots ? parseInt(openSlots) : 0,
                 duration: duration.trim(),
                 typeOfService: typeOfService.trim(),
-                vendorId: vendorId, // Ensure vendorId is treated as a string
+                vendorId: vendorId,
             };
 
-            if (serviceToUpdate && serviceToUpdate.serviceIdAsString) {
+            if (serviceToUpdate && serviceToUpdate.serviceId) {
                 // Update existing service
                 const response = await axios.put(
-                    `${BACKEND_URL}/api/services/update/${serviceToUpdate.serviceIdAsString}`,
+                    `${BACKEND_URL}/api/services/${serviceToUpdate.serviceId}`,
                     serviceData,
                     { headers: { Authorization: authHeader } }
                 );
 
                 setServices((prevServices) =>
                     prevServices.map((service) =>
-                        service.serviceIdAsString === serviceToUpdate.serviceIdAsString ? response.data : service
+                        service.serviceId === serviceToUpdate.serviceId ? response.data : service
                     )
                 );
                 Alert.alert('Service updated successfully!');
@@ -121,12 +118,12 @@ const VendorServices = () => {
     };
 
     // Delete a Service
-    const deleteService = async (serviceIdAsString) => {
+    const deleteService = async (serviceId) => {
         try {
-            await axios.delete(`${BACKEND_URL}/api/services/delete/${serviceIdAsString}`, {
+            await axios.delete(`${BACKEND_URL}/api/services/${serviceId}`, {
                 headers: { Authorization: authHeader },
             });
-            setServices((prevServices) => prevServices.filter((service) => service.serviceIdAsString !== serviceIdAsString));
+            setServices((prevServices) => prevServices.filter((service) => service.serviceId !== serviceId));
             Alert.alert('Service deleted successfully.');
         } catch (err) {
             console.error('Error deleting service:', err.message);
@@ -183,9 +180,8 @@ const VendorServices = () => {
         resetServiceForm();
         setShowModal(true);
     };
-
     const renderServiceCard = ({ item }) => (
-        <View style={styles.card} key={item.serviceIdAsString}>
+        <View style={styles.card} key={item.serviceId}>
             <Text style={styles.title}>{item.serviceName}</Text>
             <Text style={styles.description}>{item.serviceDescription}</Text>
             <Text style={styles.price}>Price: ${item.price}</Text>
@@ -194,7 +190,7 @@ const VendorServices = () => {
             <Text style={styles.duration}>Duration: {item.duration}</Text>
             <Text style={styles.typeOfService}>Service Type: {item.typeOfService}</Text>
             <Text style={styles.openSlots}>Available Slots: {item.openSlots}</Text>
-            <TouchableOpacity style={styles.deleteButton} onPress={() => deleteService(item.serviceIdAsString)}>
+            <TouchableOpacity style={styles.deleteButton} onPress={() => deleteService(item.serviceId)}>
                 <Text style={styles.buttonText}>Delete</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -213,7 +209,6 @@ const VendorServices = () => {
             </SafeAreaView>
         );
     }
-
     if (error) {
         return (
             <SafeAreaView style={styles.safeArea}>
@@ -221,7 +216,6 @@ const VendorServices = () => {
             </SafeAreaView>
         );
     }
-
     return (
         <SafeAreaView style={styles.safeArea}>
             <TouchableOpacity style={styles.addButton} onPress={handleAddServicePress}>
