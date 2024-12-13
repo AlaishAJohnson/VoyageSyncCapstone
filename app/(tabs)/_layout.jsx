@@ -13,24 +13,13 @@ const TabIcon = ({ icon, focused, name }) => {
     </View>
   );
 };
-
 const MainLayout = () => {
   const { userRole } = useAuth();
-
   const renderTabs = () => {
     switch (userRole) {
       case 'admin':
         return (
           <>
-            <Tabs.Screen
-              name="messages"
-              options={{
-                headerShown: false,
-                tabBarIcon: ({ focused }) => (
-                  <TabIcon icon="chatbox" focused={focused} name="Messages" />
-                ),
-              }}
-            />
             <Tabs.Screen
               name="user-management"
               options={{
@@ -46,24 +35,6 @@ const MainLayout = () => {
                 headerShown: false,
                 tabBarIcon: ({ focused }) => (
                   <TabIcon icon="analytics" focused={focused} name="Analytics" />
-                ),
-              }}
-            />
-            <Tabs.Screen
-              name="admin-home"
-              options={{
-                headerShown: false,
-                tabBarIcon: ({ focused }) => (
-                  <TabIcon icon="home" focused={focused} name="Home" />
-                ),
-              }}
-            />
-            <Tabs.Screen
-              name="system-settings"
-              options={{
-                headerShown: false,
-                tabBarIcon: ({ focused }) => (
-                  <TabIcon icon="cog" focused={focused} name="System" />
                 ),
               }}
             />
