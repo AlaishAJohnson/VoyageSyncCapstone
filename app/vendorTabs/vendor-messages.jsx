@@ -58,26 +58,27 @@ const VendorMessages = () => {
             setLoading(false);
         }
     };
+
     // Fetch messages for a specific user (receiver)
-    // const fetchMessages = async () => {
-    //     setLoading(true);
-    //     try {
-    //         const response = await axios.post(
-    //             `${BACKEND_URL}/api/threads/messages/create/${vendorId}/${receiverId}`,
-    //             { content: '', messageType: 'TEXT' },
-    //             { headers: { Authorization: authHeader } }
-    //         );
-    //         if (response.data) {
-    //             setMessages(response.data.messages);
-    //         } else {
-    //             setError('No messages found.');
-    //         }
-    //     } catch (err) {
-    //         setError('Failed to fetch messages.');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
+    const fetchMessages = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.post(
+                `${BACKEND_URL}/api/threads/messages/create/${vendorId}/${receiverId}`,
+                { content: '', messageType: 'TEXT' },
+                { headers: { Authorization: authHeader } }
+            );
+            if (response.data) {
+                setMessages(response.data.messages);
+            } else {
+                setError('No messages found.');
+            }
+        } catch (err) {
+            setError('Failed to fetch messages.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Send a new message
     const sendMessage = async () => {
@@ -88,10 +89,9 @@ const VendorMessages = () => {
         const messageRequest = {
             content: messageText,
             messageType: "TEXT",
-            // No threadId needed, backend will generate it
         };
 
-        console.log("Sending message:", messageRequest);  // Debugging line
+        console.log("Sending message:", messageRequest);
 
         try {
             const response = await axios.post(
@@ -118,6 +118,7 @@ const VendorMessages = () => {
             fetchUsersByRole();
         }
     }, [vendorId]);
+
     const renderUserCard = ({ item }) => (
         <View style={styles.card}>
             <Text style={styles.title}>User: {item.firstName} {item.lastName}</Text>
@@ -125,7 +126,7 @@ const VendorMessages = () => {
                 style={styles.messageButton}
                 onPress={() => {
                     setReceiverId(item.userId);
-                    // fetchMessages(); // Fetch messages for this user
+                    fetchMessages(); // Fetch messages for this user
                     setMessageModalVisible(true);
                 }}
             >
@@ -133,6 +134,7 @@ const VendorMessages = () => {
             </TouchableOpacity>
         </View>
     );
+
     if (loading) {
         return (
             <SafeAreaView style={styles.safeArea}>
@@ -140,6 +142,7 @@ const VendorMessages = () => {
             </SafeAreaView>
         );
     }
+
     if (error) {
         return (
             <SafeAreaView style={styles.safeArea}>
@@ -147,6 +150,7 @@ const VendorMessages = () => {
             </SafeAreaView>
         );
     }
+
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
@@ -165,7 +169,11 @@ const VendorMessages = () => {
                             data={messages}
                             keyExtractor={(item) => item.messageId}
                             renderItem={({ item }) => (
-                                <Text style={styles.messageText}>{item.content}</Text>
+                                <View style={[styles.messageContainer, item.senderId === vendorId ? styles.sentMessage : styles.receivedMessage]}>
+                                    <Text style={[styles.messageText, item.senderId === vendorId ? styles.sentText : styles.receivedText]}>
+                                        {item.content}
+                                    </Text>
+                                </View>
                             )}
                         />
                         {/* Message Type Selector */}
@@ -205,15 +213,20 @@ const styles = StyleSheet.create({
     card: { backgroundColor: '#d9d7d7', padding: 16, marginBottom: 8, borderRadius: 12 },
     messageButton: { backgroundColor: '#0B7784', padding: 10, borderRadius: 8, marginTop: 12 },
     messageButtonText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
-    modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
+    modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.87)' },
     modalTitle: { fontSize: 18, fontWeight: 'bold', marginTop: 50, color: '#fff', backgroundColor: '#0B7784', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
-    messageText: { fontSize: 14, color: '#333', marginBottom: 4 },
+    messageContainer: { marginVertical: 30, maxWidth: '100%' },
+    sentMessage: { alignItems: 'left',alignSelf: 'flex-end', backgroundColor: '#A3D1FF', borderRadius: 12, padding: 10 },
+    receivedMessage: { alignSelf: 'flex-start', backgroundColor: '#f1f0f0', borderRadius: 12, padding: 10 },
+    sentText: { color: '#000' },
+    receivedText: { color: '#333' },
+    messageText: { fontSize: 20 },
     messageTypeSelector: { flexDirection: 'row', justifyContent: 'center', marginBottom: 10 },
     tab: { paddingVertical: 6, paddingHorizontal: 16, borderRadius: 16, borderWidth: 1, borderColor: '#0B7784', marginRight: 10, backgroundColor: '#fff' },
     activeTab: { backgroundColor: '#0B7784' },
     activeTabText: { color: '#fff' },
     tabText: { fontSize: 15, color: '#0B7784' },
-    input: { width: '80%', backgroundColor: '#fff', padding: 12, borderRadius: 8, marginBottom: 16, borderWidth: 1, borderColor: '#ccc' },
+    input: { width: '80%', backgroundColor: '#fff', padding: 12, paddingLeft: 100, borderRadius: 8, marginBottom: 16, borderWidth: 1, borderColor: '#ccc' },
     modalButtons: { flexDirection: 'row', justifyContent: 'space-between', width: '80%' },
     emptyText: { textAlign: 'center', color: '#ccc' },
     errorText: { color: 'red', textAlign: 'center' },
