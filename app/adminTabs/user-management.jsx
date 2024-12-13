@@ -50,51 +50,63 @@ const UserManagement = () => {
   };
 
   const renderUser = ({ item }) => (
-      <TouchableOpacity
-          style={[
-            styles.card,
-            item.verificationStatus === 'REJECTED' && styles.rejectedCard, // Apply red hue if status is 'rejected'
-          ]}
-          onPress={() => router.push(`/components/${item.id}`)}
-      >
-        <View style={styles.cardContent}>
-          <Text style={styles.cardName}>{item.firstName} {item.lastName}</Text>
-          <Text style={styles.cardUsername}>{item.username}</Text>
-
-          {item.verificationStatus === 'REJECTED' && (
-              <Text style={styles.rejectedLabel}>Rejected</Text>
-          )}
-
-          {/* Action Buttons */}
-          {item.role !== 'ADMIN' && ( // Exclude buttons if the role is admin
-              <View style={styles.actionButtons}>
-                {(item.verificationStatus === 'PENDING' || item.verificationStatus === 'REJECTED') && (
-                    <TouchableOpacity
-                        style={styles.verifyButton}
-                        onPress={() => handleAction(item.userId, 'verify')}
-                    >
-                      <Text style={styles.buttonText}>Verify</Text>
-                    </TouchableOpacity>
-                )}
-                {item.verificationStatus === 'PENDING' && (
-                    <TouchableOpacity
-                        style={styles.rejectButton}
-                        onPress={() => handleAction(item.userId, 'reject')}
-                    >
-                      <Text style={styles.buttonText}>Reject</Text>
-                    </TouchableOpacity>
-                )}
-                <TouchableOpacity
-                    style={styles.removeButton}
-                    onPress={() => handleAction(item.userId, 'remove')}
-                >
-                  <Text style={styles.buttonText}>Remove</Text>
-                </TouchableOpacity>
-              </View>
-          )}
-        </View>
-      </TouchableOpacity>
+    <TouchableOpacity
+      style={[
+        styles.card,
+        item.verificationStatus === 'REJECTED' && styles.rejectedCard, // Apply red hue if status is 'rejected'
+      ]}
+      onPress={() => router.push(`/components/${item.id}`)}
+    >
+      <View style={styles.cardContent}>
+        <Text style={styles.cardName}>{item.firstName} {item.lastName}</Text>
+        <Text style={styles.cardUsername}>{item.username}</Text>
+  
+        {item.verificationStatus === 'REJECTED' && (
+          <Text style={styles.rejectedLabel}>Rejected</Text>
+        )}
+  
+        {/* Action Buttons */}
+        {item.role !== 'ADMIN' && ( // Exclude buttons if the role is admin
+          <View style={styles.actionButtons}>
+            {(item.verificationStatus === 'PENDING' || item.verificationStatus === 'REJECTED') && (
+              <TouchableOpacity
+                style={styles.verifyButton}
+                onPress={() => handleAction(item.userId, 'verify')}
+              >
+                <Text style={styles.buttonText}>Verify</Text>
+              </TouchableOpacity>
+            )}
+            {item.verificationStatus === 'PENDING' && (
+              <TouchableOpacity
+                style={styles.rejectButton}
+                onPress={() => handleAction(item.userId, 'reject')}
+              >
+                <Text style={styles.buttonText}>Reject</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={[
+                styles.activationButton,
+                item.activated ? styles.deactivateButton : styles.activateButton,
+              ]}
+              onPress={() => handleAction(item.userId, item.activated ? 'deactivate' : 'activate')}
+            >
+              <Text style={styles.buttonText}>
+                {item.activated ? 'Deactivate' : 'Activate'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={() => handleAction(item.userId, 'remove')}
+            >
+              <Text style={styles.buttonText}>Remove</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
   );
+  
 
   const handleAction = async (userId, action) => {
     console.log(`Action: ${action}, UserId: ${userId}`);
@@ -119,6 +131,14 @@ const UserManagement = () => {
         case 'remove':
           await axios.delete(`http://localhost:8080/api/admins/delete/${userId}`, {headers});
           Alert.alert('User Removed', `User ${userId} has been removed.`);
+          break;
+        case 'activate':
+          await axios.put(`http://localhost:8080/api/users/${userId}/activation?activated=true`, {}, { headers });
+          Alert.alert('User Activated', `User ${userId} has been activated.`);
+          break;
+        case 'deactivate':
+          await axios.put(`http://localhost:8080/api/users/${userId}/activation?activated=false`, {}, { headers });
+          Alert.alert('User Deactivated', `User ${userId} has been deactivated.`);
           break;
         default:
           console.error('Unknown action:', action);
@@ -296,5 +316,17 @@ const styles = StyleSheet.create({
   rejectedCard: {
     backgroundColor: '#ffe6e6',
   },
+  activationButton: {
+    padding: 8,
+    borderRadius: 5,
+    marginRight: 5,
+  },
+  activateButton: {
+    backgroundColor: '#0B7784', // Yellow
+  },
+  deactivateButton: {
+    backgroundColor: '#8E1600', // Light Orange
+  },
+
 });
 export default UserManagement;
