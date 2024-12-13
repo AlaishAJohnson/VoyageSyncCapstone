@@ -12,28 +12,13 @@ const TabIcon = ({ icon, focused, name}) => {
   
     )
   }
-  
 
 const AdminLayout = () => {
   return (
     <Tabs
-      screenOptions={{ tabBarShowLabel: false }} // Hide labels if you prefer
-      initialRouteName="admin-home" // Set your desired default tab
+      screenOptions={{ tabBarShowLabel: false }} 
+      initialRouteName="analytics" // default tab
     >
-      <Tabs.Screen 
-        name='messages'
-        options={{
-          title: 'Messages',
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon 
-              icon='chatbox'
-              focused={focused}
-              name="Messages"
-            />
-          )
-        }}
-      />
       <Tabs.Screen 
         name='user-management'
         options={{
@@ -58,34 +43,6 @@ const AdminLayout = () => {
               icon='analytics'
               focused={focused}
               name="Analytics"
-            />
-          )
-        }}
-      />
-      <Tabs.Screen 
-        name='admin-home'
-        options={{
-          title: 'Home',
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon 
-              icon='home'
-              focused={focused}
-              name="Home"
-            />
-          )
-        }}
-      />
-      <Tabs.Screen 
-        name='system-settings'
-        options={{
-          title: 'System',
-          headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <TabIcon 
-              icon='cog'
-              focused={focused}
-              name="System"
             />
           )
         }}
