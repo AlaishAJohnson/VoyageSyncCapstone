@@ -126,7 +126,7 @@ const VendorMessages = () => {
                 style={styles.messageButton}
                 onPress={() => {
                     setReceiverId(item.userId);
-                    fetchMessages(); // Fetch messages for this user
+                    // fetchMessages(); Fetch messages for this user (code works better when this is removed)
                     setMessageModalVisible(true);
                 }}
             >
