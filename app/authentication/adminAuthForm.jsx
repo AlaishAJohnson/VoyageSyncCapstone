@@ -66,8 +66,8 @@ const AdminAuthForm = () => {
               const userId = responseData.userId; 
               await AsyncStorage.setItem('userId', userId); 
               console.log("Admin ID stored in AsyncStorage:", userId);
-              console.log("Admin created, navigating to Admin Home...");
-              router.push('/adminTabs/admin-home');
+              console.log("Admin created, navigating to Admin Tabs...");
+              router.push('/adminTabs/analytics');
           } else {
               const errorData = await response.text();
               console.error('Error Response:', errorData);
@@ -168,5 +168,4 @@ const styles = StyleSheet.create({
         fontWeight: 'bold'
     }
 });
-
 export default AdminAuthForm;
