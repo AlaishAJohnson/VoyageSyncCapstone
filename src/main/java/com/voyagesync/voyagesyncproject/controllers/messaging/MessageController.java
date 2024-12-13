@@ -65,6 +65,7 @@ public class MessageController {
         return ResponseEntity.ok(response);
     }
 
+
     @GetMapping("/receiver/{receiverId}")
     public ResponseEntity<List<Map<String, Object>>> getMessagesByReceiverId(@PathVariable String receiverId) {
         ObjectId receiverObjectId = new ObjectId(receiverId);
@@ -77,42 +78,60 @@ public class MessageController {
         return ResponseEntity.ok(response);
     }
 
-
-    /* Post Methods*/
-
     @PostMapping("/create/{senderId}/{receiverId}")
     public ResponseEntity<Map<String, Object>> sendMessage(
             @PathVariable String senderId,
             @PathVariable String receiverId,
             @RequestBody Map<String, Object> messageRequest) {
 
-        ObjectId senderObjectId = new ObjectId(senderId);
-        ObjectId receiverObjectId = new ObjectId(receiverId);
+        // Check for null or empty sender/receiver IDs
+        if (senderId == null || senderId.isEmpty() || receiverId == null || receiverId.isEmpty()) {
+            return new ResponseEntity<>(Map.of("error", "Sender or receiver ID cannot be null or empty"), HttpStatus.BAD_REQUEST);
+        }
 
-        Messages message = new Messages();
-        message.setSenderId(senderObjectId);
-        message.setReceiverId(receiverObjectId);
-        message.setContent((String) messageRequest.get("content"));
+        try {
+            // Convert senderId and receiverId to ObjectIds
+            ObjectId senderObjectId = new ObjectId(senderId);
+            ObjectId receiverObjectId = new ObjectId(receiverId);
 
-        String messageTypeStr = (String) messageRequest.get("messageType");
-        Messages.MessageType messageType = Messages.MessageType.valueOf(messageTypeStr.toUpperCase());
-        message.setMessageType(messageType);
+            // Handle threadId (generate if not provided)
+            String threadIdStr = (String) messageRequest.get("threadId");
+            ObjectId threadId;
+            if (threadIdStr == null || threadIdStr.isEmpty()) {
+                threadId = new ObjectId();  // Generate new threadId if not provided
+            } else {
+                threadId = new ObjectId(threadIdStr);  // Use provided threadId
+            }
+            // Create and populate the message object
+            Messages message = new Messages();
+            message.setSenderId(senderObjectId);
+            message.setReceiverId(receiverObjectId);
+            message.setContent((String) messageRequest.get("content"));
 
-        message.setMessageStatus(Messages.MessageStatus.PENDING);
+            String messageTypeStr = (String) messageRequest.get("messageType");
+            Messages.MessageType messageType = Messages.MessageType.valueOf(messageTypeStr.toUpperCase());
+            message.setMessageType(messageType);
 
-        message.setThreadId(new ObjectId((String) messageRequest.get("threadId")));
+            message.setMessageStatus(Messages.MessageStatus.PENDING);  // Set initial status as PENDING
 
-        LocalDateTime now = LocalDateTime.now();
-        message.setTimeSent(now);
-        message.setTimeReceived(now);
+            message.setThreadId(threadId);  // Set the threadId (either from request or generated)
 
-        Messages savedMessage = messagesRepository.save(message);
+            LocalDateTime now = LocalDateTime.now();
+            message.setTimeSent(now);
+            message.setTimeReceived(now);
 
-        Map<String, Object> response = mapMessageToResponse(savedMessage);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+            // Save the message to the repository
+            Messages savedMessage = messagesRepository.save(message);
+
+            // Return the response with the saved message details
+            Map<String, Object> response = mapMessageToResponse(savedMessage);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+
+        } catch (IllegalArgumentException e) {
+            // Catch invalid ObjectId format and return a meaningful error message
+            return new ResponseEntity<>(Map.of("error", "Invalid ID format provided"), HttpStatus.BAD_REQUEST);
+        }
     }
-
-
 
     /* Put Methods*/
     @PutMapping("/update/{messageId}")
@@ -170,19 +189,16 @@ public class MessageController {
     public Map<String, Object> mapMessageToResponse(Messages message) {
         Map<String, Object> messageMap = new LinkedHashMap<>();
 
-
         messageMap.put("messageId", message.getMessageId().toHexString());
         messageMap.put("senderId", message.getSenderId().toHexString());
         messageMap.put("receiverId", message.getReceiverId().toHexString());
         messageMap.put("threadId", message.getThreadId().toHexString());
-
 
         if (message.getTripId() != null) {
             messageMap.put("tripId", message.getTripId().toHexString());
         } else {
             messageMap.put("tripId", null);
         }
-
 
         messageMap.put("content", message.getContent());
         messageMap.put("timeSent", message.getTimeSent());
