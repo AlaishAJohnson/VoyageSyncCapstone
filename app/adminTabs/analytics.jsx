@@ -177,9 +177,9 @@ const Analytics = () => {
           </View>
         </View>
         {/* Generate Report Button */}
-        <TouchableOpacity style={styles.card} onPress={generateReport} disabled={loading}>
-          <Text style={styles.cardText}>{loading ? 'Generating...' : 'Generate Report'}</Text>
-        </TouchableOpacity>
+        {/*<TouchableOpacity style={styles.card} onPress={generateReport} disabled={loading}>*/}
+        {/*  <Text style={styles.cardText}>{loading ? 'Generating...' : 'Generate Report'}</Text>*/}
+        {/*</TouchableOpacity>*/}
       </SafeAreaView>
   );
 };
