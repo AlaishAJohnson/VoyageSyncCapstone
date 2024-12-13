@@ -17,7 +17,7 @@ const UserManagement = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/users/', getAuthHeader()); // Replace with your backend API
+        const response = await axios.get('http://localhost:8080/api/users/', getAuthHeader());
         setUsersData(response.data);
         setFilteredUsers(response.data);
       } catch (err) {
@@ -327,6 +327,5 @@ const styles = StyleSheet.create({
   deactivateButton: {
     backgroundColor: '#8E1600', // Light Orange
   },
-
 });
 export default UserManagement;
