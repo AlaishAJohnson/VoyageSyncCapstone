@@ -3,20 +3,19 @@ import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ScrollView } from 'react-native';
 
 const BACKEND_URL = 'http://localhost:8080';
-
 const VendorMessages = () => {
-    const [bookings, setBookings] = useState([]);
+    const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [vendorId, setVendorId] = useState(null);
-    const [selectedTab, setSelectedTab] = useState('ALL');
     const [messages, setMessages] = useState([]);
-    const [selectedBookingId, setSelectedBookingId] = useState(null);
+    const [receiverId, setReceiverId] = useState(null);
     const [messageText, setMessageText] = useState('');
+    const [messageType, setMessageType] = useState('TEXT'); // New state for message type
     const [messageModalVisible, setMessageModalVisible] = useState(false);
+    const [threadId, setThreadId] = useState(null); // State for threadId
 
     const authHeader = 'Basic ' + btoa('admin:admin');
 
@@ -41,36 +40,27 @@ const VendorMessages = () => {
         }
     };
 
-    const fetchBookings = async (confirmationStatus) => {
-        if (!vendorId) return;
-
+    const fetchUsersByRole = async () => {
         setLoading(true);
         setError(null);
-
         try {
-            let url = `${BACKEND_URL}/api/bookings/vendor/${vendorId}`;
-            if (confirmationStatus && confirmationStatus !== 'ALL') {
-                url = `${BACKEND_URL}/api/bookings/vendor/${vendorId}/${confirmationStatus}`;
-            }
-
-            const response = await axios.get(url, {
+            const response = await axios.get(`${BACKEND_URL}/api/users/role/user`, {
                 headers: { Authorization: authHeader },
             });
-
             if (response.data && Array.isArray(response.data)) {
-                setBookings(response.data);
+                setUsers(response.data);
             } else {
-                throw new Error('No bookings found');
+                throw new Error('No users found');
             }
         } catch (err) {
-            console.error('Error fetching bookings:', err);
-            setError('Failed to fetch bookings. Please try again.');
+            console.error('Error fetching users:', err);
+            setError('Failed to fetch users. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
-    const fetchMessages = async (bookingId) => {
+    const fetchMessages = async () => {
         try {
             const response = await axios.get(`${BACKEND_URL}/api/threads/messages/`, {
                 headers: { Authorization: authHeader },
@@ -82,23 +72,62 @@ const VendorMessages = () => {
             console.error('Error fetching messages:', error);
         }
     };
-
+    // Function to check and create a new thread if none exists
+    const checkOrCreateThread = async () => {
+        try {
+            // First, check if a thread already exists between the vendor and the receiver
+            const response = await axios.get(`${BACKEND_URL}/api/threads/${threadId}`, {
+                headers: { Authorization: authHeader },
+            })
+            // If a thread exists, use the existing threadId
+            if (response.data && response.data.threadId) {
+                setThreadId(response.data.threadId);
+            } else {
+                // If no thread exists, create a new one
+                const newThreadResponse = await axios.post(
+                    `${BACKEND_URL}/api/threads/create`,
+                    { vendorId, receiverId }, // Send vendor and receiver ID to create a new thread
+                    { headers: { Authorization: authHeader } }
+                );
+                if (newThreadResponse.data && newThreadResponse.data.threadId) {
+                    setThreadId(newThreadResponse.data.threadId);
+                }
+            }
+        } catch (error) {
+            console.error('Error checking or creating thread:', error);
+        }
+    };
     const sendMessage = async () => {
         if (!messageText.trim()) {
             Alert.alert('Error', 'Message cannot be empty.');
             return;
         }
-
+        // Check or create a thread before sending the message
+        if (!threadId) {
+            await checkOrCreateThread();
+        }
+        // Log the vendorId, receiverId, and threadId
+        console.log('Sending message from Vendor ID:', vendorId);
+        console.log('To Receiver ID:', receiverId);
+        console.log('Thread ID:', threadId);
+        // Create the message request with threadId
+        const messageRequest = {
+            content: messageText,
+            messageType: messageType,
+            threadId: threadId,  // Include threadId here
+        };
+        // Log the messageRequest to see the data being sent
+        console.log('Message Data:', messageRequest);
         try {
             await axios.post(
-                `${BACKEND_URL}/api/threads/messages/create/${senderId}/${receiverId}`,
-                { bookingId: selectedBookingId, message: messageText },
+                `${BACKEND_URL}/api/threads/messages/create/${vendorId}/${receiverId}`,
+                messageRequest,
                 {
                     headers: { Authorization: authHeader },
                 }
             );
             Alert.alert('Success', 'Message sent successfully');
-            fetchMessages(selectedBookingId); // Refresh messages
+            fetchMessages(); // Refresh messages
             setMessageModalVisible(false); // Close modal
             setMessageText(''); // Clear message input
         } catch (error) {
@@ -106,7 +135,6 @@ const VendorMessages = () => {
             Alert.alert('Error', 'Failed to send message. Please try again.');
         }
     };
-
     useEffect(() => {
         const initialize = async () => {
             await getVendorId();
@@ -116,58 +144,27 @@ const VendorMessages = () => {
 
     useEffect(() => {
         if (vendorId) {
-            fetchBookings(selectedTab);
+            fetchUsersByRole();
         }
-    }, [vendorId, selectedTab]);
-
-    const renderBookingCard = ({ item }) => (
+    }, [vendorId]);
+    const renderUserCard = ({ item }) => (
         <View style={styles.card}>
-            <Text style={styles.title}>Booking Information</Text>
-            <Text style={styles.body}>Booking ID: {item.bookingId}</Text>
-            <Text style={styles.date}>Date: {new Date(item.bookingDate).toDateString()}</Text>
-            <Text style={styles.time}>Time: {new Date(item.bookingTime).toLocaleTimeString()}</Text>
-            <Text style={styles.confirmationStatus}>Status: {item.confirmationStatus}</Text>
-            <Text style={styles.serviceName}>Service Name: {item.serviceName}</Text>
-
-            {/* Show send message button based on confirmation status */}
-            {['PENDING', 'CONFIRMED', 'REJECTED', 'CANCELLED', 'RESCHEDULED'].includes(item.confirmationStatus) && (
-                <TouchableOpacity
-                    style={styles.messageButton}
-                    onPress={() => {
-                        setSelectedBookingId(item.bookingId);
-                        fetchMessages(item.bookingId);
-                        setMessageModalVisible(true);
-                    }}
-                >
-                    <Text style={styles.messageButtonText}>Send Message</Text>
-                </TouchableOpacity>
-            )}
+            <Text style={styles.title}>User Information</Text>
+            <Text style={styles.firstName}>First Name: {item.firstName}</Text>
+            <Text style={styles.lastName}>Last Name: {item.lastName}</Text>
+            <Text style={styles.email}>Email: {item.email}</Text>
+            <TouchableOpacity
+                style={styles.messageButton}
+                onPress={() => {
+                    setReceiverId(item.userId); // Set user as receiver
+                    fetchMessages(); // Messages may not need booking context
+                    setMessageModalVisible(true);
+                }}
+            >
+                <Text style={styles.messageButtonText}>Send Message</Text>
+            </TouchableOpacity>
         </View>
     );
-
-    const renderTabs = () => {
-        const tabs = ['ALL', 'CONFIRMED', 'RESCHEDULED', 'PENDING', 'REJECTED'];
-        return (
-            <ScrollView
-                horizontal
-                contentContainerStyle={styles.tabsContainer}
-                showsHorizontalScrollIndicator={false}
-            >
-                {tabs.map((tab) => (
-                    <TouchableOpacity
-                        key={tab}
-                        style={[styles.tab, selectedTab === tab && styles.activeTab]}
-                        onPress={() => setSelectedTab(tab)}
-                    >
-                        <Text style={[styles.tabText, selectedTab === tab && styles.activeTabText]}>
-                            {tab}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
-        );
-    };
-
     if (loading) {
         return (
             <SafeAreaView style={styles.safeArea}>
@@ -175,7 +172,6 @@ const VendorMessages = () => {
             </SafeAreaView>
         );
     }
-
     if (error) {
         return (
             <SafeAreaView style={styles.safeArea}>
@@ -183,17 +179,16 @@ const VendorMessages = () => {
             </SafeAreaView>
         );
     }
-
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
-                {renderTabs()}
+                <Text style={styles.titleText}>Start A Conversation </Text>
                 <FlatList
-                    data={bookings}
-                    keyExtractor={(item) => item.bookingId.toString()}
-                    renderItem={renderBookingCard}
+                    data={users}
+                    keyExtractor={(item) => item.userId.toString()}
+                    renderItem={renderUserCard}
                     contentContainerStyle={{ paddingBottom: 88 }}
-                    ListEmptyComponent={<Text style={styles.emptyText}>No bookings {selectedTab}.</Text>}
+                    ListEmptyComponent={<Text style={styles.emptyText}>No users found.</Text>}
                 />
                 {/* Message Modal */}
                 <Modal visible={messageModalVisible} animationType="slide" transparent={true}>
@@ -203,9 +198,23 @@ const VendorMessages = () => {
                             data={messages}
                             keyExtractor={(item) => item.messageId.toString()}
                             renderItem={({ item }) => (
-                                <Text style={styles.messageText}>{item.message}</Text>
+                                <Text style={styles.messageText}>{item.content}</Text> // Display message content
                             )}
                         />
+                        {/* Message Type Selection */}
+                        <View style={styles.messageTypeSelector}>
+                            {['TEXT', 'IMAGE', 'VIDEO', 'COMBINED'].map((type) => (
+                                <TouchableOpacity
+                                    key={type}
+                                    style={[styles.tab, messageType === type && styles.activeTab]}
+                                    onPress={() => setMessageType(type)}
+                                >
+                                    <Text style={[styles.tabText, messageType === type && styles.activeTabText]}>
+                                        {type}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
                         <TextInput
                             style={styles.input}
                             placeholder="Type your message..."
@@ -222,7 +231,6 @@ const VendorMessages = () => {
         </SafeAreaView>
     );
 };
-
 const styles = StyleSheet.create({
     messageButton: {
         backgroundColor: '#0B7784',
@@ -308,6 +316,13 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 6,
         elevation: 5,
+    },
+    titleText: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#0B7784',
+        textAlign: 'center',
+        marginVertical: 20,
     },
 });
 export default VendorMessages;
