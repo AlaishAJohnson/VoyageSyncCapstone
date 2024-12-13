@@ -38,6 +38,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/bookings/vendor/{vendorId}").permitAll()
                         .requestMatchers("/api/vendor-reports/metrics").permitAll()
                         .requestMatchers("/api/vendor-reports/generate").permitAll()
+                        .requestMatchers("/api/travel-preferences/create").permitAll()
+                        .requestMatchers("/api/travel-preferences/{id}").permitAll()
+                        .requestMatchers("/api/users/{userId}/linkPreferences/{preferenceId}").permitAll()
+
+                        .requestMatchers("/api/trips/organizer-member/{userId}").permitAll()
+                        .requestMatchers("/api/trips/member/{userId}").permitAll()
+                        .requestMatchers("/api/trips/organizer/{userId}").permitAll()
+                        .requestMatchers("/api/services").permitAll()
+
+                        .requestMatchers("/api/users/{userId}/activation").permitAll()
 
 
                         // Restrict access to other endpoints based on roles
