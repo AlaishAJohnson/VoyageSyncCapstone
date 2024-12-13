@@ -1,9 +1,12 @@
 package com.voyagesync.voyagesyncproject.services.trips;
 
+import com.voyagesync.voyagesyncproject.enums.ConfirmationStatus;
+import com.voyagesync.voyagesyncproject.models.bookings.Bookings;
 import com.voyagesync.voyagesyncproject.models.bookings.Services;
 import com.voyagesync.voyagesyncproject.models.trips.Itinerary;
 import com.voyagesync.voyagesyncproject.models.trips.Trips;
 import com.voyagesync.voyagesyncproject.models.trips.Vote;
+import com.voyagesync.voyagesyncproject.repositories.bookings.BookingsRepository;
 import com.voyagesync.voyagesyncproject.repositories.bookings.ServiceRepository;
 import com.voyagesync.voyagesyncproject.repositories.trips.ItineraryRepository;
 import com.voyagesync.voyagesyncproject.repositories.trips.TripRepository;
@@ -11,6 +14,7 @@ import com.voyagesync.voyagesyncproject.repositories.trips.VoteRepository;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
@@ -22,11 +26,13 @@ public class ItineraryService {
     private final ServiceRepository serviceRepository;
     private final VoteRepository voteRepository;
     private final TripRepository tripRepository;
-    public ItineraryService(final ItineraryRepository itineraryRepository, ServiceRepository serviceRepository, VoteRepository voteRepository, TripRepository tripRepository) {
+    private final BookingsRepository bookingsRepository;
+    public ItineraryService(final ItineraryRepository itineraryRepository, ServiceRepository serviceRepository, VoteRepository voteRepository, TripRepository tripRepository, BookingsRepository bookingsRepository) {
         this.itineraryRepository = itineraryRepository;
         this.serviceRepository = serviceRepository;
         this.voteRepository = voteRepository;
         this.tripRepository = tripRepository;
+        this.bookingsRepository = bookingsRepository;
     }
 
     public List<Itinerary> getAllItineraries(){
@@ -99,7 +105,6 @@ public class ItineraryService {
 
         List<ObjectId> memberIds = trip.getMemberIds();
         ObjectId organizerId = trip.getOrganizerId();
-
         assert memberIds != null;
 
         if (!memberIds.contains(organizerId)) {
@@ -107,8 +112,8 @@ public class ItineraryService {
         }
 
         if (itineraryItem.getVotes().size() >= memberIds.size() && checkMajorityVotes(itineraryId)) {
-            itineraryItem.setTimeOfService(LocalTime.now());
 
+            itineraryItem.setTimeOfService(LocalTime.now());
             itineraryRepository.save(itineraryItem);
 
             if (!trip.getItinerary().contains(itineraryObjId)) {
@@ -117,13 +122,34 @@ public class ItineraryService {
             } else {
                 System.out.println("Itinerary ID already exists in trip itinerary list.");
             }
+
             tripRepository.save(trip);
             System.out.println("Trip saved with updated itinerary.");
+
+            Bookings newBooking = new Bookings();
+            newBooking.setServiceId(itineraryItem.getServiceId());
+            newBooking.setBookingDate(LocalDate.now());
+            newBooking.setBookingTime(LocalTime.now());
+            newBooking.setConfirmationStatus(ConfirmationStatus.PENDING);
+            newBooking.setItineraryId(itineraryObjId);
+            newBooking.setNumberOfParticipants(memberIds.size());
+
+            if (itineraryItem.getServiceId() != null) {
+                Optional<Services> optionalService = serviceRepository.findById(itineraryItem.getServiceId());
+                optionalService.ifPresent(service -> {
+                    newBooking.setVendorId(service.getVendorId());
+                    System.out.println("Associated vendor ID: " + service.getVendorId());
+                });
+            } else {
+                System.out.println("Service ID not found in itinerary.");
+            }
+
+            bookingsRepository.save(newBooking);
+            System.out.println("New booking created with status PENDING: " + newBooking.getBookingId());
         } else {
             System.out.println("Voting not complete or majority not reached.");
         }
     }
-
 
     public boolean addToVote(String itineraryId, String userId, boolean vote) {
         ObjectId itineraryObjId = new ObjectId(itineraryId);
