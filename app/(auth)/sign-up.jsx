@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     lineHeight: 30,
-    paddingTop: 10,
+    paddingTop: 30,
     color: '#0B7784',
   },
   buttonsContainer: {
