@@ -4,6 +4,7 @@
     "slug": "voyagesync",
     "scheme": "voyagesync",
     "version": "1.0.0",
+    "platforms": ["ios", "android", "web"],
     "newArchEnabled": true,
     "orientation": "portrait",
     "icon": "./assets/logo.png",
